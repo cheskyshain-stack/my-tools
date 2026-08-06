@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0f766e">
+<title>QwikPen Click Calculator</title>
+<style>
+:root {
+  --bg:#eef6f4;
+  --card:#ffffff;
+  --text:#14211f;
+  --muted:#5e6d6a;
+  --accent:#0f766e;
+  --accent-dark:#0a5d57;
+  --border:#cfe0dc;
+  --warn:#fff7df;
+  --warn-border:#e6c76c;
+}
+* { box-sizing:border-box; }
+
+html, body {
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+body {
+  min-height:100dvh;
+  padding:
+    max(6px, env(safe-area-inset-top))
+    max(8px, env(safe-area-inset-right))
+    max(6px, env(safe-area-inset-bottom))
+    max(8px, env(safe-area-inset-left));
+}
+
+.app {
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.shell {
+  width:min(100%, 470px);
+  max-height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+header {
+  flex:0 0 auto;
+  text-align:center;
+}
+
+h1 {
+  margin:0;
+  font-size:clamp(1.25rem, 5.1vw, 1.9rem);
+  line-height:1.05;
+}
+
+header p {
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:clamp(.67rem, 2.55vw, .84rem);
+}
+
+.card {
+  flex:0 1 auto;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:clamp(9px, 2.8vw, 15px);
+  box-shadow:0 10px 28px rgba(15,118,110,.12);
+}
+
+.control-block + .control-block {
+  margin-top:8px;
+}
+
+label {
+  display:block;
+  margin-bottom:4px;
+  font-size:clamp(.79rem, 2.85vw, .94rem);
+  font-weight:850;
+}
+
+.stepper {
+  display:grid;
+  grid-template-columns:58px minmax(0, 1fr) 58px;
+  gap:8px;
+  align-items:center;
+}
+
+.step-btn {
+  width:58px;
+  height:clamp(48px, 7.4vh, 55px);
+  border:0;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  font-size:2rem;
+  line-height:1;
+  font-weight:950;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.step-btn:active {
+  background:var(--accent-dark);
+  transform:translateY(1px);
+}
+
+.step-btn:disabled {
+  opacity:.38;
+}
+
+.value-box {
+  height:clamp(48px, 7.4vh, 55px);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:clamp(1.13rem, 4.7vw, 1.5rem);
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.result {
+  margin-top:9px;
+  min-height:112px;
+  border:1px solid #b8ddd6;
+  border-radius:14px;
+  background:#e8f6f3;
+  padding:8px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.result-label {
+  font-size:clamp(.73rem, 2.65vw, .87rem);
+  font-weight:850;
+}
+
+.clicks {
+  margin:1px 0;
+  font-size:clamp(2.2rem, 10.5vw, 3.7rem);
+  line-height:.96;
+  font-weight:950;
+  color:var(--accent-dark);
+}
+
+.split {
+  margin-top:2px;
+  font-size:clamp(.76rem, 2.8vw, .93rem);
+  line-height:1.18;
+  font-weight:850;
+}
+
+.details {
+  margin-top:3px;
+  color:var(--muted);
+  font-size:clamp(.62rem, 2.25vw, .77rem);
+  line-height:1.18;
+}
+
+.warning {
+  margin-top:8px;
+  padding:7px 9px;
+  border:1px solid var(--warn-border);
+  border-radius:11px;
+  background:var(--warn);
+  color:#5b4817;
+  font-size:clamp(.55rem, 1.98vw, .68rem);
+  line-height:1.18;
+}
+
+.footer {
+  margin-top:4px;
+  text-align:center;
+  color:var(--muted);
+  font-size:clamp(.53rem, 1.9vw, .65rem);
+  line-height:1.25;
+}
+
+/* Compact portrait phones */
+@media (max-height:650px) and (orientation:portrait) {
+  header p, .footer { display:none; }
+  .shell { gap:3px; }
+  .card { padding:8px; }
+  .control-block + .control-block { margin-top:6px; }
+  .result { min-height:94px; margin-top:7px; padding:6px; }
+  .warning { margin-top:6px; padding:5px 7px; }
+}
+
+/* Landscape: keep the same stacked setup as portrait */
+@media (orientation:landscape) {
+  body {
+    padding:
+      max(4px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(4px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+
+  .app {
+    justify-content:center;
+  }
+
+  .shell {
+    width:min(100%, 470px);
+    height:100%;
+    max-height:100%;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  header {
+    flex:0 0 auto;
+  }
+
+  h1 {
+    font-size:clamp(1rem, 3.3vh, 1.35rem);
+  }
+
+  header p {
+    display:none;
+  }
+
+  .card {
+    flex:0 1 auto;
+    width:100%;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    padding:7px 9px;
+    overflow:hidden;
+  }
+
+  .controls-column {
+    display:block;
+  }
+
+  .control-block + .control-block {
+    margin-top:5px;
+  }
+
+  label {
+    margin-bottom:3px;
+    font-size:clamp(.7rem, 2.8vh, .86rem);
+  }
+
+  .stepper {
+    grid-template-columns:52px minmax(0, 1fr) 52px;
+    gap:7px;
+  }
+
+  .step-btn,
+  .value-box {
+    height:clamp(38px, 11.5vh, 47px);
+  }
+
+  .step-btn {
+    width:52px;
+    font-size:1.75rem;
+  }
+
+  .value-box {
+    font-size:clamp(1rem, 4.4vh, 1.28rem);
+  }
+
+  .result {
+    margin-top:6px;
+    min-height:0;
+    height:auto;
+    padding:6px 8px;
+  }
+
+  .result-label {
+    font-size:clamp(.66rem, 2.4vh, .8rem);
+  }
+
+  .clicks {
+    margin:0;
+    font-size:clamp(2rem, 8.6vh, 3rem);
+  }
+
+  .split {
+    font-size:clamp(.67rem, 2.5vh, .84rem);
+  }
+
+  .details {
+    font-size:clamp(.55rem, 2vh, .69rem);
+  }
+
+  .warning-wrap {
+    display:none;
+  }
+}
+
+@media (orientation:landscape) and (max-height:430px) {
+  header {
+    display:block;
+  }
+
+  h1 {
+    font-size:clamp(.92rem, 3.8vh, 1.15rem);
+    line-height:1;
+  }
+
+  header p {
+    display:block;
+    margin-top:1px;
+    font-size:clamp(.52rem, 2.1vh, .66rem);
+    line-height:1;
+  }
+
+  .shell {
+    gap:2px;
+  }
+
+  .card {
+    padding:4px 8px;
+  }
+
+  .control-block + .control-block {
+    margin-top:2px;
+  }
+
+  label {
+    margin-bottom:2px;
+    font-size:clamp(.64rem, 2.5vh, .78rem);
+  }
+
+  .step-btn,
+  .value-box {
+    height:clamp(32px, 10.5vh, 38px);
+  }
+
+  .result {
+    margin-top:3px;
+    padding:3px 7px;
+  }
+
+  .clicks {
+    font-size:clamp(1.65rem, 7.5vh, 2.3rem);
+  }
+}
+
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="shell">
+    <header>
+      <h1>QwikPen Click Calculator</h1>
+      <p>Based on 60 clicks for one full selected pen dose.</p>
+    </header>
+
+    <section class="card">
+      <div class="controls-column">
+        <div class="control-block">
+          <label>Pen strength</label>
+          <div class="stepper">
+            <button class="step-btn" id="penMinus" type="button" aria-label="Previous pen strength">−</button>
+            <div class="value-box" id="penValue">5 mg</div>
+            <button class="step-btn" id="penPlus" type="button" aria-label="Next pen strength">+</button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label>Dose wanted</label>
+          <div class="stepper">
+            <button class="step-btn" id="doseMinus" type="button" aria-label="Decrease dose">−</button>
+            <div class="value-box" id="doseValue">5.0 mg</div>
+            <button class="step-btn" id="dosePlus" type="button" aria-label="Increase dose">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="result" aria-live="polite">
+        <div class="result-label">Total nearest whole clicks</div>
+        <div id="clickCount" class="clicks">60</div>
+        <div id="split" class="split">60 clicks from one full pen</div>
+        <div id="details" class="details">Exact: 60.00 clicks · Estimated dose: 5.00 mg</div>
+      </div>
+
+      <div class="warning-wrap">
+      <!--
+        <div class="warning">
+          <strong>Important:</strong> Mathematical estimate only. More than 60 clicks means medication from more than one pen. Partial-dose click counting may not be manufacturer-approved or reliably accurate. Confirm the method with your prescriber or pharmacist.
+        </div>
+        -->
+        <div class="footer">
+          Dose wanted ÷ pen strength × 60<br>
+          Your last choices are saved on this phone.
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const PEN_STRENGTHS = [2.5, 5, 7.5, 10, 12.5, 15];
+const MIN_DOSE = 2.5;
+const MAX_DOSE = 15;
+const DOSE_STEP = 0.5;
+
+const penValue = document.getElementById("penValue");
+const doseValue = document.getElementById("doseValue");
+const clickCount = document.getElementById("clickCount");
+const split = document.getElementById("split");
+const details = document.getElementById("details");
+
+const penMinus = document.getElementById("penMinus");
+const penPlus = document.getElementById("penPlus");
+const doseMinus = document.getElementById("doseMinus");
+const dosePlus = document.getElementById("dosePlus");
+
+let savedPen = Number(localStorage.getItem("qwikPenStrength"));
+let penIndex = PEN_STRENGTHS.indexOf(savedPen);
+if (penIndex < 0) penIndex = 1;
+
+const savedWantedDose = localStorage.getItem("qwikWantedDose");
+let wantedDose = savedWantedDose === null ? 5.0 : Number(savedWantedDose);
+wantedDose = Math.min(MAX_DOSE, Math.max(MIN_DOSE, wantedDose));
+wantedDose = Math.round(wantedDose * 2) / 2;
+
+function penLabel(value) {
+  return Number.isInteger(value) ? `${value} mg` : `${value.toFixed(1)} mg`;
+}
+
+function doseLabel(value) {
+  return `${value.toFixed(1)} mg`;
+}
+
+function calculate() {
+  const strength = PEN_STRENGTHS[penIndex];
+  const exactClicks = (wantedDose / strength) * 60;
+  const roundedClicks = Math.round(exactClicks);
+  const estimatedDose = (roundedClicks / 60) * strength;
+
+  penValue.textContent = penLabel(strength);
+  doseValue.textContent = doseLabel(wantedDose);
+  clickCount.textContent = roundedClicks;
+
+  const fullPens = Math.floor(roundedClicks / 60);
+  const remainder = roundedClicks % 60;
+
+  if (roundedClicks < 60) {
+    split.textContent = `${roundedClicks} clicks from one pen`;
+  } else if (roundedClicks === 60) {
+    split.textContent = "60 clicks from one full pen";
+  } else if (remainder === 0) {
+    split.textContent = `${fullPens} full pens × 60 clicks`;
+  } else {
+    const penWord = fullPens === 1 ? "pen" : "pens";
+    split.textContent =
+      `${fullPens} full ${penWord} (${fullPens * 60}) + ${remainder} clicks from another pen`;
+  }
+
+  details.textContent =
+    `Exact: ${exactClicks.toFixed(2)} clicks · Estimated dose: ${estimatedDose.toFixed(2)} mg`;
+
+  localStorage.setItem("qwikPenStrength", String(strength));
+  localStorage.setItem("qwikWantedDose", wantedDose.toFixed(1));
+
+  penMinus.disabled = penIndex === 0;
+  penPlus.disabled = penIndex === PEN_STRENGTHS.length - 1;
+  doseMinus.disabled = wantedDose <= MIN_DOSE;
+  dosePlus.disabled = wantedDose >= MAX_DOSE;
+}
+
+penMinus.addEventListener("click", () => {
+  if (penIndex > 0) {
+    penIndex--;
+    calculate();
+  }
+});
+
+penPlus.addEventListener("click", () => {
+  if (penIndex < PEN_STRENGTHS.length - 1) {
+    penIndex++;
+    calculate();
+  }
+});
+
+doseMinus.addEventListener("click", () => {
+  wantedDose = Math.max(MIN_DOSE, wantedDose - DOSE_STEP);
+  calculate();
+});
+
+dosePlus.addEventListener("click", () => {
+  wantedDose = Math.min(MAX_DOSE, wantedDose + DOSE_STEP);
+  calculate();
+});
+
+calculate();
+</script>
+</body>
+</html>

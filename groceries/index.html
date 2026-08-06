@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<title> MyGroceries</title>
+<style>
+  :root {
+    --bg: #030712;
+    --card: #111827;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.4);
+    --success: #10b981;
+    --danger: #ef4444;
+    --text: #f9fafb;
+    --text-dim: #9ca3af;
+    --glass: rgba(17, 24, 39, 0.9);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header { padding: 10px 16px 2px; display: flex; justify-content: space-between; align-items: center; }
+  h1 { font-size: 18px; font-weight: 800; margin: 0; }
+  .clear-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+
+  nav { display: flex; padding: 6px 12px; gap: 6px; }
+  nav button { flex: 1; padding: 8px; border-radius: 10px; border: 1px solid #1f2937; background: var(--card); color: var(--text-dim); font-weight: 600; font-size: 12px; transition: 0.2s; }
+  nav button.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+
+  .list { flex: 1; overflow-y: auto; padding: 4px 12px 160px; }
+
+  .item {
+    background: var(--card);
+    border-radius: 10px;
+    margin-bottom: 5px;
+    padding: 8px 10px;
+    border: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .item-name { 
+    font-size: 14px; 
+    font-weight: 600; 
+    flex: 1;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .qty-area {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+    min-width: 50px;
+  }
+
+  .qty-btn { background: #1e293b; border: none; color: var(--accent); border-radius: 5px; width: 22px; height: 22px; font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+  .qty-val { font-family: monospace; font-weight: 800; color: #fbbf24; font-size: 13px; min-width: 10px; text-align: center; }
+
+  .actions { display: flex; gap: 4px; align-items: center; }
+  .actions button { height: 28px; padding: 0 8px; border-radius: 6px; border: none; font-weight: 800; font-size: 10px; color: white; display: flex; align-items: center; justify-content: center; }
+
+  .btn-got { background: var(--success); }
+  .btn-no { background: var(--danger); }
+  .btn-back { background: #374151; }
+  .btn-del { background: transparent; color: #4b5563; padding: 0 6px !important; }
+  .btn-del svg { width: 16px; height: 16px; fill: currentColor; }
+
+  /* FOOTER WITH AUTO-EXPAND TEXTAREA */
+  .footer-container { position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 1000; }
+  footer { 
+    background: var(--glass); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    padding: 8px; 
+    border-radius: 18px; 
+    display: flex; 
+    align-items: flex-end; /* Keeps button at the bottom as box grows */
+    gap: 8px; 
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.4); 
+  }
+  
+  footer textarea { 
+    flex: 1; 
+    background: rgba(255,255,255,0.05); 
+    border: none; 
+    border-radius: 12px; 
+    padding: 10px 14px; 
+    color: white; 
+    font-size: 15px; 
+    outline: none; 
+    resize: none;
+    height: 42px; /* Initial height */
+    max-height: 150px;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+
+  .foot-btn { height: 42px; border-radius: 12px; border: none; font-weight: 800; color: white; display: flex; align-items: center; justify-content: center; }
+  
+  #addBtn { width: 80px; background: var(--accent); font-size: 12px; flex-shrink: 0; }
+  #addBtn:disabled { opacity: 0.2; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Shopping List</h1>
+  <button class="clear-btn" onclick="clearAll()">RESET</button>
+</header>
+
+<nav>
+  <button onclick="switchTab('main')" class="active" id="btn-main">List</button>
+  <button onclick="switchTab('got')" id="btn-got">Got</button>
+  <button onclick="switchTab('no')" id="btn-no">Missing</button>
+</nav>
+
+<div id="list-main" class="list"></div>
+<div id="list-got" class="list" style="display:none"></div>
+<div id="list-no" class="list" style="display:none"></div>
+
+<div class="footer-container">
+  <footer>
+    <textarea id="itemInput" placeholder="Paste list or type items..." rows="1"></textarea>
+    <button id="addBtn" class="foot-btn" disabled onclick="addItem()">ADD</button>
+  </footer>
+</div>
+
+<script>
+let store = { main: [], got: [], no: [] };
+let counter = Date.now();
+
+const itemInput = document.getElementById('itemInput');
+const addBtn = document.getElementById('addBtn');
+
+function vibe(ms = 10) {
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+// Auto-expand textarea logic
+itemInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight) + 'px';
+  addBtn.disabled = !this.value.trim();
+});
+
+function switchTab(tab) {
+  vibe(5);
+  document.querySelectorAll('.list').forEach(l => l.style.display = 'none');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`list-${tab}`).style.display = 'block';
+  document.getElementById(`btn-${tab}`).classList.add('active');
+}
+
+function render() {
+  ['main', 'got', 'no'].forEach(key => {
+    const box = document.getElementById(`list-${key}`);
+    box.innerHTML = '';
+    store[key].sort((a,b) => a.id - b.id);
+
+    store[key].forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <span class="item-name">${item.name}</span>
+        <div class="qty-area">
+          ${item.qty > 1 ? `<button class="qty-btn" onclick="changeQty('${key}', ${idx}, -1)"></button>` : ''}
+          ${item.qty > 1 ? `<span class="qty-val">${item.qty}</span>` : ''}
+          <button class="qty-btn" onclick="changeQty('${key}', ${idx}, 1)">+</button>
+        </div>
+        <div class="actions">
+          ${key === 'main' ? `
+            <button class="btn-got" onclick="move('${key}', 'got', ${idx})">GOT</button>
+            <button class="btn-no" onclick="move('${key}', 'no', ${idx})">NO</button>
+          ` : `
+            <button class="btn-back" onclick="move('${key}', 'main', ${idx})">BACK</button>
+          `}
+          <button class="btn-del" onclick="remove('${key}', ${idx})">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+      `;
+      box.appendChild(el);
+    });
+  });
+  localStorage.setItem('shain_flux_elite', JSON.stringify(store));
+}
+
+function addItem() {
+  const inputVal = itemInput.value.trim();
+  if(!inputVal) return;
+
+  const lines = inputVal.split(/[\r\n,]+/);
+  
+  if (lines.length > 1) vibe(25); else vibe(15);
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+
+    let q = 1, n = trimmed;
+    const m = trimmed.match(/^(\d+)\s*[xX]?\s*(.*)$/);
+    if(m) { q = parseInt(m[1]); n = m[2].trim(); }
+    
+    const existing = store.main.find(i => i.name.toLowerCase() === n.toLowerCase());
+    if(existing) {
+        existing.qty += q;
+    } else {
+        store.main.push({ id: counter++, name: n, qty: q });
+    }
+  });
+
+  itemInput.value = '';
+  itemInput.style.height = '42px'; // Reset height
+  addBtn.disabled = true;
+  render();
+}
+
+// Enter now simply inserts a line break (default textarea behavior).
+// Add is triggered only via the ADD button.
+
+window.changeQty = (l, i, d) => { vibe(10); store[l][i].qty = Math.max(1, store[l][i].qty + d); render(); };
+window.move = (f, t, i) => { vibe(15); const item = store[f].splice(i, 1)[0]; store[t].push(item); render(); };
+window.remove = (l, i) => { vibe([30, 20, 30]); store[l].splice(i, 1); render(); };
+
+function clearAll() { 
+  if(confirm("Clear Everything?")) { 
+    vibe(50);
+    store={main:[], got:[], no:[]}; 
+    render(); 
+  } 
+}
+
+const saved = localStorage.getItem('shain_flux_elite');
+if(saved) store = JSON.parse(saved);
+render();
+</script>
+</body>
+</html>
