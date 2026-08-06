@@ -3,137 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f6f7fb">
-  <title>Chalie's Links</title>
+  <meta name="theme-color" content="#f7f8fa">
+  <title>Chalie's Tools</title>
   <style>
     :root{
-      --bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;
-      --line:#e5e7eb;--shadow:0 12px 30px rgba(15,23,42,.08)
+      --bg:#f7f8fa;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --hover:#f9fafb;
+      --shadow:0 6px 20px rgba(15,23,42,.07);
     }
+
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%}
-    body{
+
+    html,body{
+      margin:0;
+      min-height:100%;
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-      background:linear-gradient(145deg,#f8fafc,#f4f4fb);
-      color:var(--text);display:flex;justify-content:center;padding:24px 14px 44px
+      background:var(--bg);
+      color:var(--text);
     }
-    .wrap{width:min(680px,100%)}
-    header{margin:4px 2px 20px}
-    h1{margin:0;font-size:clamp(28px,5vw,42px);letter-spacing:-.04em}
-    .sub{margin:7px 0 0;color:var(--muted);font-size:14px}
-    .section-title{margin:24px 4px 10px;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-    .list{display:grid;gap:10px}
-    .item{
-      display:flex;align-items:center;gap:13px;min-height:72px;padding:14px 16px;
-      background:var(--card);border:1px solid var(--line);border-radius:16px;
-      color:var(--text);text-decoration:none;box-shadow:var(--shadow);
-      transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease
+
+    body{
+      padding:28px 16px 48px;
     }
-    .item:hover{transform:translateY(-2px);border-color:#c7d2fe;box-shadow:0 16px 34px rgba(15,23,42,.11)}
-    .icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;color:#fff;font-size:20px;font-weight:900}
-    .copy{min-width:0;flex:1}
-    .name{font-size:16px;font-weight:850;line-height:1.15}
-    .short{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.3}
-    .more{max-height:0;opacity:0;overflow:hidden;color:var(--muted);font-size:12px;line-height:1.4;transition:max-height .2s ease,opacity .2s ease,margin-top .2s ease}
-    .item:hover .more{max-height:80px;opacity:1;margin-top:7px}
-    .arrow{color:#9ca3af;font-size:22px;font-weight:700;flex:0 0 auto}
-    #allTools{display:none}
-    #allTools.show{display:grid}
-    .secret{
-      position:fixed;right:10px;bottom:10px;width:20px;height:20px;border:0;border-radius:50%;
-      background:#9ca3af;opacity:.12;cursor:pointer;padding:0
+
+    .container{
+      width:min(720px,100%);
+      margin:0 auto;
     }
-    .secret:active{transform:scale(.9)}
-    .notice{display:none;margin:12px 2px 0;color:var(--muted);font-size:11px;text-align:right}
-    .notice.show{display:block}
+
+    header{
+      margin-bottom:22px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(30px,5vw,44px);
+      letter-spacing:-.045em;
+      line-height:1;
+      cursor:default;
+      user-select:none;
+    }
+
+    .subtitle{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .tools{
+      display:grid;
+      gap:12px;
+    }
+
+    .tool{
+      display:grid;
+      grid-template-columns:46px minmax(0,1fr) 24px;
+      align-items:center;
+      gap:14px;
+      min-height:78px;
+      padding:15px 16px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      color:var(--text);
+      text-decoration:none;
+      transition:background-color .14s ease,border-color .14s ease;
+    }
+
+    .tool:hover{
+      background:var(--hover);
+      border-color:#d1d5db;
+    }
+
+    .icon{
+      width:46px;
+      height:46px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      color:#fff;
+      font-size:21px;
+      font-weight:900;
+    }
+
+    .tool-copy{
+      min-width:0;
+    }
+
+    .tool-name{
+      font-size:16px;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    .tool-desc{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .arrow{
+      color:#9ca3af;
+      font-size:22px;
+      text-align:right;
+    }
+
+    .hidden-tool{
+      display:none;
+    }
+
+    .hidden-tool.show{
+      display:grid;
+    }
+
+    footer{
+      margin-top:28px;
+      padding-top:18px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+    }
+
     @media(max-width:560px){
-      body{padding-top:18px}.item{min-height:68px}.short{font-size:12px}
-      .item:hover .more{max-height:0;opacity:0;margin-top:0}
+      body{padding-top:22px}
+      .tool{
+        grid-template-columns:42px minmax(0,1fr) 20px;
+        min-height:72px;
+        padding:13px 14px;
+      }
+      .icon{
+        width:42px;
+        height:42px;
+        font-size:19px;
+      }
+      .tool-name{font-size:15px}
+      .tool-desc{font-size:12px}
     }
   </style>
 </head>
 <body>
-  <main class="wrap">
+  <main class="container">
     <header>
-      <h1>Chalie's Links</h1>
-      <p class="sub">A few useful links and tools.</p>
+      <h1 id="secretTitle">Chalie's Tools</h1>
+      <p class="subtitle">Simple tools and links in one place.</p>
     </header>
 
-    <div class="section-title">Public</div>
-    <section class="list">
-      <a class="item" href="/groceries/">
+    <section class="tools">
+      <a class="tool" href="/groceries/">
         <div class="icon" style="background:linear-gradient(145deg,#2563eb,#1d4ed8)">🛒</div>
-        <div class="copy">
-          <div class="name">Shopping List</div>
-          <div class="short">Create and manage grocery lists.</div>
-          <div class="more">Add multiple items, track quantities, and move items between List, Got, and Missing.</div>
+        <div class="tool-copy">
+          <div class="tool-name">Shopping List</div>
+          <div class="tool-desc">Create and manage grocery lists.</div>
         </div>
         <div class="arrow">›</div>
       </a>
 
-      <a class="item" href="https://suno.com/@cshain" target="_blank" rel="noopener">
+      <a class="tool" href="https://suno.com/@cshain" target="_blank" rel="noopener">
         <div class="icon" style="background:linear-gradient(145deg,#ec4899,#8b5cf6)">♫</div>
-        <div class="copy">
-          <div class="name">Suno Music</div>
-          <div class="short">Listen to my music on Suno.</div>
-          <div class="more">Opens my public Suno profile with songs and music projects.</div>
+        <div class="tool-copy">
+          <div class="tool-name">Suno Music</div>
+          <div class="tool-desc">Listen to my music on Suno.</div>
         </div>
         <div class="arrow">↗</div>
       </a>
-    </section>
 
-    <div id="hiddenHeading" class="section-title" style="display:none">All tools</div>
-    <section id="allTools" class="list">
-      <a class="item" href="/budget/">
+      <a class="tool hidden-tool" href="/budget/">
         <div class="icon" style="background:linear-gradient(145deg,#0ea5e9,#2563eb)">$</div>
-        <div class="copy">
-          <div class="name">Budget Planner</div>
-          <div class="short">Plan income, expenses, and savings.</div>
-          <div class="more">Adjust annual income and percentages to calculate yearly and monthly allocations.</div>
+        <div class="tool-copy">
+          <div class="tool-name">Budget Planner</div>
+          <div class="tool-desc">Plan income, expenses, and savings.</div>
         </div>
         <div class="arrow">›</div>
       </a>
 
-      <a class="item" href="/qwikpen/">
+      <a class="tool hidden-tool" href="/qwikpen/">
         <div class="icon" style="background:linear-gradient(145deg,#14b8a6,#0f766e)">✚</div>
-        <div class="copy">
-          <div class="name">QwikPen Click Calculator</div>
-          <div class="short">Calculate clicks for a selected dose.</div>
-          <div class="more">Choose pen strength and desired dose to calculate the nearest whole number of clicks.</div>
+        <div class="tool-copy">
+          <div class="tool-name">QwikPen Click Calculator</div>
+          <div class="tool-desc">Calculate clicks for a selected dose.</div>
         </div>
         <div class="arrow">›</div>
       </a>
     </section>
 
-    <div id="notice" class="notice">Hidden tools are now visible.</div>
+    <footer>© <span id="year"></span> Chalie's Tools</footer>
   </main>
 
-  <button id="secretButton" class="secret" type="button" aria-label="More"></button>
-
   <script>
-    const secretButton = document.getElementById("secretButton");
-    const allTools = document.getElementById("allTools");
-    const hiddenHeading = document.getElementById("hiddenHeading");
-    const notice = document.getElementById("notice");
+    const secretTitle = document.getElementById("secretTitle");
+    const hiddenTools = [...document.querySelectorAll(".hidden-tool")];
+
     let clicks = 0;
-    let timer;
+    let clickTimer;
 
-    secretButton.addEventListener("click", () => {
+    function setHiddenToolsVisible(show){
+      hiddenTools.forEach(tool => tool.classList.toggle("show",show));
+      localStorage.setItem("chaliesHiddenToolsVisible",show ? "yes" : "no");
+    }
+
+    const savedSetting =
+      localStorage.getItem("chaliesHiddenToolsVisible") === "yes";
+
+    setHiddenToolsVisible(savedSetting);
+
+    secretTitle.addEventListener("click",()=>{
       clicks++;
-      clearTimeout(timer);
+      clearTimeout(clickTimer);
 
-      if (clicks >= 3) {
-        const showing = allTools.classList.toggle("show");
-        hiddenHeading.style.display = showing ? "block" : "none";
-        notice.classList.toggle("show", showing);
+      if(clicks >= 3){
+        const showing = hiddenTools.some(tool => tool.classList.contains("show"));
+        setHiddenToolsVisible(!showing);
         clicks = 0;
         return;
       }
 
-      timer = setTimeout(() => {
+      clickTimer = setTimeout(()=>{
         clicks = 0;
-      }, 1200);
+      },1200);
     });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
