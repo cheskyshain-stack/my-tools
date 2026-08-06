@@ -1,0 +1,14 @@
+CHALIE'S TOOLS WEBSITE
+
+Contents:
+- index.html              Homepage
+- budget/index.html       Smart Budget Planner
+
+UPLOAD TO GITHUB:
+1. Open the my-tools repository.
+2. Upload index.html and the budget folder.
+3. Confirm replacing the existing root index.html.
+4. Commit the changes.
+5. Cloudflare will redeploy automatically.
+
+The homepage currently links to the existing QwikPen Worker URL.
