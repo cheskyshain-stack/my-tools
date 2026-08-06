@@ -1,1 +1,19 @@
-Upload index.html and logo.png to the root of your GitHub my-tools repository. Replace the existing index.html. Triple-click the logo to show or hide the hidden tools.
+CJ APPS DESIGN SYSTEM — GITHUB UPLOAD
+
+This package contains:
+- index.html (homepage)
+- logo.png
+- budget/index.html
+- groceries/index.html
+- qwikpen/index.html
+
+Upload all of these to the root of your GitHub my-tools repository and replace matching files.
+
+WHAT CHANGED
+- All three apps now use the CJ Apps dark blue/cyan design.
+- Each app shows a small CJ Apps logo at the top-left.
+- The logo is a Home button.
+- On page load, the logo animates from large to its top-left position.
+- Existing calculations, saved data, lists, buttons, and app functions were preserved.
+
+After committing, wait 30–90 seconds and refresh tools.cjaffa.com.

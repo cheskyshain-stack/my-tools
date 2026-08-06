@@ -361,13 +361,65 @@ label {
 }
 
 </style>
+
+<style id="cj-apps-design-system">
+
+@keyframes cjLogoDock{
+  0%{
+    opacity:0;
+    transform:translate(clamp(80px,28vw,260px),clamp(35px,10vh,110px)) scale(2.4);
+    filter:blur(2px);
+  }
+  65%{opacity:1}
+  100%{opacity:1;transform:translate(0,0) scale(1);filter:blur(0)}
+}
+
+:root{
+  --bg:#080b12;--card:#101622;--text:#f8fafc;--muted:#94a3b8;
+  --accent:#16d7e8;--accent-dark:#08a8bd;--border:#243044;
+  --warn:#231d0f;--warn-border:#6b5722;
+}
+html,body{
+  background:radial-gradient(circle at 12% 0%,rgba(22,215,232,.13),transparent 24rem),
+             radial-gradient(circle at 90% 8%,rgba(47,125,246,.12),transparent 22rem),var(--bg)!important;
+  color:var(--text);
+}
+.shell{width:min(100%,500px)}
+.cj-page-header{
+  display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:12px;text-align:left;
+}
+.cj-brand{width:76px;height:50px;border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.32)}
+.cj-brand img{width:100%;height:100%;object-fit:cover;display:block;animation:cjLogoDock .55s cubic-bezier(.2,.8,.2,1) both}
+.cj-heading h1{color:var(--text)}
+.cj-heading p{color:var(--muted)}
+.card{background:linear-gradient(145deg,#101622,#0d1420)!important;border-color:var(--border)!important;box-shadow:0 16px 42px rgba(0,0,0,.30)!important}
+.value-box{background:#0d1420!important;color:var(--text)!important;border-color:#334155!important}
+.step-btn{background:linear-gradient(135deg,#16d7e8,#08a8bd)!important;color:#031016!important}
+.result{background:linear-gradient(145deg,#0d2730,#10202a)!important;border-color:#1f5a66!important}
+.clicks{color:#5ce8f5!important}
+.details,.footer{color:var(--muted)!important}
+@media(max-width:520px){
+  .cj-page-header{grid-template-columns:62px minmax(0,1fr);gap:9px}
+  .cj-brand{width:62px;height:42px;border-radius:10px}
+}
+@media(orientation:landscape){
+  .cj-page-header{display:grid!important}
+  .shell{width:min(100%,500px)!important}
+}
+</style>
+
 </head>
 <body>
 <main class="app">
   <div class="shell">
-    <header>
-      <h1>QwikPen Click Calculator</h1>
-      <p>Based on 60 clicks for one full selected pen dose.</p>
+    <header class="cj-page-header">
+      <a class="cj-brand" href="/" aria-label="CJ Apps home">
+        <img src="/logo.png" alt="CJ Apps">
+      </a>
+      <div class="cj-heading">
+        <h1>QwikPen Click Calculator</h1>
+        <p>Based on 60 clicks for one full selected pen dose.</p>
+      </div>
     </header>
 
     <section class="card">
@@ -510,6 +562,5 @@ dosePlus.addEventListener("click", () => {
 
 calculate();
 </script>
-
 </body>
 </html>
