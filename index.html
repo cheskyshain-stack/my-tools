@@ -189,6 +189,47 @@
       if(dragged){ e.preventDefault(); e.stopPropagation(); dragged=false; }
     }, true);
 
+    /* ===== Remember scroll + tab position (e.g. after Back from an outbound link) ===== */
+    const STATE_KEY = "cjHomeState";
+    let saveTimer;
+    function saveState(){
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(()=>{
+        try{
+          sessionStorage.setItem(STATE_KEY, JSON.stringify({
+            page: Math.round(currentRatio()),
+            scrollY: window.scrollY
+          }));
+        }catch(e){}
+      }, 120);
+    }
+    window.addEventListener("scroll", saveState, {passive:true});
+    swiper.addEventListener("scroll", saveState, {passive:true});
+    window.addEventListener("pagehide", ()=>{
+      try{
+        sessionStorage.setItem(STATE_KEY, JSON.stringify({ page: Math.round(currentRatio()), scrollY: window.scrollY }));
+      }catch(e){}
+    });
+
+    function readSavedState(){
+      try{ return JSON.parse(sessionStorage.getItem(STATE_KEY)); }catch(e){ return null; }
+    }
+    // Restore the tab/page immediately — doesn't depend on images/fonts finishing.
+    const savedState = readSavedState();
+    if(savedState && Number.isInteger(savedState.page)){
+      swiper.scrollLeft = savedState.page * swiper.clientWidth;
+      applyFromRatio(savedState.page);
+    }
+    // Restore vertical scroll only once everything (incl. the logo image) has
+    // finished loading, so a late layout shift doesn't undo/clamp it.
+    function restoreScrollY(){
+      const st = readSavedState();
+      if(st && Number.isFinite(st.scrollY)) window.scrollTo(0, st.scrollY);
+      updateMiniHeader();
+    }
+    if(document.readyState === "complete") restoreScrollY();
+    else window.addEventListener("load", restoreScrollY, { once: true });
+
     onSwiperScroll();
   </script>
 </body>
