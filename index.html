@@ -13,7 +13,13 @@
     body{padding:24px 16px 48px}
     .container{width:min(720px,100%);margin:0 auto}
     header{display:flex;justify-content:center;margin-bottom:26px;text-align:center}
-    .site-logo{width:min(340px,82vw);height:auto;display:block;border-radius:22px;box-shadow:0 18px 48px rgba(0,0,0,.30);user-select:none;-webkit-user-drag:none;cursor:default}
+    .site-logo{width:min(260px,68vw);height:auto;display:block;border-radius:20px;box-shadow:0 14px 36px rgba(0,0,0,.28);user-select:none;-webkit-user-drag:none;cursor:default}
+
+    .mini-header{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(8,11,18,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);opacity:0;transform:translateY(-100%);pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+    .mini-header.show{opacity:1;transform:translateY(0);pointer-events:auto}
+    .mini-brand{display:flex;align-items:center;gap:10px;width:min(720px,100%);margin:0 auto;background:none;border:none;padding:0;cursor:pointer;color:inherit;font:inherit}
+    .mini-logo{width:40px;height:40px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.3);display:block}
+    .mini-title{font-size:15px;font-weight:800}
     .section-label{margin:0 0 10px 4px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#64748b}
     .tools{display:grid;gap:12px}
     .tool-group{margin-bottom:26px}
@@ -23,10 +29,16 @@
     .tool-copy{min-width:0}.tool-name{font-size:16px;font-weight:800;line-height:1.2}.tool-desc{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35}.arrow{color:#64748b;font-size:22px;text-align:right}
     .hidden-tool{display:none}.hidden-tool.show{display:grid}
     footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:#64748b;font-size:12px;text-align:center}
-    @media(max-width:560px){body{padding-top:18px}.site-logo{width:min(300px,90vw);border-radius:18px}.tool{grid-template-columns:42px minmax(0,1fr) 20px;min-height:72px;padding:13px 14px}.icon{width:42px;height:42px;font-size:19px}.tool-name{font-size:15px}.tool-desc{font-size:12px}}
+    @media(max-width:560px){body{padding-top:18px}.site-logo{width:min(220px,72vw);border-radius:16px}.tool{grid-template-columns:42px minmax(0,1fr) 20px;min-height:72px;padding:13px 14px}.icon{width:42px;height:42px;font-size:19px}.tool-name{font-size:15px}.tool-desc{font-size:12px}}
   </style>
 </head>
 <body>
+  <div class="mini-header" id="miniHeader">
+    <button class="mini-brand" id="miniBrand" aria-label="Back to top">
+      <img src="/logo.png" alt="CJ Apps" class="mini-logo">
+      <span class="mini-title">CJ Apps</span>
+    </button>
+  </div>
   <main class="container">
     <header><img id="secretLogo" src="/logo.png" alt="CJ Apps" class="site-logo"></header>
 
@@ -36,7 +48,7 @@
         <a class="tool" href="/groceries/"><div class="icon" style="background:linear-gradient(145deg,#2563eb,#1d4ed8)">🛒</div><div class="tool-copy"><div class="tool-name">Shopping List</div><div class="tool-desc">Create and manage grocery lists.</div></div><div class="arrow">›</div></a>
         <a class="tool" href="/qr-code/"><div class="icon" style="background:linear-gradient(145deg,#0ea5e9,#0369a1)">▦</div><div class="tool-copy"><div class="tool-name">QR Code Creator</div><div class="tool-desc">Make QR codes for links, email, phone, and Wi-Fi.</div></div><div class="arrow">›</div></a>
         <a class="tool" href="/braille/"><div class="icon" style="background:linear-gradient(145deg,#14b8a6,#0f766e)">⠿</div><div class="tool-copy"><div class="tool-name">Braille Translator</div><div class="tool-desc">Translate English or Hebrew text into Braille.</div></div><div class="arrow">›</div></a>
-        <a class="tool" href="https://suno.com/@cshain" target="_blank" rel="noopener"><div class="icon" style="background:linear-gradient(145deg,#8b5cf6,#06b6d4)">♫</div><div class="tool-copy"><div class="tool-name">Suno Music</div><div class="tool-desc">Listen to my music on Suno.</div></div><div class="arrow">↗</div></a>
+        <a class="tool" href="https://suno.com/@cjaffa" target="_blank" rel="noopener"><div class="icon" style="background:linear-gradient(145deg,#8b5cf6,#06b6d4)">♫</div><div class="tool-copy"><div class="tool-name">Suno Music</div><div class="tool-desc">Listen to my music on Suno.</div></div><div class="arrow">↗</div></a>
         <a class="tool hidden-tool" href="/budget/"><div class="icon" style="background:linear-gradient(145deg,#0ea5e9,#2563eb)">$</div><div class="tool-copy"><div class="tool-name">Budget Planner</div><div class="tool-desc">Plan income, expenses, and savings.</div></div><div class="arrow">›</div></a>
         <a class="tool hidden-tool" href="/qwikpen/"><div class="icon" style="background:linear-gradient(145deg,#14b8a6,#0f766e)">✚</div><div class="tool-copy"><div class="tool-name">QwikPen Click Calculator</div><div class="tool-desc">Calculate clicks for a selected dose.</div></div><div class="arrow">›</div></a>
       </section>
@@ -61,6 +73,15 @@
     setHiddenToolsVisible(localStorage.getItem("cjAppsHiddenToolsVisible")==="yes");
     secretLogo.addEventListener("click",()=>{clicks++;clearTimeout(clickTimer);if(clicks>=3){const showing=hiddenTools.some(tool=>tool.classList.contains("show"));setHiddenToolsVisible(!showing);clicks=0;return}clickTimer=setTimeout(()=>{clicks=0},1200)});
     document.getElementById("year").textContent=new Date().getFullYear();
+
+    const miniHeader=document.getElementById("miniHeader");
+    function updateMiniHeader(){
+      miniHeader.classList.toggle("show", secretLogo.getBoundingClientRect().bottom<0);
+    }
+    window.addEventListener("scroll",updateMiniHeader,{passive:true});
+    window.addEventListener("resize",updateMiniHeader);
+    updateMiniHeader();
+    document.getElementById("miniBrand").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
   </script>
 </body>
 </html>
