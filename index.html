@@ -1,3 +1,66 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#315ee8"><title>CJ Apps</title><style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,#dce7ff 0,transparent 34%),radial-gradient(circle at top right,#eee2ff 0,transparent 32%),#f7f9fd;color:#172033}.shell{width:min(1060px,calc(100% - 32px));margin:auto;padding:34px 0 56px}.top{display:flex;align-items:center;gap:14px;margin-bottom:34px}.logo{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#2563eb,#7c3aed);box-shadow:0 12px 28px rgba(37,99,235,.3)}.logo span{color:white;font-weight:900;letter-spacing:-1.5px;font-size:20px}.brand h1{margin:0;font-size:28px;letter-spacing:-.8px}.brand p{margin:3px 0 0;color:#68728a}.hero{background:rgba(255,255,255,.78);border:1px solid rgba(215,224,243,.9);box-shadow:0 20px 55px rgba(53,74,120,.12);border-radius:28px;padding:28px;margin-bottom:24px;backdrop-filter:blur(14px)}.hero h2{margin:0 0 8px;font-size:clamp(27px,6vw,46px);letter-spacing:-1.4px}.hero p{margin:0;color:#69748c;font-size:17px;max-width:680px}.category-grid,.app-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.category,.app{position:relative;overflow:hidden;text-decoration:none;color:inherit;background:#fff;border:1px solid #e0e7f5;border-radius:22px;padding:24px;box-shadow:0 10px 28px rgba(41,62,110,.08);transition:box-shadow .16s ease,border-color .16s ease}.category:hover,.app:hover{transform:none;border-color:#b9c9ef;box-shadow:0 15px 38px rgba(41,62,110,.13)}.category .icon,.app .icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:#edf2ff;margin-bottom:18px}.category h3,.app h3{margin:0 0 6px;font-size:21px}.category p,.app p{margin:0;color:#737d92;line-height:1.45}.arrow{position:absolute;right:20px;top:20px;color:#6f7fa7;font-size:22px}.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.back{text-decoration:none;color:#315ee8;font-weight:700}.section-title{margin:0;font-size:30px;letter-spacing:-.7px}@media(max-width:680px){.shell{width:min(100% - 22px,1060px);padding-top:18px}.hero{padding:22px}.category-grid,.app-grid{grid-template-columns:1fr}.top{margin-bottom:22px}.logo{width:50px;height:50px;border-radius:16px}}
-</style></head><body><main class="shell"><header class="top"><div class="logo"><span>CJ</span></div><div class="brand"><h1>CJ Apps</h1><p>Simple apps that work.</p></div></header><section class="hero"><h2>What would you like to open?</h2><p>Games and useful everyday tools are now organized separately, while keeping the same CJ Apps design.</p></section><section class="category-grid"><a class="category" href="games/index.html"><span class="arrow">›</span><div class="icon">🎮</div><h3>Games</h3><p>Chess, Sudoku, and Tic-Tac-Toe.</p></a><a class="category" href="tools/index.html"><span class="arrow">›</span><div class="icon">🧰</div><h3>Tools</h3><p>Budget, Groceries, QwikPen, QR Code, and Braille.</p></a></section></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b12">
+  <meta name="description" content="CJ Apps — smart tools and games. Shopping list, budget planner, QR codes, Braille, chess, sudoku and more.">
+  <title>CJ Apps</title>
+  <style>
+    :root{--bg:#080b12;--card:#101622;--card-hover:#141c2a;--text:#f8fafc;--muted:#94a3b8;--line:#1f2937;--shadow:0 10px 28px rgba(0,0,0,.28)}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 50% -10%,rgba(37,99,235,.16),transparent 30rem),var(--bg);color:var(--text)}
+    body{padding:24px 16px 48px}
+    .container{width:min(720px,100%);margin:0 auto}
+    header{display:flex;justify-content:center;margin-bottom:26px;text-align:center}
+    .site-logo{width:min(340px,82vw);height:auto;display:block;border-radius:22px;box-shadow:0 18px 48px rgba(0,0,0,.30);user-select:none;-webkit-user-drag:none;cursor:default}
+    .section-label{margin:0 0 10px 4px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#64748b}
+    .tools{display:grid;gap:12px}
+    .tool-group{margin-bottom:26px}
+    .tool{display:grid;grid-template-columns:46px minmax(0,1fr) 24px;align-items:center;gap:14px;min-height:78px;padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:var(--card);box-shadow:var(--shadow);color:var(--text);text-decoration:none;transition:background-color .14s ease,border-color .14s ease}
+    .tool:hover{background:var(--card-hover);border-color:#334155}
+    .icon{width:46px;height:46px;display:grid;place-items:center;border-radius:12px;color:#fff;font-size:21px;font-weight:900}
+    .tool-copy{min-width:0}.tool-name{font-size:16px;font-weight:800;line-height:1.2}.tool-desc{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35}.arrow{color:#64748b;font-size:22px;text-align:right}
+    .hidden-tool{display:none}.hidden-tool.show{display:grid}
+    footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:#64748b;font-size:12px;text-align:center}
+    @media(max-width:560px){body{padding-top:18px}.site-logo{width:min(300px,90vw);border-radius:18px}.tool{grid-template-columns:42px minmax(0,1fr) 20px;min-height:72px;padding:13px 14px}.icon{width:42px;height:42px;font-size:19px}.tool-name{font-size:15px}.tool-desc{font-size:12px}}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header><img id="secretLogo" src="/logo.png" alt="CJ Apps" class="site-logo"></header>
+
+    <div class="tool-group">
+      <h2 class="section-label">Tools</h2>
+      <section class="tools">
+        <a class="tool" href="/groceries/"><div class="icon" style="background:linear-gradient(145deg,#2563eb,#1d4ed8)">🛒</div><div class="tool-copy"><div class="tool-name">Shopping List</div><div class="tool-desc">Create and manage grocery lists.</div></div><div class="arrow">›</div></a>
+        <a class="tool" href="/qr-code/"><div class="icon" style="background:linear-gradient(145deg,#0ea5e9,#0369a1)">▦</div><div class="tool-copy"><div class="tool-name">QR Code Creator</div><div class="tool-desc">Make QR codes for links, email, phone, and Wi-Fi.</div></div><div class="arrow">›</div></a>
+        <a class="tool" href="/braille/"><div class="icon" style="background:linear-gradient(145deg,#14b8a6,#0f766e)">⠿</div><div class="tool-copy"><div class="tool-name">Braille Translator</div><div class="tool-desc">Translate English or Hebrew text into Braille.</div></div><div class="arrow">›</div></a>
+        <a class="tool" href="https://suno.com/@cshain" target="_blank" rel="noopener"><div class="icon" style="background:linear-gradient(145deg,#8b5cf6,#06b6d4)">♫</div><div class="tool-copy"><div class="tool-name">Suno Music</div><div class="tool-desc">Listen to my music on Suno.</div></div><div class="arrow">↗</div></a>
+        <a class="tool hidden-tool" href="/budget/"><div class="icon" style="background:linear-gradient(145deg,#0ea5e9,#2563eb)">$</div><div class="tool-copy"><div class="tool-name">Budget Planner</div><div class="tool-desc">Plan income, expenses, and savings.</div></div><div class="arrow">›</div></a>
+        <a class="tool hidden-tool" href="/qwikpen/"><div class="icon" style="background:linear-gradient(145deg,#14b8a6,#0f766e)">✚</div><div class="tool-copy"><div class="tool-name">QwikPen Click Calculator</div><div class="tool-desc">Calculate clicks for a selected dose.</div></div><div class="arrow">›</div></a>
+      </section>
+    </div>
+
+    <div class="tool-group">
+      <h2 class="section-label">Games</h2>
+      <section class="tools">
+        <a class="tool" href="/chess/"><div class="icon" style="background:linear-gradient(145deg,#b58863,#7a5a3a)">♞</div><div class="tool-copy"><div class="tool-name">Chess</div><div class="tool-desc">Play the computer or pass and play.</div></div><div class="arrow">›</div></a>
+        <a class="tool" href="/sudoku/"><div class="icon" style="background:linear-gradient(145deg,#6366f1,#4338ca)">9</div><div class="tool-copy"><div class="tool-name">Sudoku</div><div class="tool-desc">Generate, solve, check, save, and print puzzles.</div></div><div class="arrow">›</div></a>
+        <a class="tool" href="/tic-tac-toe/"><div class="icon" style="background:linear-gradient(145deg,#22c55e,#15803d)">✕</div><div class="tool-copy"><div class="tool-name">Tic-Tac-Toe</div><div class="tool-desc">Two players, or play against your phone.</div></div><div class="arrow">›</div></a>
+      </section>
+    </div>
+
+    <footer>© <span id="year"></span> CJ Apps</footer>
+  </main>
+  <script>
+    const secretLogo=document.getElementById("secretLogo");
+    const hiddenTools=[...document.querySelectorAll(".hidden-tool")];
+    let clicks=0,clickTimer;
+    function setHiddenToolsVisible(show){hiddenTools.forEach(tool=>tool.classList.toggle("show",show));localStorage.setItem("cjAppsHiddenToolsVisible",show?"yes":"no")}
+    setHiddenToolsVisible(localStorage.getItem("cjAppsHiddenToolsVisible")==="yes");
+    secretLogo.addEventListener("click",()=>{clicks++;clearTimeout(clickTimer);if(clicks>=3){const showing=hiddenTools.some(tool=>tool.classList.contains("show"));setHiddenToolsVisible(!showing);clicks=0;return}clickTimer=setTimeout(()=>{clicks=0},1200)});
+    document.getElementById("year").textContent=new Date().getFullYear();
+  </script>
+</body>
+</html>

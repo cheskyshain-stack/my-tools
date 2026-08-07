@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Translate English or Hebrew text into Braille. Part of CJ Apps.">
+<title>Braille Translator | CJ Apps</title>
+<style>
+  /* ============ Design tokens ============ */
+  :root{
+    --bg:#f5f3ee;
+    --panel:#ffffff;
+    --ink:#22252b;
+    --muted:#6b7180;
+    --line:#dcd8ce;
+    --accent:#2f5d62;        /* deep teal */
+    --accent-ink:#ffffff;
+    --chip:#ece9e1;
+    --focus:#c98f2b;         /* amber focus ring */
+    --shadow:0 1px 3px rgba(30,32,38,.08);
+  }
+  body.dark{
+    --bg:#15171c;
+    --panel:#1e2128;
+    --ink:#e8e6df;
+    --muted:#9aa0ab;
+    --line:#33363e;
+    --accent:#5ba8ae;
+    --accent-ink:#10262a;
+    --chip:#282b33;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew","Noto Sans",sans-serif;
+    line-height:1.45;
+    padding:12px 12px 40px;
+    max-width:760px;
+    margin:0 auto;
+    transition:background .25s,color .25s;
+  }
+
+  /* ============ Header with braille-cell logo ============ */
+  header{display:flex;align-items:center;gap:12px;margin:6px 0 14px}
+  .cell{display:grid;grid-template-columns:repeat(2,10px);grid-template-rows:repeat(3,10px);gap:4px}
+  .cell span{width:10px;height:10px;border-radius:50%;background:var(--accent);opacity:.25}
+  .cell span.on{opacity:1}
+  h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:.01em}
+  h1 small{display:block;font-size:.72rem;font-weight:400;color:var(--muted)}
+  .spacer{flex:1}
+
+  /* ============ Controls ============ */
+  .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  button{
+    font:inherit;
+    font-size:.9rem;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--ink);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+  button.small{padding:8px 12px;font-size:.85rem}
+
+
+  /* ============ Text areas ============ */
+  label{display:block;font-size:.78rem;color:var(--muted);margin:14px 0 4px;text-transform:uppercase;letter-spacing:.06em}
+  textarea{
+    width:100%;
+    min-height:120px;
+    font:inherit;
+    font-size:1.05rem;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--ink);
+    resize:vertical;
+  }
+  textarea:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+  #output{
+    font-size:28px;            /* adjustable */
+    line-height:1.6;
+    min-height:140px;
+    word-break:break-word;
+  }
+  .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    background:var(--ink);color:var(--bg);
+    padding:8px 16px;border-radius:20px;font-size:.85rem;
+    opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  .toast.show{opacity:1}
+
+  /* ============ Reference chart ============ */
+  details{margin-top:22px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+  summary{padding:12px 14px;cursor:pointer;font-weight:600;font-size:.9rem}
+  .chart{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 14px}
+  .chart h3{width:100%;font-size:.8rem;color:var(--muted);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.06em}
+  .chip{
+    background:var(--chip);border-radius:8px;padding:6px 8px;
+    font-size:.85rem;display:flex;flex-direction:column;align-items:center;min-width:44px;
+  }
+  .chip b{font-size:1.25rem;font-weight:400}
+
+  /* ============ Print: only the translation ============ */
+  @media print{
+    body{background:#fff;color:#000;padding:0}
+    header .spacer,header button,.row,.hint,details,.toast,label[for="input"]{display:none!important}
+    textarea{border:none;box-shadow:none;resize:none}
+    #input{font-size:12pt}
+    #output{font-size:20pt}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+
+<link rel="stylesheet" href="/assets/cj.css">
+<style>
+  /* CJ Apps dark palette — light mode stays available via the toggle */
+  :root{
+    --bg:#080b12;--panel:#101622;--ink:#f8fafc;--muted:#94a3b8;
+    --line:#243044;--accent:#2f7df6;--accent-ink:#fff;--focus:#16d7e8;
+    --chip:#152238;--shadow:0 8px 22px rgba(0,0,0,.30);
+  }
+  body.light{
+    --bg:#f5f7fc;--panel:#fff;--ink:#172033;--muted:#6b7280;
+    --line:#dfe5f2;--accent:#2f7df6;--accent-ink:#fff;--focus:#7c3aed;
+    --chip:#edf2ff;--shadow:0 1px 3px rgba(30,32,38,.08);
+  }
+  body.light{background:var(--bg)!important}
+  body{max-width:760px;margin:0 auto;padding:0 12px 40px}
+  button.primary{background:linear-gradient(135deg,#2f7df6,#1763cf);border-color:#2f7df6}
+  #darkBtn{white-space:nowrap}
+  textarea{background:var(--panel);border-color:var(--line);color:var(--ink)}
+  textarea::placeholder{color:var(--muted)}
+  .cell span{background:var(--accent)}
+</style>
+</head>
+<body>
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Apps home"><img src="/logo.png" alt="CJ Apps"></a>
+  <h1>Braille</h1>
+  <button id="darkBtn" class="small" aria-pressed="false" title="Toggle light mode">☀️ Light</button>
+</header>
+
+<label for="input">Text input</label>
+<textarea id="input" placeholder="Type or paste text here… (English or עברית)" autocomplete="off" spellcheck="false"></textarea>
+
+<label for="output">Braille output</label>
+<textarea id="output" readonly placeholder="⠠⠃⠗⠁⠊⠇⠇⠑  ⠁⠏⠏⠑⠁⠗⠎   ⠓⠑⠗⠑"></textarea>
+<div class="hint" id="modeHint">Language: — (detected automatically, live)</div>
+
+<div class="row">
+  <button id="fontUp" class="small" title="Increase Braille font">A＋</button>
+  <button id="fontDown" class="small" title="Decrease Braille font">A－</button>
+  <button id="copyBtn" class="small">Copy Output</button>
+  <button id="clearBtn" class="small">Clear</button>
+  <button id="dlBtn" class="small">Download .txt</button>
+  <button id="printBtn" class="small">Print</button>
+</div>
+
+<!-- Reference charts -->
+<details>
+  <summary>Braille reference chart</summary>
+  <div class="chart" id="chart"></div>
+</details>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   TEXT ↔ BRAILLE TRANSLATOR
+   - Grade 1 (uncontracted) English Braille
+   - Hebrew Braille (standard Israeli letter assignments)
+   - Capital sign ⠠ (English), number sign ⠼, common punctuation
+   - Fully reversible for the supported character set
+   ===================================================================== */
+
+/* ---------- 1. Mapping tables ---------- */
+
+// English letters a–z (Grade 1)
+const ENG = {
+  a:"⠁", b:"⠃", c:"⠉", d:"⠙", e:"⠑", f:"⠋", g:"⠛", h:"⠓", i:"⠊",
+  j:"⠚", k:"⠅", l:"⠇", m:"⠍", n:"⠝", o:"⠕", p:"⠏", q:"⠟", r:"⠗",
+  s:"⠎", t:"⠞", u:"⠥", v:"⠧", w:"⠺", x:"⠭", y:"⠽", z:"⠵"
+};
+
+// Digits 1–0 use the same cells as a–j, preceded by the number sign ⠼
+const DIGITS = {
+  "1":"⠁","2":"⠃","3":"⠉","4":"⠙","5":"⠑",
+  "6":"⠋","7":"⠛","8":"⠓","9":"⠊","0":"⠚"
+};
+
+// Common punctuation (single- and two-cell)
+const PUNCT = {
+  ".":"⠲", ",":"⠂", "?":"⠦", "!":"⠖", ":":"⠒", ";":"⠆",
+  "'":"⠄", "\"":"⠶", "(":"⠐⠣", ")":"⠐⠜", "-":"⠤", "/":"⠌"
+};
+
+// Hebrew letters (finals share the cell of their regular form)
+const HEB = {
+  "א":"⠁","ב":"⠧","ג":"⠛","ד":"⠙","ה":"⠓","ו":"⠺","ז":"⠵","ח":"⠭",
+  "ט":"⠞","י":"⠚","כ":"⠡","ך":"⠡","ל":"⠇","מ":"⠍","ם":"⠍","נ":"⠝",
+  "ן":"⠝","ס":"⠎","ע":"⠫","פ":"⠋","ף":"⠋","צ":"⠮","ץ":"⠮","ק":"⠟",
+  "ר":"⠗","ש":"⠩","ת":"⠹"
+};
+
+const CAPS = "⠠";   // capital indicator
+const NUM  = "⠼";   // number indicator
+
+
+/* ---------- 2. Encoding: text → Braille ---------- */
+
+function textToBraille(text, lang){
+  let out = "";
+  let numberMode = false;                // true while inside a digit run
+
+  for (const ch of text){
+    // Preserve whitespace exactly; whitespace ends number mode
+    if (ch === " " || ch === "\n" || ch === "\t"){
+      out += ch; numberMode = false; continue;
+    }
+    // Digits: emit the number sign once per run of digits
+    if (DIGITS[ch]){
+      if (!numberMode){ out += NUM; numberMode = true; }
+      out += DIGITS[ch]; continue;
+    }
+    numberMode = false;
+    // Punctuation (shared by both languages)
+    if (PUNCT[ch]){ out += PUNCT[ch]; continue; }
+
+    if (lang === "he"){
+      if (HEB[ch]){ out += HEB[ch]; continue; }
+      // Hebrew vowel points / cantillation have no cell here: skip them
+      if (ch >= "\u0591" && ch <= "\u05C7") continue;
+      // Fall through to English letters so mixed text still works
+    }
+    const lower = ch.toLowerCase();
+    if (ENG[lower]){
+      if (ch !== lower) out += CAPS;     // capital sign before the letter
+      out += ENG[lower]; continue;
+    }
+    out += ch;                           // pass through anything unknown
+  }
+  return out;
+}
+
+/* ---------- 4. UI wiring ---------- */
+
+const $ = id => document.getElementById(id);
+const input = $("input"), output = $("output"), hint = $("modeHint"), toast = $("toast");
+
+let fontSize = 28;               // output font size in px
+
+/*
+ * Automatic language detection: any Hebrew letter in the input
+ * switches Hebrew rules on; otherwise English rules apply.
+ */
+function detectLang(text){
+  return /[\u05D0-\u05EA]/.test(text) ? "he" : "en";
+}
+
+function translate(){
+  const lang = detectLang(input.value);
+  output.value = textToBraille(input.value, lang);
+  input.dir = lang === "he" ? "rtl" : "ltr";   // braille output stays LTR
+  hint.textContent = input.value.trim()
+    ? `Language: ${lang === "he" ? "עברית" : "English"} (detected automatically, live)`
+    : "Language: — (detected automatically, live)";
+}
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove("show"), 1600);
+}
+
+// Live translation while typing / pasting
+input.addEventListener("input", translate);
+
+// Copy output
+$("copyBtn").addEventListener("click", async () => {
+  try{
+    await navigator.clipboard.writeText(output.value);
+    showToast("Copied");
+  }catch(e){
+    // Fallback for older WebViews
+    output.select(); document.execCommand("copy");
+    showToast("Copied");
+  }
+});
+
+// Clear both boxes
+$("clearBtn").addEventListener("click", () => {
+  input.value = ""; output.value = ""; input.focus();
+});
+
+// Braille font size
+$("fontUp").addEventListener("click", () => setFont(fontSize + 4));
+$("fontDown").addEventListener("click", () => setFont(fontSize - 4));
+function setFont(px){
+  fontSize = Math.min(56, Math.max(16, px));
+  output.style.fontSize = fontSize + "px";
+  showToast(fontSize + "px");
+}
+
+// Dark mode toggle
+$("darkBtn").addEventListener("click", () => {
+  const light = document.body.classList.toggle("light");
+  $("darkBtn").textContent = light ? "🌙 Dark" : "☀️ Light";
+  $("darkBtn").setAttribute("aria-pressed", light);
+});
+
+// Download output as .txt
+$("dlBtn").addEventListener("click", () => {
+  const blob = new Blob([output.value], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "braille-translation.txt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+});
+
+// Print (print CSS shows only input + output)
+$("printBtn").addEventListener("click", () => window.print());
+
+/* ---------- 5. Reference chart ---------- */
+
+function buildChart(){
+  const c = $("chart");
+  const section = (title, entries) => {
+    const h = document.createElement("h3");
+    h.textContent = title;
+    c.appendChild(h);
+    for (const [ch, br] of entries){
+      const d = document.createElement("div");
+      d.className = "chip";
+      d.innerHTML = `<b>${br}</b><span>${ch}</span>`;
+      c.appendChild(d);
+    }
+  };
+  section("English (Grade 1)", Object.entries(ENG));
+  section("Numbers (after ⠼)", Object.entries(DIGITS));
+  section("Punctuation", Object.entries(PUNCT));
+  section("Signs", [["capital", CAPS], ["number", NUM]]);
+  // Hebrew: show regular forms only (finals share the same cell)
+  section("עברית (Hebrew)", Object.entries(HEB).filter(([ch]) => !"ךםןףץ".includes(ch)));
+}
+buildChart();
+
+/* ---------- 5. Startup ---------- */
+
+// Focus the input so the keyboard is ready to go
+// (input is no longer auto-focused, so the keyboard does not pop open on load)
+</script>
+</body>
+</html>

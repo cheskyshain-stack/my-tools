@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Sudoku — generate, check, solve, save and print puzzles. Part of CJ Apps.">
+<title>Sudoku | CJ Apps</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    padding:18px 14px 44px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+
+  #game{
+    background:var(--cj-card,#101622);
+    border:1px solid var(--cj-line,#243044);
+    padding:14px;
+    border-radius:18px;
+    box-shadow:0 18px 45px rgba(0,0,0,.34);
+    max-width:440px;width:100%;
+    margin-top:8px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    border:3px solid #5b7091;
+    border-radius:6px;
+    overflow:hidden;
+    aspect-ratio:1 / 1;
+    background:#0d1420;
+  }
+  .cell{
+    border:1px solid #2a3850;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(1rem,3.4vw,1.45rem);
+    font-weight:600;
+    color:#7cc0ff;
+    cursor:pointer;user-select:none;
+    background:#111a29;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .cell.given{background:#182437;color:#f8fafc;font-weight:800}
+  .cell.selected{background:#1d3358;box-shadow:inset 0 0 0 2px #2f7df6}
+  .cell:nth-child(3n+1){border-left:3px solid #5b7091}
+  .cell:nth-child(-n+9){border-top:none}
+  .cell:nth-child(9n){border-right:none}
+  .cell:nth-child(n+73){border-bottom:none}
+  .row-3,.row-6{border-bottom:3px solid #5b7091}
+
+  .number-pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
+  .num-btn{
+    background:#152238;border:1px solid #27405e;border-radius:12px;
+    color:#5ba2ff;font-size:1.25rem;font-weight:700;padding:12px 0;
+    cursor:pointer;font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .num-btn:active{background:#1d3358}
+  .num-btn.erase{color:#fb7185;border-color:#4a2733;background:#241722}
+
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .ctrl-btn{
+    flex:1 1 auto;min-width:72px;border:1px solid var(--cj-line,#243044);
+    border-radius:12px;padding:11px;cursor:pointer;
+    font-weight:700;font-size:.88rem;font-family:inherit;
+    background:#101622;color:#cbd5e1;
+  }
+  .ctrl-btn.primary{
+    background:linear-gradient(135deg,#2f7df6,#1763cf);
+    border-color:#2f7df6;color:#fff;
+    box-shadow:0 8px 18px rgba(47,125,246,.25);
+  }
+  .ctrl-btn:active{transform:translateY(1px)}
+  #status{margin-top:12px;font-size:.9rem;min-height:20px;text-align:center;color:#94a3b8;font-weight:600}
+
+  @media print{
+    body{background:#fff!important;padding:0;display:block}
+    .number-pad,.controls,#status{display:none!important}
+    #game{box-shadow:none;border:none;padding:0;background:#fff;max-width:100%}
+    .grid{width:100%;border:2px solid #000;background:#fff;border-radius:0}
+    .cell{border:1px solid #000;background:#fff!important;color:#000!important;font-size:18pt}
+    .cell.given{background:#fff!important;color:#000!important}
+    .cell:nth-child(3n+1){border-left:2px solid #000}
+    .row-3,.row-6{border-bottom:2px solid #000}
+  }
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Apps home"><img src="/logo.png" alt="CJ Apps"></a>
+  <h1>Sudoku</h1>
+</header>
+
+<div id="game">
+  <div id="grid" class="grid"></div>
+  <div id="numberPad" class="number-pad"></div>
+  <div class="controls">
+    <button id="newBtn" class="ctrl-btn primary">New</button>
+    <button id="checkBtn" class="ctrl-btn">Check</button>
+    <button id="clearBtn" class="ctrl-btn">Clear</button>
+    <button id="solveBtn" class="ctrl-btn">Solve</button>
+    <button id="printBtn" class="ctrl-btn">Print</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+  const gridEl = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+  let selectedCell = null;
+  let solution = [];
+  let puzzle = [];
+
+  function emptyBoard() {
+    return Array.from({length: 9}, () => Array(9).fill(0));
+  }
+
+  function shuffle(a) {
+    return a.sort(() => Math.random() - 0.5);
+  }
+
+  function isSafe(board, r, c, n) {
+    for (let x = 0; x < 9; x++) {
+      if (board[r][x] === n || board[x][c] === n) return false;
+    }
+    const sr = r - (r % 3), sc = c - (c % 3);
+    for (let i = 0; i < 3; i++)
+      for (let j = 0; j < 3; j++)
+        if (board[sr+i][sc+j] === n) return false;
+    return true;
+  }
+
+  function fillBoard(board) {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (board[r][c] === 0) {
+          const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+          for (let n of nums) {
+            if (isSafe(board, r, c, n)) {
+              board[r][c] = n;
+              if (fillBoard(board)) return true;
+              board[r][c] = 0;
+            }
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function copyBoard(b){return b.map(r=>r.slice());}
+
+  function makePuzzle(full, holes=42){
+    const p = copyBoard(full);
+    let cells = [];
+    for(let r=0;r<9;r++) for(let c=0;c<9;c++) cells.push({r,c});
+    cells = shuffle(cells);
+    let removed=0;
+    for(let {r,c} of cells){
+      if(removed>=holes) break;
+      p[r][c]=0; removed++;
+    }
+    return p;
+  }
+
+  function renderGrid(p){
+    gridEl.innerHTML='';
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        const cell=document.createElement('div');
+        cell.className='cell';
+        cell.dataset.row=r; cell.dataset.col=c;
+        if(r===2||r===5) cell.classList.add('row-'+(r+1));
+        if(p[r][c]!==0){cell.textContent=p[r][c];cell.classList.add('given');}
+        cell.onclick=()=>selectCell(cell);
+        gridEl.appendChild(cell);
+      }
+    }
+  }
+
+  function selectCell(cell){
+    if(selectedCell) selectedCell.classList.remove('selected');
+    selectedCell=cell; cell.classList.add('selected');
+  }
+
+  function fillNumber(num){
+    if(!selectedCell || selectedCell.classList.contains('given')) return;
+    const r=parseInt(selectedCell.dataset.row);
+    const c=parseInt(selectedCell.dataset.col);
+    puzzle[r][c]=num;
+    selectedCell.textContent=num===0?'':num;
+    saveProgress();
+  }
+
+  function createNumberPad(){
+    const pad=document.getElementById('numberPad');
+    pad.innerHTML='';
+    for(let i=1;i<=9;i++){
+      const b=document.createElement('button');
+      b.textContent=i; b.className='num-btn';
+      b.onclick=()=>fillNumber(i);
+      pad.appendChild(b);
+    }
+    const erase=document.createElement('button');
+    erase.textContent='⌫'; erase.className='num-btn erase';
+    erase.onclick=()=>fillNumber(0);
+    pad.appendChild(erase);
+  }
+
+  function checkPuzzle(){
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(puzzle[r][c] && puzzle[r][c]!==solution[r][c]){
+          statusEl.textContent="There is a mistake!";
+          statusEl.style.color="#fb7185"; return;
+        }
+      }
+    }
+    const complete=puzzle.every(row=>row.every(v=>v!==0));
+    statusEl.textContent=complete?"Solved perfectly!":"So far so good.";
+    statusEl.style.color=complete?"#34d399":"#94a3b8";
+  }
+
+  function clearEditable(){
+    const cells=document.querySelectorAll('.cell');
+    cells.forEach(cell=>{
+      if(!cell.classList.contains('given')){
+        cell.textContent='';
+        puzzle[cell.dataset.row][cell.dataset.col]=0;
+      }
+    });
+    statusEl.textContent='';
+    saveProgress();
+  }
+
+  function solvePuzzle(){
+    document.querySelectorAll('.cell').forEach(cell=>{
+      const r=cell.dataset.row, c=cell.dataset.col;
+      cell.textContent=solution[r][c];
+      puzzle[r][c]=solution[r][c];
+    });
+    statusEl.textContent="Solved!";
+    statusEl.style.color="#5ba2ff";
+    saveProgress();
+  }
+
+  function newPuzzle(){
+    const full=emptyBoard();
+    fillBoard(full);
+    solution=copyBoard(full);
+    puzzle=makePuzzle(full,42);
+    renderGrid(puzzle);
+    statusEl.textContent="New puzzle ready!";
+    statusEl.style.color="#94a3b8";
+    selectedCell=null;
+    saveProgress(true);
+  }
+
+  // Save & Load
+  function saveProgress(reset=false){
+    if(reset){
+      localStorage.removeItem('sudokuPuzzle');
+      localStorage.removeItem('sudokuSolution');
+      localStorage.removeItem('sudokuProgress');
+      localStorage.setItem('sudokuPuzzle', JSON.stringify(puzzle));
+      localStorage.setItem('sudokuSolution', JSON.stringify(solution));
+    } else {
+      localStorage.setItem('sudokuProgress', JSON.stringify(puzzle));
+    }
+  }
+
+  function loadProgress(){
+    const savedPuzzle = localStorage.getItem('sudokuPuzzle');
+    const savedSolution = localStorage.getItem('sudokuSolution');
+    const savedProgress = localStorage.getItem('sudokuProgress');
+    if(savedPuzzle && savedSolution){
+      puzzle = JSON.parse(savedProgress || savedPuzzle);
+      solution = JSON.parse(savedSolution);
+      const givens = JSON.parse(savedPuzzle);
+      renderGrid(givens);
+      // restore the player's own entries on top of the givens
+      document.querySelectorAll('.cell').forEach(cell=>{
+        const r=cell.dataset.row, c=cell.dataset.col;
+        if(!cell.classList.contains('given') && puzzle[r][c]){
+          cell.textContent = puzzle[r][c];
+        }
+      });
+      statusEl.textContent="Restored last game.";
+    } else {
+      newPuzzle();
+    }
+  }
+
+  document.getElementById('printBtn').onclick = () => window.print();
+  document.getElementById('newBtn').onclick=newPuzzle;
+  document.getElementById('checkBtn').onclick=checkPuzzle;
+  document.getElementById('clearBtn').onclick=clearEditable;
+  document.getElementById('solveBtn').onclick=solvePuzzle;
+
+  createNumberPad();
+  loadProgress();
+</script>
+</body>
+</html>

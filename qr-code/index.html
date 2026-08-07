@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Create downloadable QR codes for links, email, phone numbers and Wi-Fi. Part of CJ Apps.">
+<title>QR Code Creator | CJ Apps</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body { min-height:100vh; padding:12px 14px 40px; }
+
+.container { max-width:520px; margin:0 auto; }
+
+.card {
+  background:var(--cj-card,#101622);
+  border:1px solid var(--cj-line,#243044);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 18px 45px rgba(0,0,0,.34);
+  margin-bottom:16px;
+}
+
+.card h2 {
+  font-size:18px; font-weight:800; margin-bottom:18px;
+  text-align:center; color:#f8fafc; letter-spacing:-.3px;
+}
+
+.type-selector { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px; }
+
+.type-btn {
+  padding:12px; border:1px solid #27405e; background:#152238;
+  border-radius:12px; font-size:14px; font-weight:700;
+  cursor:pointer; transition:all .18s; color:#94a3b8; font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.type-btn.active {
+  background:linear-gradient(135deg,#2f7df6,#1763cf);
+  color:#fff; border-color:#2f7df6;
+  box-shadow:0 8px 18px rgba(47,125,246,.25);
+}
+
+.input-group { margin-bottom:16px; }
+.input-group label {
+  display:block; font-size:12px; font-weight:700; color:#94a3b8;
+  margin-bottom:8px; text-transform:uppercase; letter-spacing:.06em;
+}
+.input-group input, .input-group select {
+  width:100%; padding:13px 14px;
+  border:1px solid #334155; border-radius:12px;
+  font-size:15px; transition:border-color .2s;
+  background:#0d1420; color:#f8fafc; font-family:inherit;
+}
+.input-group input::placeholder { color:#64748b; }
+.input-group input:focus, .input-group select:focus { outline:none; border-color:#2f7df6; }
+
+.hidden { display:none; }
+
+#qrPreview {
+  text-align:center; padding:20px;
+  background:#fff; border-radius:14px; margin-bottom:18px;
+}
+#qrPreview canvas, #qrPreview img { max-width:100%; height:auto; }
+
+.btn {
+  width:100%; padding:14px; border:none; border-radius:12px;
+  font-size:15px; font-weight:800; cursor:pointer;
+  transition:all .2s; margin-bottom:10px; font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-primary {
+  background:linear-gradient(135deg,#2f7df6,#1763cf); color:#fff;
+  box-shadow:0 8px 18px rgba(47,125,246,.25);
+}
+.btn-primary:active { transform:translateY(1px); }
+.btn-secondary { background:#152238; color:#cbd5e1; border:1px solid #27405e; }
+
+.hint { font-size:12px; color:#64748b; margin-top:8px; line-height:1.4; }
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Apps home"><img src="/logo.png" alt="CJ Apps"></a>
+  <h1>QR Codes</h1>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>QR Code Creator</h2>
+
+    <div class="type-selector">
+      <button class="type-btn active" data-type="url">🔗 URL</button>
+      <button class="type-btn" data-type="email">✉️ Email</button>
+      <button class="type-btn" data-type="phone">📞 Phone</button>
+      <button class="type-btn" data-type="wifi">📶 WiFi</button>
+    </div>
+
+    <!-- URL Input -->
+    <div id="urlInput" class="input-section">
+      <div class="input-group">
+        <label>Enter URL</label>
+        <input type="text" id="urlField" placeholder="https://example.com">
+        <div class="hint">Enter a website address</div>
+      </div>
+    </div>
+
+    <!-- Email Input -->
+    <div id="emailInput" class="input-section hidden">
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="emailField" placeholder="email@example.com">
+      </div>
+      <div class="input-group">
+        <label>Subject (Optional)</label>
+        <input type="text" id="subjectField" placeholder="Email subject">
+      </div>
+      <div class="input-group">
+        <label>Message (Optional)</label>
+        <input type="text" id="messageField" placeholder="Email message">
+      </div>
+    </div>
+
+    <!-- Phone Input -->
+    <div id="phoneInput" class="input-section hidden">
+      <div class="input-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phoneField" placeholder="+1234567890">
+        <div class="hint">Include country code (e.g., +1 for US)</div>
+      </div>
+    </div>
+
+    <!-- WiFi Input -->
+    <div id="wifiInput" class="input-section hidden">
+      <div class="input-group">
+        <label>Network Name (SSID)</label>
+        <input type="text" id="ssidField" placeholder="MyWiFi">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="text" id="passwordField" placeholder="WiFi password">
+      </div>
+      <div class="input-group">
+        <label>Security Type</label>
+        <select id="securityField">
+          <option value="WPA">WPA/WPA2</option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">None (Open)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn">Generate QR Code</button>
+  </div>
+
+  <div class="card hidden" id="previewCard">
+    <h2>Your QR Code</h2>
+    <div id="qrPreview"></div>
+    <button class="btn btn-primary" id="downloadBtn">⬇️ Download QR Code</button>
+    <button class="btn btn-secondary" id="newBtn">Create New QR Code</button>
+  </div>
+</div>
+
+<!-- Hidden off-screen canvas for export -->
+<canvas id="exportCanvas" style="display:none;"></canvas>
+
+<script src="/assets/qrcode.min.js"></script>
+<script>
+let currentType = 'url';
+let qrCode = null;
+let currentData = '';
+
+// Type selector
+document.querySelectorAll('.type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType = btn.dataset.type;
+    document.querySelectorAll('.input-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(currentType + 'Input').classList.remove('hidden');
+  });
+});
+
+// Generate QR Code
+document.getElementById('generateBtn').addEventListener('click', () => {
+  let data = '';
+
+  switch (currentType) {
+    case 'url':
+      data = document.getElementById('urlField').value.trim();
+      if (!data) { alert('Please enter a URL'); return; }
+      if (!data.startsWith('http://') && !data.startsWith('https://')) data = 'https://' + data;
+      break;
+
+    case 'email':
+      const email = document.getElementById('emailField').value.trim();
+      const subject = document.getElementById('subjectField').value.trim();
+      const message = document.getElementById('messageField').value.trim();
+      if (!email) { alert('Please enter an email address'); return; }
+      data = `mailto:${email}`;
+      if (subject || message) {
+        data += '?';
+        if (subject) data += `subject=${encodeURIComponent(subject)}`;
+        if (subject && message) data += '&';
+        if (message) data += `body=${encodeURIComponent(message)}`;
+      }
+      break;
+
+    case 'phone':
+      const phone = document.getElementById('phoneField').value.trim();
+      if (!phone) { alert('Please enter a phone number'); return; }
+      data = `tel:${phone}`;
+      break;
+
+    case 'wifi':
+      const ssid = document.getElementById('ssidField').value.trim();
+      const password = document.getElementById('passwordField').value.trim();
+      const security = document.getElementById('securityField').value;
+      if (!ssid) { alert('Please enter WiFi network name'); return; }
+      data = `WIFI:T:${security};S:${ssid};P:${password};;`;
+      break;
+  }
+
+  currentData = data;
+  generateQRCode(data);
+});
+
+function generateQRCode(data) {
+  document.getElementById('qrPreview').innerHTML = '';
+  qrCode = new QRCode(document.getElementById('qrPreview'), {
+    text: data,
+    width: 280,
+    height: 280,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  document.getElementById('previewCard').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+// ── Download with simple border ───────────────────────────────────────
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const qrCanvas = document.querySelector('#qrPreview canvas');
+  if (!qrCanvas) return;
+
+  const border = 20;   // white padding around QR
+  const stroke = 2;    // border line thickness
+  const radius = 0;    // rounded corner radius
+  const qrSize = qrCanvas.width;
+  const total  = qrSize + (border + stroke) * 2;
+
+  const ec = document.getElementById('exportCanvas');
+  ec.width  = total;
+  ec.height = total;
+  const ctx = ec.getContext('2d');
+
+  roundRect(ctx, 0, 0, total, total, radius);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = stroke * 2;
+  ctx.stroke();
+
+  ctx.drawImage(qrCanvas, border + stroke, border + stroke, qrSize, qrSize);
+
+  ec.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${buildFilename()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function buildFilename() {
+  switch (currentType) {
+    case 'url': {
+      const v = document.getElementById('urlField').value.trim();
+      return ('QR_' + v.replace(/^https?:\/\//, '').replace(/[^a-zA-Z0-9_-]/g, '_')).slice(0, 50);
+    }
+    case 'email': {
+      const e = document.getElementById('emailField').value.trim();
+      return ('QR_' + e.replace(/[^a-zA-Z0-9_-]/g, '_')).slice(0, 50);
+    }
+    case 'phone': {
+      const p = document.getElementById('phoneField').value.trim().replace(/[^0-9]/g, '');
+      return `QR_phone_${p}`.slice(0, 50);
+    }
+    case 'wifi': {
+      const s = document.getElementById('ssidField').value.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `QR_WiFi_${s}`.slice(0, 50);
+    }
+    default: return 'qrcode';
+  }
+}
+
+// Create new QR code
+document.getElementById('newBtn').addEventListener('click', () => {
+  document.getElementById('previewCard').classList.add('hidden');
+  document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
