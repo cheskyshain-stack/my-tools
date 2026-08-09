@@ -1,0 +1,13 @@
+{
+  "name": "QR Code Creator",
+  "short_name": "QR Code",
+  "description": "Make QR codes for links, email, phone, and Wi-Fi.",
+  "start_url": "/qr-code/",
+  "scope": "/qr-code/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/qr-code/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

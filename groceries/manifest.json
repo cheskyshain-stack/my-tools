@@ -1,0 +1,13 @@
+{
+  "name": "Shopping List",
+  "short_name": "Shopping List",
+  "description": "Create and manage grocery lists.",
+  "start_url": "/groceries/",
+  "scope": "/groceries/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/groceries/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

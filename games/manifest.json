@@ -1,0 +1,13 @@
+{
+  "name": "CJ Games",
+  "short_name": "CJ Games",
+  "description": "Chess, Sudoku, and Tic-Tac-Toe.",
+  "start_url": "/games/",
+  "scope": "/games/",
+  "display": "standalone",
+  "background_color": "#f7f9fd",
+  "theme_color": "#315ee8",
+  "icons": [
+    { "src": "/games/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

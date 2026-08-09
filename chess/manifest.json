@@ -1,0 +1,13 @@
+{
+  "name": "Chess",
+  "short_name": "Chess",
+  "description": "Play the computer or pass and play.",
+  "start_url": "/chess/",
+  "scope": "/chess/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    { "src": "/chess/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

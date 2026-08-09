@@ -1,0 +1,13 @@
+{
+  "name": "Tic-Tac-Toe",
+  "short_name": "Tic-Tac-Toe",
+  "description": "Two players, or play against your phone.",
+  "start_url": "/tic-tac-toe/",
+  "scope": "/tic-tac-toe/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/tic-tac-toe/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

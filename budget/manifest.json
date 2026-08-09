@@ -1,0 +1,13 @@
+{
+  "name": "Budget Planner",
+  "short_name": "Budget",
+  "description": "Plan income, expenses, and savings.",
+  "start_url": "/budget/",
+  "scope": "/budget/",
+  "display": "standalone",
+  "background_color": "#eef2ff",
+  "theme_color": "#eef2ff",
+  "icons": [
+    { "src": "/budget/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "QwikPen Click Calculator",
+  "short_name": "QwikPen",
+  "description": "Calculate clicks for a selected dose.",
+  "start_url": "/qwikpen/",
+  "scope": "/qwikpen/",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "/qwikpen/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

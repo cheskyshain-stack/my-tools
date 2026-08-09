@@ -1,0 +1,13 @@
+{
+  "name": "Sudoku",
+  "short_name": "Sudoku",
+  "description": "Generate, solve, check, save, and print puzzles.",
+  "start_url": "/sudoku/",
+  "scope": "/sudoku/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/sudoku/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

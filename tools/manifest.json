@@ -1,0 +1,13 @@
+{
+  "name": "CJ Tools",
+  "short_name": "CJ Tools",
+  "description": "Budget planner and groceries — part of CJ Portal.",
+  "start_url": "/tools/",
+  "scope": "/tools/",
+  "display": "standalone",
+  "background_color": "#f7f9fd",
+  "theme_color": "#315ee8",
+  "icons": [
+    { "src": "/tools/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
