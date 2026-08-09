@@ -91,12 +91,10 @@ ul{ margin:0; padding:0; list-style:none; }
 .wordmark{ display:flex; align-items:center; gap:11px; }
 .wordmark .glyph{
   width:38px; height:38px; border-radius:12px; flex:none;
-  display:grid; place-items:center;
-  background:linear-gradient(150deg, var(--gold) 0%, var(--gold-deep) 55%, #8A5B0C 100%);
-  color:#1A1000;
-  font-family:var(--display); font-weight:700; font-size:16px; letter-spacing:-.02em;
-  box-shadow:0 8px 20px rgba(245,184,65,.26), inset 0 1px 0 rgba(255,255,255,.42);
+  overflow:hidden;
+  box-shadow:0 8px 20px rgba(76,125,240,.26), inset 0 1px 0 rgba(255,255,255,.16);
 }
+.wordmark .glyph img{ width:100%; height:100%; object-fit:cover; display:block; }
 .wordmark h1{
   margin:0;
   font-family:var(--display); font-weight:600; font-size:20px; letter-spacing:-.015em;
@@ -143,17 +141,12 @@ main{
 .ph{
   position:absolute; inset:0; display:grid; place-items:center;
   background:
-    radial-gradient(120% 90% at 22% 12%, rgba(76,125,240,.55), transparent 60%),
-    radial-gradient(110% 90% at 88% 92%, rgba(245,184,65,.34), transparent 58%),
+    url(/music/logo.png) center / 44% no-repeat,
+    radial-gradient(120% 90% at 22% 12%, rgba(76,125,240,.45), transparent 60%),
+    radial-gradient(110% 90% at 88% 92%, rgba(76,125,240,.22), transparent 58%),
     linear-gradient(155deg, #1A2A52, #0D1730 90%, #0A122B);
   background-color:#132043;
-}
-.ph::after{
-  content:"CJ";
-  font-family:var(--display); font-weight:700; letter-spacing:-.03em;
-  font-size:clamp(15px, 34%, 60px);
-  color:rgba(255,255,255,.80);
-  text-shadow:0 3px 14px rgba(0,0,0,.4);
+  filter:drop-shadow(0 3px 14px rgba(0,0,0,.4));
 }
 
 /* ============================================================
@@ -590,7 +583,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
   <!-- ===== Top bar ===== -->
   <header class="topbar">
     <div class="wordmark">
-      <div class="glyph">CJ</div>
+      <div class="glyph"><img src="/music/logo.png" alt="CJ Music"></div>
       <div>
         <h1>CJ Music</h1>
         <span class="sub">Charlie Jaffa</span>
@@ -1760,6 +1753,31 @@ function boot(){
   paintTime();
   setTimeout(prefetchDurations, 900);
 }
+
+/* ============================================================================
+   Hand off to the persistent mini-player (when embedded in the site shell)
+   ============================================================================ */
+window.addEventListener("pagehide", () => {
+  if (window.parent === window) return; // standalone — nothing to hand off to
+  if (!S.playing || S.pos < 0) return;
+  try{
+    const queue = S.order.map(i => {
+      const s = songs[i];
+      const art = artFor(s);
+      return {
+        title: s.title,
+        audio: "/music/" + s.audio,
+        artwork: art ? "/music/" + art : ""
+      };
+    });
+    window.parent.postMessage({
+      type: "cj-music-handoff",
+      queue,
+      pos: S.pos,
+      currentTime: audio.currentTime
+    }, location.origin);
+  }catch(e){}
+});
 
 Promise.all([
   fetch("songs.json").then(r => r.json()),
