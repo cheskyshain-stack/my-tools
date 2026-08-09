@@ -162,7 +162,7 @@ function stopMiniPlayer(){
   showMiniBar(false);
 }
 
-async function loadMini(pos, startTime, autoplay){
+function loadMini(pos, startTime, autoplay){
   const s = miniQueue[pos];
   if (!s) return;
   miniPos = pos;
@@ -174,14 +174,28 @@ async function loadMini(pos, startTime, autoplay){
   $("miniPrev").disabled = miniPos <= 0;
   $("miniNext").disabled = miniPos >= miniQueue.length - 1;
 
-  if (autoplay) await boost.resume(); // active before playback starts, not racing it
+  if (startTime){
+    const setStart = () => {
+      miniAudio.currentTime = startTime;
+      miniAudio.removeEventListener("loadedmetadata", setStart);
+    };
+    miniAudio.addEventListener("loadedmetadata", setStart);
+  }
 
-  const onReady = () => {
-    if (startTime) miniAudio.currentTime = startTime;
-    if (autoplay) miniAudio.play().catch(() => {});
-    miniAudio.removeEventListener("loadedmetadata", onReady);
-  };
-  miniAudio.addEventListener("loadedmetadata", onReady);
+  if (autoplay){
+    // This handoff is triggered by page navigation (back button, another
+    // tab taking over, etc.) - not a direct tap on this page - so any
+    // "this came from a user gesture" allowance the browser might carry
+    // over is time-limited and can already be most of the way gone by
+    // the time we get here. Call play() immediately, in the same tick,
+    // rather than waiting on boost.resume() or the track's metadata to
+    // load first - both of those are safe to resolve in the background;
+    // waiting on them first only burns down that window for no benefit.
+    // If the browser still blocks it, play() rejects quietly and the
+    // mini-bar's own Play button (already visible) is the fallback.
+    boost.resume();
+    miniAudio.play().catch(() => {});
+  }
 }
 
 function miniNext(){ if (miniPos < miniQueue.length - 1) loadMini(miniPos + 1, 0, true); }
