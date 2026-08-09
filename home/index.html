@@ -42,22 +42,22 @@
     .swipe-page{flex:0 0 100%;width:100%;min-width:100%;scroll-snap-align:start;padding:2px 16px 6px}
 
     .section-label{margin:0 0 10px 4px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#64748b}
-    .tools{display:grid;gap:12px}
-    .tool{display:grid;grid-template-columns:46px minmax(0,1fr) 24px;align-items:center;gap:14px;min-height:78px;padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:var(--card);box-shadow:var(--shadow);color:var(--text);text-decoration:none;transition:background-color .14s ease,border-color .14s ease}
+    .tools{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .tool{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 10px 12px;border:1px solid var(--line);border-radius:20px;background:var(--card);box-shadow:var(--shadow);color:var(--text);text-decoration:none;text-align:center;transition:background-color .14s ease,border-color .14s ease}
     .tool:hover{background:var(--card-hover);border-color:#334155}
-    .icon{width:46px;height:46px;display:grid;place-items:center;border-radius:12px;color:#fff;font-size:21px;font-weight:900}
-    .tool-copy{min-width:0}.tool-name{font-size:16px;font-weight:800;line-height:1.2}.tool-desc{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35}.arrow{color:#64748b;font-size:22px;text-align:right}
-    .hidden-tool{display:none}.hidden-tool.show{display:grid}
+    .icon{width:100%;aspect-ratio:1;display:grid;place-items:center;border-radius:18px;color:#fff;font-size:21px;font-weight:900}
+    .tool-copy{min-width:0;width:100%}.tool-name{font-size:13.5px;font-weight:800;line-height:1.25}.tool-desc{display:none}.arrow{display:none}
+    .hidden-tool{display:none}.hidden-tool.show{display:flex}
 
     footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:#64748b;font-size:12px;text-align:center}
 
+    @media(min-width:640px){
+      .tools{grid-template-columns:repeat(3,1fr)}
+    }
     @media(max-width:560px){
       body{padding-top:18px}
       .site-logo{width:min(220px,72vw);border-radius:16px}
-      .tool{grid-template-columns:42px minmax(0,1fr) 20px;min-height:72px;padding:13px 14px}
-      .icon{width:42px;height:42px;font-size:19px}
-      .tool-name{font-size:15px}
-      .tool-desc{font-size:12px}
+      .tool-name{font-size:12.5px}
       .tab{font-size:12.5px;gap:5px}
     }
   </style>
