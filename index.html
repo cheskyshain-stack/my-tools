@@ -17,8 +17,8 @@
   :root{--mini-h:64px}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#080b12;overflow:hidden}
-  #shellFrame{border:0;width:100%;height:100vh;display:block;background:#080b12}
-  body.mini-active #shellFrame{height:calc(100vh - var(--mini-h) - env(safe-area-inset-bottom))}
+  #shellFrame{border:0;width:100%;height:100vh;height:100dvh;display:block;background:#080b12}
+  body.mini-active #shellFrame{height:calc(100vh - var(--mini-h) - env(safe-area-inset-bottom));height:calc(100dvh - var(--mini-h) - env(safe-area-inset-bottom))}
 
   .mini-bar{
     position:fixed;left:0;right:0;bottom:0;z-index:1000;
