@@ -1,0 +1,13 @@
+{
+  "name": "CJ Music — Admin",
+  "short_name": "CJ Music Admin",
+  "description": "Manage the CJ Music song catalog.",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/music/logo.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}

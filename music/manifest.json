@@ -1,0 +1,13 @@
+{
+  "name": "CJ Music",
+  "short_name": "CJ Music",
+  "description": "Browse and play the full CJ Music catalog by Charlie Jaffa.",
+  "start_url": "/music/",
+  "scope": "/music/",
+  "display": "standalone",
+  "background_color": "#050A18",
+  "theme_color": "#050A18",
+  "icons": [
+    { "src": "/music/logo.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}
