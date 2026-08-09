@@ -41,10 +41,12 @@
   },
   {
     "id": "the-little-leaf-2",
-    "title": "The Little Leaf (2)",
+    "title": "The Little Leaf",
     "audio": "the-little-leaf-2.mp3",
     "lyrics": "",
-    "albumId": "remix"
+    "albumId": "remix",
+    "visible": true,
+    "download": true
   },
   {
     "id": "chazara",
