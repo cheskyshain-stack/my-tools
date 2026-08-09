@@ -828,10 +828,11 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
      music/cover1.jpg
    ============================================================================ */
 
-// The catalog now lives in songs.json (fetched at the bottom of this script)
-// so the admin upload portal can add songs via the GitHub API without
-// having to edit JS embedded in this HTML file.
+// The catalog now lives in songs.json + albums.json (fetched at the bottom
+// of this script) so the admin portal can manage songs/albums via the
+// GitHub API without having to edit JS embedded in this HTML file.
 let songs = [];
+let albumMeta = [];
 
 const ARTIST = "Charlie Jaffa";
 
@@ -911,14 +912,30 @@ function durText(song){
   const d = S.durations[keyOf(song)];
   return d ? fmt(d) : "—:—";
 }
+function albumNameFor(song){
+  if (!song || !song.albumId) return "";
+  const a = albumMeta.find(x => x.id === song.albumId);
+  return a ? a.name : "";
+}
+function artFor(song){
+  // A song's own artwork wins; otherwise fall back to its album's artwork.
+  if (!song) return "";
+  if (song.artwork) return song.artwork;
+  if (song.albumId){
+    const a = albumMeta.find(x => x.id === song.albumId);
+    if (a && a.artwork) return a.artwork;
+  }
+  return "";
+}
 function artNode(song, cls){
   const d = document.createElement("div");
   d.className = "art" + (cls ? " " + cls : "");
-  if (song && song.artwork){
+  const src = artFor(song);
+  if (src){
     const img = new Image();
     img.alt = "";
     img.loading = "lazy";
-    img.src = song.artwork;
+    img.src = src;
     img.onerror = () => { img.remove(); d.appendChild(phNode()); };
     d.appendChild(img);
   } else {
@@ -954,15 +971,27 @@ function popular(){
   return (flagged.length ? flagged : songs.map((s,i)=>({s,i}))).slice(0, 6);
 }
 function albums(){
-  const map = new Map();
-  songs.forEach((s,i) => {
-    const name = s.album || "Singles";
-    if (!map.has(name)) map.set(name, { name, items: [], year: s.year || "" });
-    const a = map.get(name);
-    a.items.push(i);
-    if ((parseInt(s.year)||0) > (parseInt(a.year)||0)) a.year = s.year || a.year;
+  // Real albums first, in the order they're set in albums.json (hidden ones
+  // skipped); any songs left without an albumId fall into a "Singles"
+  // catch-all appended at the end.
+  const list = [];
+  albumMeta.forEach(a => {
+    if (a.visible === false) return;
+    const items = [];
+    songs.forEach((s,i) => { if (s.albumId === a.id) items.push(i); });
+    if (!items.length) return;
+    let year = a.releaseDate ? a.releaseDate.slice(0,4) : "";
+    items.forEach(i => { if ((parseInt(songs[i].year)||0) > (parseInt(year)||0)) year = songs[i].year || year; });
+    list.push({ id: a.id, name: a.name, items, year, description: a.description || "" });
   });
-  return [...map.values()].sort((a,b) => (parseInt(b.year)||0) - (parseInt(a.year)||0));
+  const singles = [];
+  songs.forEach((s,i) => { if (!s.albumId) singles.push(i); });
+  if (singles.length){
+    let year = "";
+    singles.forEach(i => { if ((parseInt(songs[i].year)||0) > (parseInt(year)||0)) year = songs[i].year || year; });
+    list.push({ id: null, name: "Singles", items: singles, year, description: "" });
+  }
+  return list;
 }
 function featured(){
   const f = songs.findIndex(s => s.featured);
@@ -992,7 +1021,7 @@ function renderHero(){
   const h3 = document.createElement("h3"); h3.textContent = s.title;
   const ar = document.createElement("p"); ar.className = "artist"; ar.textContent = ARTIST;
   const ch = document.createElement("div"); ch.className = "chips";
-  [s.album, s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
   meta.append(h3, ar, ch);
   body.appendChild(meta);
   el.appendChild(body);
@@ -1011,13 +1040,15 @@ function renderHero(){
   fav.setAttribute("aria-label", "Favorite");
   fav.onclick = () => { toggleFav(i); renderAll(); };
 
-  const dl = document.createElement("a");
-  dl.className = "btn btn-ghost";
-  dl.href = s.audio; dl.download = "";
-  dl.innerHTML = I.down;
-  dl.setAttribute("aria-label", "Download MP3");
-
-  acts.append(play, fav, dl);
+  acts.append(play, fav);
+  if (s.download !== false){
+    const dl = document.createElement("a");
+    dl.className = "btn btn-ghost";
+    dl.href = s.audio; dl.download = "";
+    dl.innerHTML = I.down;
+    dl.setAttribute("aria-label", "Download MP3");
+    acts.appendChild(dl);
+  }
   el.appendChild(acts);
 }
 
@@ -1059,7 +1090,7 @@ function songRow(i, opts){
   info.className = "info";
   const t = document.createElement("div"); t.className = "t"; t.textContent = s.title;
   const sub = document.createElement("div"); sub.className = "s";
-  sub.textContent = [ARTIST, s.album, s.genre].filter(Boolean).join(" · ");
+  sub.textContent = [ARTIST, albumNameFor(s), s.genre].filter(Boolean).join(" · ");
   info.append(t, sub);
   b.appendChild(info);
 
@@ -1159,6 +1190,12 @@ function openAlbum(name, keepScroll){
   const p = document.createElement("p"); p.style.margin = "0 0 8px"; p.style.color = "var(--muted)"; p.textContent = ARTIST;
   const s = document.createElement("div"); s.className = "s"; s.textContent = a.items.length + " songs · " + a.year;
   meta.append(h, p, s);
+  if (a.description){
+    const desc = document.createElement("p");
+    desc.style.margin = "10px 0 0"; desc.style.color = "var(--muted)"; desc.style.fontSize = "13.5px"; desc.style.lineHeight = "1.5";
+    desc.textContent = a.description;
+    meta.appendChild(desc);
+  }
   head.appendChild(meta);
 
   const list = $("albumSongs"); list.innerHTML = "";
@@ -1183,7 +1220,7 @@ function renderSearch(){
   const hits = songs.map((s,i)=>i).filter(i => {
     if (!q) return true;
     const s = songs[i];
-    return [s.title, s.album, s.genre, s.year, ARTIST].filter(Boolean)
+    return [s.title, albumNameFor(s), s.genre, s.year, ARTIST].filter(Boolean)
       .join(" ").toLowerCase().includes(q);
   });
 
@@ -1340,16 +1377,17 @@ function paintNowPlaying(){
   if (!s) return;
 
   $("miniT").textContent = s.title;
-  $("miniS").textContent = [ARTIST, s.album].filter(Boolean).join(" · ");
+  $("miniS").textContent = [ARTIST, albumNameFor(s)].filter(Boolean).join(" · ");
   fillArt($("miniArt"), s);
   $("liveTxt").textContent = s.title;
 
   $("fTitle").textContent = s.title;
   fillArt($("fArt"), s);
   const ch = $("fChips"); ch.innerHTML = "";
-  [s.album, s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
 
   const dl = $("fDownload");
+  dl.style.display = s.download === false ? "none" : "grid";
   dl.href = s.audio;
   dl.setAttribute("download", "");
   dl.innerHTML = I.down;
@@ -1365,7 +1403,7 @@ function paintNowPlaying(){
   if ("mediaSession" in navigator){
     try{
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: s.title, artist: ARTIST, album: s.album || "CJ Music",
+        title: s.title, artist: ARTIST, album: albumNameFor(s) || "CJ Music",
         artwork: s.artwork ? [{ src: s.artwork, sizes: "512x512" }] : []
       });
     }catch(e){}
@@ -1521,7 +1559,7 @@ audio.addEventListener("loadedmetadata", () => {
 function paintNowPlayingChips(){
   const s = currentSong(); if (!s) return;
   const ch = $("fChips"); ch.innerHTML = "";
-  [s.album, s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
 }
 audio.addEventListener("ended", () => next(true));
 audio.addEventListener("error", () => {
@@ -1715,10 +1753,14 @@ function boot(){
   setTimeout(prefetchDurations, 900);
 }
 
-fetch("songs.json")
-  .then(r => r.json())
-  .then(data => {
-    songs = data;
+Promise.all([
+  fetch("songs.json").then(r => r.json()),
+  fetch("albums.json").then(r => r.json())
+])
+  .then(([songData, albumData]) => {
+    albumMeta = albumData;
+    // Hidden songs are excluded from the public catalog entirely.
+    songs = songData.filter(s => s.visible !== false);
     S.order = songs.map((_, i) => i);
     boot();
   })

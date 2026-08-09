@@ -11,24 +11,24 @@
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 50% -10%,rgba(37,99,235,.16),transparent 30rem),var(--bg);color:var(--text)}
   body{padding:28px 16px 60px}
-  .wrap{width:min(560px,100%);margin:0 auto}
+  .wrap{width:min(620px,100%);margin:0 auto}
   h1{font-size:20px;font-weight:800;margin:0 0 4px}
   .sub{color:var(--muted);font-size:13px;margin:0 0 24px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px}
   .card + .card{margin-top:16px}
   label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin:0 0 6px}
-  input[type=text],input[type=password],textarea{
+  input[type=text],input[type=password],input[type=date],select,textarea{
     width:100%;background:#0d1420;border:1px solid var(--line);border-radius:10px;color:var(--text);
     padding:11px 12px;font-size:14.5px;font-family:inherit;outline:none;
   }
-  input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:var(--accent)}
+  input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:var(--accent)}
   textarea{resize:vertical;min-height:90px;line-height:1.5}
   .field{margin-bottom:14px}
   .field:last-child{margin-bottom:0}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .filepick{
     display:flex;align-items:center;gap:10px;border:1px dashed var(--line);border-radius:10px;
-    padding:11px 12px;background:#0d1420;cursor:pointer;font-size:13.5px;color:var(--muted);
+    padding:11px 12px;background:#0d1420;cursor:pointer;font-size:13.5px;color:var(--muted);flex:1;min-width:0;
   }
   .filepick input{display:none}
   .filepick .name{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -56,17 +56,59 @@
   .success.show{display:block}
   .success .big{font-size:16px;font-weight:800;margin-bottom:6px}
   .success p{color:var(--muted);font-size:13px;margin:0 0 16px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:10px}
   .pill{font-size:11px;font-weight:700;color:var(--success);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.28);padding:4px 10px;border-radius:999px}
   ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.7}
   a{color:#60a5fa}
   code{background:#0d1420;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+
+  /* ===== Library ===== */
+  .lib-toolbar{display:flex;gap:10px;margin-bottom:16px}
+  .lib-toolbar .btn{width:auto;padding:0 16px;height:42px;font-size:13px;flex:1}
+  .lib-section{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
+  .lib-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
+  .lib-section-title{font-weight:800;font-size:14.5px}
+  .lib-rows{display:flex;flex-direction:column;gap:8px}
+  .lib-row{display:flex;flex-direction:column;gap:8px;padding:9px 10px;border-radius:10px;background:#0d1420;border:1px solid var(--line)}
+  .lib-row-top{display:flex;align-items:center;gap:10px}
+  .lib-thumb{width:34px;height:34px;border-radius:8px;flex:none;background:#1a2436;background-size:cover;background-position:center;display:grid;place-items:center;color:var(--muted);font-size:13px;overflow:hidden}
+  .lib-row-title{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lib-row-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:44px}
+  .lib-move-select{width:auto;flex:1;min-width:100px;background:#08101f;border:1px solid var(--line);color:var(--muted);border-radius:8px;font-size:11.5px;padding:6px 7px}
+  .lib-move-btns{display:flex;gap:3px}
+  .lib-move-btns button{width:27px;height:27px;border-radius:7px;border:1px solid var(--line);background:none;color:var(--muted);font-size:12px;flex:none}
+  .lib-move-btns button:disabled{opacity:.3}
+  .icon-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;height:27px;padding:0 10px;font-size:11.5px;font-weight:700;flex:none}
+  .empty-hint{color:var(--muted);font-size:12.5px;padding:6px 4px}
+  .hidden-tag{color:var(--danger);font-weight:700;font-size:11px}
+
+  /* ===== Modals ===== */
+  .modal-scrim{position:fixed;inset:0;background:rgba(3,7,16,.72);backdrop-filter:blur(3px);z-index:80;display:none}
+  .modal-scrim.show{display:block}
+  .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(540px,92vw);max-height:88vh;overflow-y:auto;
+    background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);z-index:90;display:none}
+  .modal.show{display:block}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--card);border-radius:18px 18px 0 0;z-index:1}
+  .modal-head h2{margin:0;font-size:16px}
+  .modal-close{background:none;border:0;color:var(--muted);font-size:20px;width:32px;height:32px;border-radius:8px;line-height:1}
+  .modal-body{padding:18px}
+  .modal-actions{display:flex;gap:10px;margin-top:8px}
+  .modal-actions .btn{width:auto;flex:1}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line)}
+  .toggle-row:first-of-type{border-top:0}
+  .toggle-row label{margin:0;color:var(--text);font-size:13.5px;font-weight:600}
+  .toggle-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+  .art-row{display:flex;align-items:center;gap:12px}
+  .art-preview{width:56px;height:56px;border-radius:10px;flex:none;background:#0d1420;border:1px solid var(--line);background-size:cover;background-position:center}
+
+  @media(max-width:420px){ .lib-move-select{min-width:84px} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>CJ Music — Admin</h1>
-  <p class="sub">Add a song directly to the live catalog.</p>
+  <p class="sub">Manage your songs and albums.</p>
 
   <!-- ===== Auth screen ===== -->
   <div class="card" id="authCard">
@@ -90,67 +132,143 @@
     </p>
   </div>
 
-  <!-- ===== Main form ===== -->
+  <!-- ===== Main ===== -->
   <div id="mainScreen" style="display:none">
     <div class="topbar">
       <span class="pill" id="whoami">Connected</span>
       <button class="btn btn-ghost" id="logoutBtn" style="width:auto;padding:0 14px">Log out</button>
     </div>
 
-    <div class="card" style="margin-top:14px">
-      <form id="songForm">
-        <div class="field">
-          <label for="title">Title *</label>
-          <input type="text" id="title" required>
+    <!-- ===== Library ===== -->
+    <div id="libraryScreen" style="margin-top:14px">
+      <div class="lib-toolbar">
+        <button class="btn btn-ghost" id="createAlbumBtn">+ Create Album</button>
+        <button class="btn" id="showAddSongBtn">+ Add Song</button>
+      </div>
+      <div class="error" id="libraryError"></div>
+      <div id="libraryBody"><p class="hint">Loading…</p></div>
+    </div>
+
+    <!-- ===== Add song ===== -->
+    <div id="addSongScreen" style="display:none">
+      <div class="card" style="margin-top:14px">
+        <div class="topbar" style="margin-bottom:16px">
+          <h2 style="margin:0;font-size:16px">Add a song</h2>
+          <button class="btn btn-ghost" id="backToLibraryBtn" style="width:auto;padding:0 14px">← Library</button>
         </div>
-        <div class="row2">
+        <form id="songForm">
           <div class="field">
-            <label for="album">Album (optional)</label>
-            <input type="text" id="album" list="albumList" placeholder="e.g. Popcorn">
-            <datalist id="albumList"></datalist>
+            <label for="title">Title *</label>
+            <input type="text" id="title" required>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="album">Album (optional)</label>
+              <select id="album"><option value="">Unassigned</option></select>
+            </div>
+            <div class="field">
+              <label for="genre">Genre / language (optional)</label>
+              <input type="text" id="genre" placeholder="e.g. Hebrew">
+            </div>
           </div>
           <div class="field">
-            <label for="genre">Genre / language (optional)</label>
-            <input type="text" id="genre" placeholder="e.g. Hebrew">
+            <label for="lyrics">Lyrics (optional)</label>
+            <textarea id="lyrics" placeholder="Paste lyrics here — line breaks are kept as typed."></textarea>
           </div>
-        </div>
-        <div class="field">
-          <label for="lyrics">Lyrics (optional)</label>
-          <textarea id="lyrics" placeholder="Paste lyrics here — line breaks are kept as typed."></textarea>
-        </div>
-        <div class="field">
-          <label>Audio file *</label>
-          <label class="filepick" id="audioPick">
-            <input type="file" id="audio" accept="audio/*" required>
-            <span>🎵</span><span class="name" id="audioName">Choose an mp3…</span>
-          </label>
-        </div>
-        <div class="field">
-          <label>Cover art (optional)</label>
-          <label class="filepick" id="artPick">
-            <input type="file" id="art" accept="image/*">
-            <span>🖼️</span><span class="name" id="artName">Choose an image…</span>
-          </label>
+          <div class="field">
+            <label>Audio file *</label>
+            <label class="filepick" id="audioPick">
+              <input type="file" id="audio" accept="audio/*" required>
+              <span>🎵</span><span class="name" id="audioName">Choose an mp3…</span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Cover art (optional)</label>
+            <label class="filepick" id="artPick">
+              <input type="file" id="art" accept="image/*">
+              <span>🖼️</span><span class="name" id="artName">Choose an image…</span>
+            </label>
+          </div>
+
+          <div class="field" style="margin-top:18px">
+            <button class="btn" id="submitBtn" type="submit">Add song</button>
+          </div>
+        </form>
+
+        <div class="error" id="formError"></div>
+
+        <div class="steps" id="steps">
+          <div class="step" id="step-audio"><span class="dot"></span><span>Uploading audio</span></div>
+          <div class="step" id="step-art"><span class="dot"></span><span>Uploading cover art</span></div>
+          <div class="step" id="step-catalog"><span class="dot"></span><span>Updating the catalog</span></div>
         </div>
 
-        <div class="field" style="margin-top:18px">
-          <button class="btn" id="submitBtn" type="submit">Add song</button>
+        <div class="success" id="success">
+          <div class="big">Added ✓</div>
+          <p><span id="successTitle"></span> is committed. The live site will pick it up on its next deploy (usually under a minute).</p>
+          <button class="btn btn-ghost" id="addAnotherBtn" style="width:100%">Add another</button>
         </div>
-      </form>
-
-      <div class="error" id="formError"></div>
-
-      <div class="steps" id="steps">
-        <div class="step" id="step-audio"><span class="dot"></span><span>Uploading audio</span></div>
-        <div class="step" id="step-art"><span class="dot"></span><span>Uploading cover art</span></div>
-        <div class="step" id="step-catalog"><span class="dot"></span><span>Updating the catalog</span></div>
       </div>
+    </div>
+  </div>
+</div>
 
-      <div class="success" id="success">
-        <div class="big">Added ✓</div>
-        <p><span id="successTitle"></span> is committed. The live site will pick it up on its next deploy (usually under a minute).</p>
-        <button class="btn btn-ghost" id="addAnotherBtn" style="width:100%">Add another</button>
+<!-- ===== Edit Song modal ===== -->
+<div class="modal-scrim" id="songModalScrim"></div>
+<div class="modal" id="songModal">
+  <div class="modal-head"><h2>Edit song</h2><button class="modal-close" id="songModalClose">✕</button></div>
+  <div class="modal-body">
+    <div class="field"><label>Title</label><input type="text" id="esTitle"></div>
+    <div class="field"><label>Album</label><select id="esAlbum"></select></div>
+    <div class="field">
+      <label>Artwork</label>
+      <div class="art-row">
+        <div class="art-preview" id="esArtPreview"></div>
+        <label class="filepick" id="esArtPick"><input type="file" id="esArtFile" accept="image/*"><span>🖼️</span><span class="name" id="esArtName">Replace image…</span></label>
       </div>
+    </div>
+    <div class="field">
+      <label>Audio file</label>
+      <p class="hint" id="esAudioCurrent" style="margin:0 0 8px"></p>
+      <label class="filepick" id="esAudioPick"><input type="file" id="esAudioFile" accept="audio/*"><span>🎵</span><span class="name" id="esAudioName">Replace audio…</span></label>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Genre / language</label><input type="text" id="esGenre"></div>
+      <div class="field"><label>Release date</label><input type="date" id="esReleaseDate"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="esDescription" style="min-height:70px"></textarea></div>
+    <div class="field"><label>Credits</label><textarea id="esCredits" style="min-height:60px"></textarea></div>
+    <div class="field"><label>Lyrics</label><textarea id="esLyrics"></textarea></div>
+    <div class="toggle-row"><label for="esVisible">Visible on website</label><input type="checkbox" id="esVisible"></div>
+    <div class="toggle-row"><label for="esDownload">Download enabled</label><input type="checkbox" id="esDownload"></div>
+    <div class="error" id="songModalError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="esDeleteBtn" style="color:var(--danger);border-color:rgba(239,68,68,.3)">Delete</button>
+      <button class="btn" id="esSaveBtn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Create/Edit Album modal ===== -->
+<div class="modal-scrim" id="albumModalScrim"></div>
+<div class="modal" id="albumModal">
+  <div class="modal-head"><h2 id="albumModalTitle">Create album</h2><button class="modal-close" id="albumModalClose">✕</button></div>
+  <div class="modal-body">
+    <div class="field"><label>Album name</label><input type="text" id="eaName"></div>
+    <div class="field">
+      <label>Artwork</label>
+      <div class="art-row">
+        <div class="art-preview" id="eaArtPreview"></div>
+        <label class="filepick" id="eaArtPick"><input type="file" id="eaArtFile" accept="image/*"><span>🖼️</span><span class="name" id="eaArtName">Choose image…</span></label>
+      </div>
+    </div>
+    <div class="field"><label>Release date</label><input type="date" id="eaReleaseDate"></div>
+    <div class="field"><label>Description</label><textarea id="eaDescription" style="min-height:70px"></textarea></div>
+    <div class="toggle-row"><label for="eaVisible">Visible on website</label><input type="checkbox" id="eaVisible" checked></div>
+    <div class="error" id="albumModalError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="eaDeleteBtn" style="color:var(--danger);border-color:rgba(239,68,68,.3);display:none">Delete album</button>
+      <button class="btn" id="eaSaveBtn">Save</button>
     </div>
   </div>
 </div>
@@ -163,6 +281,10 @@ const API = "https://api.github.com";
 const TOKEN_KEY = "cjMusicAdminToken";
 
 const $ = id => document.getElementById(id);
+
+function escapeHtml(str){
+  return String(str == null ? "" : str).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
 
 function ghHeaders(token){
   return {
@@ -231,11 +353,33 @@ async function getFile(token, path){
   return { content: b64ToUtf8(data.content), sha: data.sha };
 }
 
+/* Fetch-mutate-commit helpers for the two catalog files, reused by every
+   library mutation (move, reassign, edit, delete, create). */
+async function commitSongs(token, mutateFn, message){
+  const { content, sha } = await getFile(token, "music/songs.json");
+  const list = mutateFn(JSON.parse(content));
+  await putFile(token, "music/songs.json", utf8ToB64(JSON.stringify(list, null, 2)), message, sha);
+}
+async function commitAlbums(token, mutateFn, message){
+  const { content, sha } = await getFile(token, "music/albums.json");
+  const list = mutateFn(JSON.parse(content));
+  await putFile(token, "music/albums.json", utf8ToB64(JSON.stringify(list, null, 2)), message, sha);
+}
+
+function slugify(str){
+  return str.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || ("album-" + Date.now());
+}
+function uniqueAlbumId(base, existingIds){
+  let id = base, n = 2;
+  while(existingIds.includes(id)) id = `${base}-${n++}`;
+  return id;
+}
+
 /* ===== Auth flow ===== */
 function showMain(){
   $("authCard").style.display = "none";
   $("mainScreen").style.display = "block";
-  loadAlbumList();
+  loadLibrary();
 }
 function showAuth(){
   $("authCard").style.display = "block";
@@ -267,17 +411,345 @@ $("logoutBtn").addEventListener("click", () => {
   showAuth();
 });
 
-/* ===== Album autocomplete ===== */
-async function loadAlbumList(){
+/* ===== Library ===== */
+let libSongs = [];
+let libAlbums = [];
+
+async function loadLibrary(){
   try{
-    const res = await fetch("/music/songs.json", { cache: "no-store" });
-    const list = await res.json();
-    const albums = [...new Set(list.map(s => s.album).filter(Boolean))];
-    $("albumList").innerHTML = albums.map(a => `<option value="${a.replace(/"/g,"&quot;")}">`).join("");
-  }catch(e){ /* non-critical */ }
+    const [songsRes, albumsRes] = await Promise.all([
+      fetch("/music/songs.json", { cache: "no-store" }),
+      fetch("/music/albums.json", { cache: "no-store" })
+    ]);
+    libSongs = await songsRes.json();
+    libAlbums = await albumsRes.json();
+    renderLibrary();
+    populateAlbumSelect($("album"));
+    $("libraryError").classList.remove("show");
+  }catch(err){
+    $("libraryError").textContent = "Couldn't load the library: " + err.message;
+    $("libraryError").classList.add("show");
+  }
 }
 
-/* ===== File pickers ===== */
+function populateAlbumSelect(selectEl, selectedId){
+  selectEl.innerHTML = ['<option value="">Unassigned</option>']
+    .concat(libAlbums.map(a => `<option value="${escapeHtml(a.id)}" ${a.id === selectedId ? "selected" : ""}>${escapeHtml(a.name)}</option>`))
+    .join("");
+}
+
+function songRowHtml(s, groupIds){
+  const pos = groupIds.indexOf(s.id);
+  const isFirst = pos <= 0, isLast = pos === groupIds.length - 1;
+  const thumbStyle = s.artwork ? ` style="background-image:url('${escapeHtml("/music/" + s.artwork)}')"` : "";
+  const albumOptions = ['<option value="">Unassigned</option>']
+    .concat(libAlbums.map(a => `<option value="${escapeHtml(a.id)}" ${a.id === s.albumId ? "selected" : ""}>${escapeHtml(a.name)}</option>`))
+    .join("");
+  return `
+    <div class="lib-row">
+      <div class="lib-row-top">
+        <div class="lib-thumb"${thumbStyle}>${s.artwork ? "" : "🎵"}</div>
+        <div class="lib-row-title">${escapeHtml(s.title)}${s.visible === false ? ' <span class="hidden-tag">(hidden)</span>' : ""}</div>
+      </div>
+      <div class="lib-row-controls">
+        <select class="lib-move-select" data-reassign="${escapeHtml(s.id)}">${albumOptions}</select>
+        <div class="lib-move-btns">
+          <button type="button" data-move="${escapeHtml(s.id)}" data-dir="-1" ${isFirst ? "disabled" : ""} aria-label="Move up">↑</button>
+          <button type="button" data-move="${escapeHtml(s.id)}" data-dir="1" ${isLast ? "disabled" : ""} aria-label="Move down">↓</button>
+        </div>
+        <button type="button" class="icon-btn" data-edit-song="${escapeHtml(s.id)}">Edit</button>
+      </div>
+    </div>`;
+}
+
+function renderLibrary(){
+  let html = "";
+  libAlbums.forEach(a => {
+    const members = libSongs.filter(s => s.albumId === a.id);
+    const memberIds = members.map(s => s.id);
+    html += `<div class="lib-section">
+      <div class="lib-section-head">
+        <span class="lib-section-title">${escapeHtml(a.name)}${a.visible === false ? ' <span class="hidden-tag">(hidden)</span>' : ""}</span>
+        <button type="button" class="icon-btn" data-edit-album="${escapeHtml(a.id)}">✎ Edit</button>
+      </div>
+      <div class="lib-rows">
+        ${members.length ? members.map(s => songRowHtml(s, memberIds)).join("") : '<div class="empty-hint">No songs yet — move some in from Unassigned.</div>'}
+      </div>
+    </div>`;
+  });
+
+  const unassigned = libSongs.filter(s => !s.albumId);
+  const unassignedIds = unassigned.map(s => s.id);
+  html += `<div class="lib-section">
+    <div class="lib-section-head"><span class="lib-section-title">Unassigned Songs</span></div>
+    <div class="lib-rows">
+      ${unassigned.length ? unassigned.map(s => songRowHtml(s, unassignedIds)).join("") : '<div class="empty-hint">Nothing here.</div>'}
+    </div>
+  </div>`;
+
+  $("libraryBody").innerHTML = html;
+}
+
+$("libraryBody").addEventListener("click", e => {
+  const editSong = e.target.closest("[data-edit-song]");
+  if(editSong){ openSongModal(editSong.dataset.editSong); return; }
+  const editAlbum = e.target.closest("[data-edit-album]");
+  if(editAlbum){ openAlbumModal(editAlbum.dataset.editAlbum); return; }
+  const move = e.target.closest("[data-move]");
+  if(move && !move.disabled){ moveSong(move.dataset.move, parseInt(move.dataset.dir, 10)); }
+});
+$("libraryBody").addEventListener("change", e => {
+  const sel = e.target.closest("[data-reassign]");
+  if(sel){ reassignAlbum(sel.dataset.reassign, sel.value || null); }
+});
+
+async function moveSong(id, dir){
+  const token = localStorage.getItem(TOKEN_KEY);
+  try{
+    await commitSongs(token, list => {
+      const song = list.find(s => s.id === id);
+      if(!song) return list;
+      const groupIds = list.filter(s => (s.albumId || null) === (song.albumId || null)).map(s => s.id);
+      const pos = groupIds.indexOf(id);
+      const swapPos = pos + dir;
+      if(swapPos < 0 || swapPos >= groupIds.length) return list;
+      const swapId = groupIds[swapPos];
+      const i1 = list.findIndex(s => s.id === id);
+      const i2 = list.findIndex(s => s.id === swapId);
+      [list[i1], list[i2]] = [list[i2], list[i1]];
+      return list;
+    }, `Reorder: ${id}`);
+    await loadLibrary();
+  }catch(err){
+    $("libraryError").textContent = err.message;
+    $("libraryError").classList.add("show");
+  }
+}
+
+async function reassignAlbum(songId, newAlbumId){
+  const token = localStorage.getItem(TOKEN_KEY);
+  try{
+    await commitSongs(token, list => {
+      const s = list.find(x => x.id === songId);
+      if(!s) return list;
+      if(newAlbumId) s.albumId = newAlbumId; else delete s.albumId;
+      return list;
+    }, `Move song to ${newAlbumId || "Unassigned"}: ${songId}`);
+    await loadLibrary();
+  }catch(err){
+    $("libraryError").textContent = err.message;
+    $("libraryError").classList.add("show");
+  }
+}
+
+/* ===== Modal plumbing ===== */
+function showModal(name){ $(name + "ModalScrim").classList.add("show"); $(name + "Modal").classList.add("show"); }
+function hideModal(name){ $(name + "ModalScrim").classList.remove("show"); $(name + "Modal").classList.remove("show"); }
+function setModalBusy(name, busy){
+  const btn = name === "song" ? $("esSaveBtn") : $("eaSaveBtn");
+  btn.disabled = busy;
+  btn.textContent = busy ? "Saving…" : "Save changes";
+  if(name === "album") btn.textContent = busy ? "Saving…" : "Save";
+}
+function setModalError(name, msg){
+  const el = name === "song" ? $("songModalError") : $("albumModalError");
+  el.textContent = msg || "";
+  el.classList.toggle("show", !!msg);
+}
+
+/* ===== Edit Song modal ===== */
+let currentEditingSongId = null;
+function openSongModal(id){
+  const s = libSongs.find(x => x.id === id);
+  if(!s) return;
+  currentEditingSongId = id;
+  $("esTitle").value = s.title || "";
+  populateAlbumSelect($("esAlbum"), s.albumId);
+  $("esGenre").value = s.genre || "";
+  $("esReleaseDate").value = s.releaseDate || "";
+  $("esDescription").value = s.description || "";
+  $("esCredits").value = s.credits || "";
+  $("esLyrics").value = s.lyrics || "";
+  $("esVisible").checked = s.visible !== false;
+  $("esDownload").checked = s.download !== false;
+  $("esArtPreview").style.backgroundImage = s.artwork ? `url('/music/${s.artwork}')` : "none";
+  $("esAudioCurrent").textContent = "Current file: " + s.audio;
+  $("esArtFile").value = ""; $("esArtName").textContent = "Replace image…";
+  $("esAudioFile").value = ""; $("esAudioName").textContent = "Replace audio…";
+  setModalError("song", "");
+  showModal("song");
+}
+function closeSongModal(){ hideModal("song"); currentEditingSongId = null; }
+$("songModalClose").onclick = closeSongModal;
+$("songModalScrim").onclick = closeSongModal;
+$("esArtFile").addEventListener("change", () => { $("esArtName").textContent = $("esArtFile").files[0]?.name || "Replace image…"; });
+$("esAudioFile").addEventListener("change", () => { $("esAudioName").textContent = $("esAudioFile").files[0]?.name || "Replace audio…"; });
+
+$("esSaveBtn").addEventListener("click", async () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const id = currentEditingSongId;
+  const title = $("esTitle").value.trim();
+  if(!title){ setModalError("song", "Title is required."); return; }
+
+  setModalBusy("song", true); setModalError("song", "");
+  try{
+    const albumId = $("esAlbum").value || undefined;
+    const genre = $("esGenre").value.trim();
+    const releaseDate = $("esReleaseDate").value;
+    const description = $("esDescription").value.trim();
+    const credits = $("esCredits").value.trim();
+    const lyrics = $("esLyrics").value;
+    const visible = $("esVisible").checked;
+    const download = $("esDownload").checked;
+    const artFile = $("esArtFile").files[0];
+    const audioFile = $("esAudioFile").files[0];
+
+    let newArtwork, newAudio;
+    if(artFile){
+      const ext = (artFile.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `art/${id}.${ext}`;
+      await putFile(token, `music/${path}`, await fileToBase64(artFile), `Update artwork for: ${title}`);
+      newArtwork = path;
+    }
+    if(audioFile){
+      const ext = (audioFile.name.split(".").pop() || "mp3").toLowerCase();
+      const filename = `${id}.${ext}`;
+      await putFile(token, `music/${filename}`, await fileToBase64(audioFile), `Update audio for: ${title}`);
+      newAudio = filename;
+    }
+
+    await commitSongs(token, list => {
+      const s = list.find(x => x.id === id);
+      if(!s) throw new Error("Song not found in the catalog — it may have been deleted elsewhere.");
+      s.title = title;
+      if(albumId) s.albumId = albumId; else delete s.albumId;
+      if(genre) s.genre = genre; else delete s.genre;
+      if(releaseDate) s.releaseDate = releaseDate; else delete s.releaseDate;
+      if(description) s.description = description; else delete s.description;
+      if(credits) s.credits = credits; else delete s.credits;
+      s.lyrics = lyrics || "";
+      s.visible = visible;
+      s.download = download;
+      if(newArtwork) s.artwork = newArtwork;
+      if(newAudio) s.audio = newAudio;
+      return list;
+    }, `Edit song: ${title}`);
+
+    closeSongModal();
+    await loadLibrary();
+  }catch(err){
+    setModalError("song", err.message);
+  }finally{
+    setModalBusy("song", false);
+  }
+});
+
+$("esDeleteBtn").addEventListener("click", async () => {
+  if(!confirm("Delete this song? It's removed from the catalog — the underlying audio/art files stay in the repo.")) return;
+  const token = localStorage.getItem(TOKEN_KEY);
+  const id = currentEditingSongId;
+  setModalBusy("song", true); setModalError("song", "");
+  try{
+    await commitSongs(token, list => list.filter(s => s.id !== id), `Delete song: ${id}`);
+    closeSongModal();
+    await loadLibrary();
+  }catch(err){
+    setModalError("song", err.message);
+  }finally{
+    setModalBusy("song", false);
+  }
+});
+
+/* ===== Create/Edit Album modal ===== */
+let currentEditingAlbumId = null;
+function openAlbumModal(id){
+  currentEditingAlbumId = id || null;
+  const a = id ? libAlbums.find(x => x.id === id) : null;
+  $("albumModalTitle").textContent = a ? "Edit album" : "Create album";
+  $("eaName").value = a ? a.name : "";
+  $("eaReleaseDate").value = a ? (a.releaseDate || "") : "";
+  $("eaDescription").value = a ? (a.description || "") : "";
+  $("eaVisible").checked = a ? a.visible !== false : true;
+  $("eaArtPreview").style.backgroundImage = (a && a.artwork) ? `url('/music/${a.artwork}')` : "none";
+  $("eaArtFile").value = ""; $("eaArtName").textContent = "Choose image…";
+  $("eaDeleteBtn").style.display = a ? "block" : "none";
+  setModalError("album", "");
+  showModal("album");
+}
+function closeAlbumModal(){ hideModal("album"); currentEditingAlbumId = null; }
+$("createAlbumBtn").onclick = () => openAlbumModal(null);
+$("albumModalClose").onclick = closeAlbumModal;
+$("albumModalScrim").onclick = closeAlbumModal;
+$("eaArtFile").addEventListener("change", () => { $("eaArtName").textContent = $("eaArtFile").files[0]?.name || "Choose image…"; });
+
+$("eaSaveBtn").addEventListener("click", async () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const name = $("eaName").value.trim();
+  if(!name){ setModalError("album", "Album name is required."); return; }
+
+  setModalBusy("album", true); setModalError("album", "");
+  try{
+    const releaseDate = $("eaReleaseDate").value;
+    const description = $("eaDescription").value.trim();
+    const visible = $("eaVisible").checked;
+    const artFile = $("eaArtFile").files[0];
+    const isCreate = !currentEditingAlbumId;
+    const id = currentEditingAlbumId || uniqueAlbumId(slugify(name), libAlbums.map(a => a.id));
+
+    let newArtwork;
+    if(artFile){
+      const ext = (artFile.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `art/${id}.${ext}`;
+      await putFile(token, `music/${path}`, await fileToBase64(artFile), `Update album artwork: ${name}`);
+      newArtwork = path;
+    }
+
+    await commitAlbums(token, list => {
+      if(isCreate){
+        list.push({ id, name, artwork: newArtwork || "", description, releaseDate, visible });
+      }else{
+        const a = list.find(x => x.id === id);
+        if(!a) throw new Error("Album not found — it may have been deleted elsewhere.");
+        a.name = name;
+        a.description = description;
+        a.releaseDate = releaseDate;
+        a.visible = visible;
+        if(newArtwork) a.artwork = newArtwork;
+      }
+      return list;
+    }, isCreate ? `Create album: ${name}` : `Edit album: ${name}`);
+
+    closeAlbumModal();
+    await loadLibrary();
+  }catch(err){
+    setModalError("album", err.message);
+  }finally{
+    setModalBusy("album", false);
+  }
+});
+
+$("eaDeleteBtn").addEventListener("click", async () => {
+  if(!confirm("Delete this album? Its songs move to Unassigned — they are not deleted.")) return;
+  const token = localStorage.getItem(TOKEN_KEY);
+  const id = currentEditingAlbumId;
+  setModalBusy("album", true); setModalError("album", "");
+  try{
+    await commitSongs(token, list => { list.forEach(s => { if(s.albumId === id) delete s.albumId; }); return list; }, `Unlink songs from deleted album: ${id}`);
+    await commitAlbums(token, list => list.filter(a => a.id !== id), `Delete album: ${id}`);
+    closeAlbumModal();
+    await loadLibrary();
+  }catch(err){
+    setModalError("album", err.message);
+  }finally{
+    setModalBusy("album", false);
+  }
+});
+
+/* ===== Add song / Library screen toggle ===== */
+$("showAddSongBtn").onclick = () => { $("libraryScreen").style.display = "none"; $("addSongScreen").style.display = "block"; };
+$("backToLibraryBtn").onclick = () => { $("addSongScreen").style.display = "none"; $("libraryScreen").style.display = "block"; loadLibrary(); };
+
+/* ===== File pickers (Add song form) ===== */
 $("audio").addEventListener("change", () => {
   $("audioName").textContent = $("audio").files[0]?.name || "Choose an mp3…";
 });
@@ -285,11 +757,12 @@ $("art").addEventListener("change", () => {
   $("artName").textContent = $("art").files[0]?.name || "Choose an image…";
 });
 
-/* ===== Steps UI ===== */
+/* ===== Steps UI (Add song form) ===== */
 function resetSteps(){
   ["step-audio","step-art","step-catalog"].forEach(id => {
     const el = $(id);
     el.classList.remove("busy","done","fail");
+    el.style.display = "flex";
     el.querySelector(".dot").textContent = "";
   });
   $("steps").classList.add("show");
@@ -299,16 +772,15 @@ function resetSteps(){
 function stepStart(id){ $(id).classList.add("busy"); }
 function stepDone(id){ $(id).classList.remove("busy"); $(id).classList.add("done"); $(id).querySelector(".dot").textContent = "✓"; }
 function stepFail(id){ $(id).classList.remove("busy"); $(id).classList.add("fail"); $(id).querySelector(".dot").textContent = "!"; }
-function stepSkip(id){ $(id).style.display = "none"; }
 
-/* ===== Submit ===== */
+/* ===== Submit (Add song form) ===== */
 $("songForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const token = localStorage.getItem(TOKEN_KEY);
   if(!token){ showAuth(); return; }
 
   const title = $("title").value.trim();
-  const album = $("album").value.trim();
+  const albumId = $("album").value;
   const genre = $("genre").value.trim();
   const lyrics = $("lyrics").value;
   const audioFile = $("audio").files[0];
@@ -343,16 +815,15 @@ $("songForm").addEventListener("submit", async (e) => {
     }
 
     stepStart("step-catalog");
-    const { content, sha } = await getFile(token, "music/songs.json");
-    const list = JSON.parse(content);
-    const entry = { title, audio: `${id}.${audioExt}` };
-    if(album) entry.album = album;
-    if(genre) entry.genre = genre;
-    if(artRelPath) entry.artwork = artRelPath;
-    entry.lyrics = lyrics || "";
-    list.push(entry);
-    const updatedB64 = utf8ToB64(JSON.stringify(list, null, 2));
-    await putFile(token, "music/songs.json", updatedB64, `Add song to catalog: ${title}`, sha);
+    await commitSongs(token, list => {
+      const entry = { id, title, audio: `${id}.${audioExt}` };
+      if(albumId) entry.albumId = albumId;
+      if(genre) entry.genre = genre;
+      if(artRelPath) entry.artwork = artRelPath;
+      entry.lyrics = lyrics || "";
+      list.push(entry);
+      return list;
+    }, `Add song to catalog: ${title}`);
     stepDone("step-catalog");
 
     $("successTitle").textContent = title;
@@ -360,7 +831,6 @@ $("songForm").addEventListener("submit", async (e) => {
     $("songForm").reset();
     $("audioName").textContent = "Choose an mp3…";
     $("artName").textContent = "Choose an image…";
-    loadAlbumList();
   }catch(err){
     const busy = document.querySelector(".step.busy");
     if(busy) stepFail(busy.id);
