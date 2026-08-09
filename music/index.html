@@ -1647,6 +1647,12 @@ document.querySelectorAll(".nav button").forEach(b => {
     $("view-" + b.dataset.view).classList.add("active");
     window.scrollTo({ top: 0 });
     if (b.dataset.view === "search") setTimeout(() => $("q").focus(), 220);
+    if (b.dataset.view === "albums"){
+      // Always land on the collections grid, never a previously-opened album.
+      S.albumOpen = null;
+      $("albumDetail").hidden = true;
+      $("albumGridWrap").hidden = false;
+    }
   };
 });
 
