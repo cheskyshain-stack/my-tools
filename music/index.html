@@ -1547,7 +1547,7 @@ $("wave").addEventListener("keydown", e => {
 /* ============================================================================
    Audio events
    ============================================================================ */
-audio.addEventListener("play", () => { S.playing = true; paintTransport(); renderLists(); });
+audio.addEventListener("play", () => { S.playing = true; paintTransport(); renderLists(); ensureLeaveGuard(); });
 audio.addEventListener("pause", () => { S.playing = false; paintTransport(); renderLists(); });
 audio.addEventListener("timeupdate", () => {
   paintTime();
@@ -1706,12 +1706,29 @@ function closeFull(){
    playing, instead of silently cutting the music with no notice (there is
    no cross-page mini-player anymore; leaving just stops playback).
    Works the same way the full-player's own Back handling above does: push
-   one extra history entry up front, so the first real Back press lands on
-   this popstate handler instead of immediately navigating away, giving us
-   a chance to confirm first. Declining re-pushes the same guard so the
-   next Back press is caught too.
+   one extra history entry, so the first real Back press lands on this
+   popstate handler instead of immediately navigating away, giving us a
+   chance to confirm first. Declining re-pushes the same guard so the next
+   Back press is caught too.
+
+   Pushed lazily, the first time a song actually starts playing - NOT
+   unconditionally at page load. The shell (the parent page hosting this
+   in an iframe) pushes its own history entry for "now showing /music/"
+   right as this page finishes loading, and that push happens AFTER this
+   script already ran (inline scripts run during parsing, well before the
+   page is considered "loaded"). Pushing this guard eagerly at parse time
+   put it BELOW the shell's own entry once the shell caught up, so the
+   very first Back press was popping the shell's layer, not this one - the
+   shell navigated away immediately, before this guard ever got a chance
+   to run. Waiting for the first "play" event sidesteps that race
+   entirely, since it only happens well after the page (and the shell's
+   own push) has settled.
    ============================================================================ */
-try{ history.pushState({ cjLeaveGuard: true }, "", location.href); }catch(e){}
+let leaveGuardPushed = false;
+function ensureLeaveGuard(){
+  if (leaveGuardPushed) return;
+  try{ history.pushState({ cjLeaveGuard: true }, "", location.href); leaveGuardPushed = true; }catch(e){}
+}
 
 window.addEventListener("popstate", (e) => {
   if ($("full").classList.contains("open") && !(e.state && e.state.cjFullPlayer)){
