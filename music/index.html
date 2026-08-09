@@ -1193,6 +1193,12 @@ function renderFavorites(){
 }
 
 function openAlbum(name, keepScroll){
+  // Only when this is a genuine "open this album" tap (e.g. from a tile in
+  // the Home screen's Collections rail) - not when renderLists() re-calls
+  // this with keepScroll=true just to keep an already-open album's detail
+  // view populated after a re-render. Switching views on THAT call would
+  // yank the user back to Albums even if they'd since moved to another tab.
+  if (!keepScroll) switchView("albums");
   S.albumOpen = name;
   const a = albums().find(x => x.name === name);
   if (!a) return;
@@ -1660,12 +1666,14 @@ $("fShare2").onclick = share;
 /* ============================================================================
    Views / panels
    ============================================================================ */
+function switchView(name){
+  document.querySelectorAll(".nav button").forEach(x => x.classList.toggle("on", x.dataset.view === name));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("view-" + name).classList.add("active");
+}
 document.querySelectorAll(".nav button").forEach(b => {
   b.onclick = () => {
-    document.querySelectorAll(".nav button").forEach(x => x.classList.remove("on"));
-    b.classList.add("on");
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    $("view-" + b.dataset.view).classList.add("active");
+    switchView(b.dataset.view);
     window.scrollTo({ top: 0 });
     if (b.dataset.view === "search") setTimeout(() => $("q").focus(), 220);
     if (b.dataset.view === "albums"){
