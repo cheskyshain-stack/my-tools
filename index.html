@@ -62,6 +62,7 @@
 
   <audio id="miniAudio" preload="none"></audio>
 
+<script src="/assets/audio-boost.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const iframe = $("shellFrame");
@@ -110,7 +111,13 @@ iframe.addEventListener("load", () => {
       loadMini(lastMusicState.pos, lastMusicState.currentTime, true);
     }
     lastMusicState = null;
-    if (path === "/music/") startMusicPolling();
+    if (path === "/music/"){
+      // The full app is taking over now - it resumes its own last-played
+      // song from its own "picking up where you left off" logic, so the
+      // shell's own audio needs to stop, not keep playing alongside it.
+      stopMiniPlayer();
+      startMusicPolling();
+    }
 
     const displayPath = path === "/home/" ? "/" : path;
     if (suppressPush){
@@ -131,19 +138,8 @@ window.addEventListener("popstate", (e) => {
   iframe.src = target;
 });
 
-/* ===== Volume boost, same approach as the music player ===== */
-const BOOST = 1.8;
-let audioCtx, gainNode, sourceNode;
-function ensureAudioGraph(){
-  if (sourceNode) return;
-  try{
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sourceNode = audioCtx.createMediaElementSource(miniAudio);
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = BOOST;
-    sourceNode.connect(gainNode).connect(audioCtx.destination);
-  }catch(e){}
-}
+// Shared boost implementation — see assets/audio-boost.js
+const boost = createAudioBoost(miniAudio);
 
 /* ===== Minimal persistent player ===== */
 let miniQueue = [];
@@ -154,12 +150,22 @@ function showMiniBar(show){
   document.body.classList.toggle("mini-active", show);
 }
 
-function loadMini(pos, startTime, autoplay){
+// Stops and hides the shell's own mini-player. Used whenever /music/
+// becomes the active page again, so control hands back to the full app
+// instead of two separate audio elements both being able to play at
+// once (that was the real bug behind "two setups, sound goes low" —
+// the shell never used to give control back, only ever take it).
+function stopMiniPlayer(){
+  miniAudio.pause();
+  miniQueue = [];
+  miniPos = -1;
+  showMiniBar(false);
+}
+
+async function loadMini(pos, startTime, autoplay){
   const s = miniQueue[pos];
   if (!s) return;
   miniPos = pos;
-  ensureAudioGraph();
-  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
   miniAudio.src = s.audio;
   $("miniTitle").textContent = s.title;
   $("miniArt").style.backgroundImage = s.artwork ? `url('${s.artwork}')` : "none";
@@ -167,6 +173,8 @@ function loadMini(pos, startTime, autoplay){
   showMiniBar(true);
   $("miniPrev").disabled = miniPos <= 0;
   $("miniNext").disabled = miniPos >= miniQueue.length - 1;
+
+  if (autoplay) await boost.resume(); // active before playback starts, not racing it
 
   const onReady = () => {
     if (startTime) miniAudio.currentTime = startTime;
@@ -182,10 +190,12 @@ function miniPrevTrack(){
   if (miniPos > 0) loadMini(miniPos - 1, 0, true);
   else miniAudio.currentTime = 0;
 }
-function miniToggle(){
+async function miniToggle(){
   if (miniPos < 0) return;
-  if (miniAudio.paused) miniAudio.play().catch(() => {});
-  else miniAudio.pause();
+  if (miniAudio.paused){
+    await boost.resume();
+    miniAudio.play().catch(() => {});
+  } else miniAudio.pause();
 }
 
 $("miniPlayPause").addEventListener("click", miniToggle);

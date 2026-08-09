@@ -810,6 +810,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
   <audio id="audio" preload="metadata"></audio>
 </div>
 
+<script src="/assets/audio-boost.js"></script>
 <script>
 /* ============================================================================
    CJ MUSIC — Charlie Jaffa
@@ -1318,25 +1319,11 @@ function load(index, autoplay, from){
   else { S.playing = false; paintTransport(); }
 }
 
-/* Boost playback past the normal 100% ceiling — HTML5 audio.volume tops out
-   at 1.0, which isn't loud enough for some of these recordings. Routing
-   through a Web Audio GainNode lets us push past that. */
-const BOOST = 1.8;
-let audioCtx, gainNode, sourceNode;
-function ensureAudioGraph(){
-  if (sourceNode) return;
-  try{
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sourceNode = audioCtx.createMediaElementSource(audio);
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = BOOST;
-    sourceNode.connect(gainNode).connect(audioCtx.destination);
-  }catch(e){ /* Web Audio unavailable — falls back to normal volume */ }
-}
+// Shared boost implementation — see assets/audio-boost.js
+const boost = createAudioBoost(audio);
 
-function start(){
-  ensureAudioGraph();
-  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+async function start(){
+  await boost.resume(); // wait for the boost to actually be active before playing
   const p = audio.play();
   if (p && p.catch) p.catch(() => {
     S.playing = false; paintTransport();
