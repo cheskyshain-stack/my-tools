@@ -88,17 +88,17 @@
     "albumId": "best-songs"
   },
   {
-    "id": "malei-shira-kayam",
-    "title": "מלֵא שִׁירָה כַּיָּם",
-    "audio": "malei-shira-kayam.mp3",
+    "id": "modeh-ani-lefanecha",
+    "title": "מודה אני לפניך",
+    "audio": "modeh-ani-lefanecha.mp3",
     "lyrics": "",
     "genre": "Hebrew",
     "albumId": "best-songs"
   },
   {
-    "id": "modeh-ani-lefanecha",
-    "title": "מודה אני לפניך",
-    "audio": "modeh-ani-lefanecha.mp3",
+    "id": "malei-shira-kayam",
+    "title": "מלֵא שִׁירָה כַּיָּם",
+    "audio": "malei-shira-kayam.mp3",
     "lyrics": "",
     "genre": "Hebrew",
     "albumId": "best-songs"
