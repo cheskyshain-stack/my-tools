@@ -22,14 +22,6 @@
     --ocolor: #ef4444;
   }
 
-  body.day {
-    --bg: #f8fafc;
-    --fg: #0f172a;
-    --board: #e2e8f0;
-    --cell: #cbd5e1;
-    --accent: #0284c7;
-  }
-
   body {
     font-family: "Segoe UI", sans-serif;
     background: var(--bg);
@@ -55,25 +47,6 @@
     margin-bottom: 20px;
     color: var(--accent);
     text-shadow: 0 0 12px var(--accent);
-  }
-
-  .menu button {
-    display: block;
-    width: 85%;
-    margin: 10px auto;
-    font-size: 1.2em;
-    padding: 14px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: 0.3s;
-  }
-
-  .menu button:hover {
-    transform: scale(1.04);
-    box-shadow: 0 0 14px var(--accent);
   }
 
   .board {
@@ -120,23 +93,35 @@
     --bg:#050A18;--fg:#EDF2FF;--board:#121D38;--cell:#182747;
     --accent:#2583F7;--xcolor:#22c55e;--ocolor:#fbbf24;
   }
-  body.day{--bg:#f5f7fc;--fg:#172033;--board:#e7ecf5;--cell:#fff;--accent:#2583F7}
-  body.day{background:var(--bg)!important}
   body{height:auto;min-height:100vh;display:block;padding:0 14px 40px}
   .game{margin:6px auto 0}
-  .menu button,.controls button,#starter button{
+  .mode-row{display:flex;gap:8px;justify-content:center;margin:0 0 12px}
+  .mode-btn{
+    flex:1;max-width:170px;padding:11px 8px;border-radius:999px;
+    background:var(--cell);color:var(--fg);font-family:inherit;font-weight:700;font-size:13.5px;
+    border:2px solid transparent;cursor:pointer;transition:transform .16s cubic-bezier(.22,.9,.28,1),background .16s,border-color .16s;
+  }
+  .mode-btn.selected{
+    background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff;border-color:transparent;
+    box-shadow:0 10px 22px rgba(37,131,247,.3);
+  }
+  .mode-btn:active{transform:scale(.965)}
+  .starter-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .starter-row .starter-label{font-size:12.5px;font-weight:600;color:var(--fg);opacity:.75}
+  .starter-btn{
+    padding:7px 14px;border-radius:999px;background:var(--cell);color:var(--fg);
+    font-family:inherit;font-weight:700;font-size:12.5px;border:2px solid transparent;
+    cursor:pointer;transition:transform .16s cubic-bezier(.22,.9,.28,1),background .16s,border-color .16s;
+  }
+  .starter-btn.selected{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff;border-color:transparent}
+  .starter-btn:active{transform:scale(.965)}
+  .controls button{
     background:linear-gradient(140deg,#2583F7,#1763CF)!important;
     border-radius:999px!important;font-family:inherit;font-weight:700;color:#fff!important;
     box-shadow:0 10px 22px rgba(37,131,247,.3)!important;border:none;cursor:pointer;
     transition:transform .16s cubic-bezier(.22,.9,.28,1);
   }
-  body.day .menu button,body.day .controls button,body.day #starter button{
-    background:linear-gradient(135deg,#2583F7,#1763CF)!important;color:#fff!important;
-    box-shadow:0 8px 18px rgba(37,131,247,.25)!important;
-  }
-  .menu button:hover{transform:none!important;box-shadow:0 10px 22px rgba(0,200,255,.4)!important}
-  .menu button:active,.controls button:active,#starter button:active{transform:scale(.965)}
-  #starter p{color:var(--fg);font-weight:600}
+  .controls button:active{transform:scale(.965)}
   .board{
     background:var(--board);border:1px solid var(--cj-line,#243044);
     border-radius:var(--cj-r-lg,22px);
@@ -146,7 +131,7 @@
   .status{color:var(--fg);font-weight:700}
 </style>
 </head>
-<body class="night">
+<body>
 <header class="cj-page-header">
   <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/tic-tac-toe/icon.png" alt="Tic-Tac-Toe"></a>
   <h1>Tic-Tac-Toe</h1>
@@ -154,26 +139,21 @@
 
 <div class="game">
 
-  <div class="menu" id="menu">
-    <button onclick="startMode('2p')">👥 2 Players</button>
-    <button onclick="showStarter()">🤖 Play vs Phone</button>
-    <button onclick="toggleMode()">🌗 Toggle Day / Night</button>
+  <div class="mode-row" id="modeRow">
+    <button class="mode-btn selected" id="btnMode2p" onclick="setMode('2p')">👥 2 Players</button>
+    <button class="mode-btn" id="btnModeAI" onclick="setMode('ai')">🤖 Vs Phone</button>
   </div>
 
-  <div id="starter" style="display:none;">
-    <p>Who should start?</p>
-    <button onclick="startGame('ai','X')">🧍 You (X)</button>
-    <button onclick="startGame('ai','O')">💻 Phone (O)</button>
+  <div class="starter-row" id="starterRow" style="display:none;">
+    <span class="starter-label">Who starts?</span>
+    <button class="starter-btn selected" id="btnStarterX" onclick="setStarter('X')">You (X)</button>
+    <button class="starter-btn" id="btnStarterO" onclick="setStarter('O')">Phone (O)</button>
   </div>
 
-  <div id="gameScreen" style="display:none;">
-    <div class="board" id="board"></div>
-    <div class="status" id="status"></div>
-    <div class="controls">
-      <button onclick="restart()">↻ Restart</button>
-      <button onclick="resetAll()">🏠 Menu</button>
-      <button onclick="toggleMode()">🌗 Day/Night</button>
-    </div>
+  <div class="board" id="board"></div>
+  <div class="status" id="status"></div>
+  <div class="controls">
+    <button onclick="restart()">↻ Restart</button>
   </div>
 </div>
 
@@ -183,7 +163,7 @@
 <script>
   let board = Array(9).fill("");
   let current = "X";
-  let mode = "";
+  let mode = "2p";
   let playerSymbol = "X";
   let gameOver = false;
   const boardDiv = document.getElementById("board");
@@ -202,28 +182,19 @@
     });
   }
 
-  function startMode(m) {
+  function setMode(m) {
     mode = m;
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("gameScreen").style.display = "block";
+    document.getElementById("btnMode2p").classList.toggle("selected", m === "2p");
+    document.getElementById("btnModeAI").classList.toggle("selected", m === "ai");
+    document.getElementById("starterRow").style.display = m === "ai" ? "flex" : "none";
     restart();
   }
 
-  function showStarter() {
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("starter").style.display = "block";
-  }
-
-  function startGame(m, starter) {
-    mode = m;
-    playerSymbol = starter;
-    document.getElementById("starter").style.display = "none";
-    document.getElementById("gameScreen").style.display = "block";
+  function setStarter(sym) {
+    playerSymbol = sym;
+    document.getElementById("btnStarterX").classList.toggle("selected", sym === "X");
+    document.getElementById("btnStarterO").classList.toggle("selected", sym === "O");
     restart();
-    if (mode === "ai" && playerSymbol === "O") {
-      current = "X";
-      setTimeout(aiMove, 400);
-    }
   }
 
   function makeMove(i) {
@@ -309,19 +280,12 @@
     gameOver = false;
     drawBoard();
     updateStatus();
+    if (mode === "ai" && playerSymbol === "O") {
+      setTimeout(aiMove, 400);
+    }
   }
 
-  function resetAll() {
-    document.getElementById("menu").style.display = "block";
-    document.getElementById("starter").style.display = "none";
-    document.getElementById("gameScreen").style.display = "none";
-  }
-
-  function toggleMode() {
-    document.body.classList.toggle("day");
-  }
-
-  drawBoard();
+  restart();
 </script>
 </body>
 </html>
