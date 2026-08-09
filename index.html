@@ -72,9 +72,46 @@ const miniAudio = $("miniAudio");
 let firstLoad = true;
 let suppressPush = false;
 
+/* ===== Reliable playback handoff: poll /music/ while it's active =====
+   Don't rely solely on the outgoing page's `pagehide` firing in time
+   (mobile browsers can tear a navigating-away page down fast enough to
+   cut that off). Instead, keep a recent snapshot of what's playing by
+   calling the page's own exposed window.__cjMusicNowPlaying() directly
+   (same-origin, no messaging needed) while it's the active page, so a
+   snapshot is always ready the moment navigation actually happens. */
+let lastMusicState = null;
+let musicPollTimer = null;
+function startMusicPolling(){
+  stopMusicPolling();
+  musicPollTimer = setInterval(() => {
+    try{
+      const fn = iframe.contentWindow.__cjMusicNowPlaying;
+      lastMusicState = (typeof fn === "function") ? fn() : null;
+    }catch(e){ lastMusicState = null; }
+  }, 700);
+}
+function stopMusicPolling(){
+  if (musicPollTimer){ clearInterval(musicPollTimer); musicPollTimer = null; }
+}
+
 iframe.addEventListener("load", () => {
   try{
+    const wasPolling = !!musicPollTimer;
+    stopMusicPolling();
+
     const path = iframe.contentWindow.location.pathname;
+
+    // Just navigated away from /music/ - adopt the last known playback
+    // state if we have one (the postMessage handoff may also have
+    // already applied this via the 'message' listener; re-applying is
+    // harmless, at worst a tiny restart-from-nearly-the-same-spot blip).
+    if (wasPolling && path !== "/music/" && lastMusicState){
+      miniQueue = lastMusicState.queue;
+      loadMini(lastMusicState.pos, lastMusicState.currentTime, true);
+    }
+    lastMusicState = null;
+    if (path === "/music/") startMusicPolling();
+
     const displayPath = path === "/home/" ? "/" : path;
     if (suppressPush){
       suppressPush = false;
