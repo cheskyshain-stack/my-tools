@@ -57,18 +57,18 @@
     "albumId": "best-songs"
   },
   {
-    "id": "erev-shabbos",
-    "title": "Erev Shabbos",
-    "audio": "erev-shabbos.mp3",
-    "lyrics": "",
-    "albumId": "best-songs"
-  },
-  {
     "id": "hatov",
     "title": "הטוב",
     "audio": "hatov.mp3",
     "lyrics": "",
     "genre": "Hebrew",
+    "albumId": "best-songs"
+  },
+  {
+    "id": "erev-shabbos",
+    "title": "Erev Shabbos",
+    "audio": "erev-shabbos.mp3",
+    "lyrics": "",
     "albumId": "best-songs"
   },
   {
