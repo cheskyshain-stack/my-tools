@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="robots" content="noindex, nofollow">
+<title>CJ Music — Admin</title>
+<style>
+  :root{--bg:#080b12;--card:#101622;--card-hi:#141c2a;--line:#1f2937;--text:#f8fafc;--muted:#94a3b8;--accent:#3b82f6;--accent-deep:#1d4ed8;--danger:#ef4444;--success:#10b981;--shadow:0 10px 28px rgba(0,0,0,.28)}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 50% -10%,rgba(37,99,235,.16),transparent 30rem),var(--bg);color:var(--text)}
+  body{padding:28px 16px 60px}
+  .wrap{width:min(560px,100%);margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px}
+  .card + .card{margin-top:16px}
+  label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin:0 0 6px}
+  input[type=text],input[type=password],textarea{
+    width:100%;background:#0d1420;border:1px solid var(--line);border-radius:10px;color:var(--text);
+    padding:11px 12px;font-size:14.5px;font-family:inherit;outline:none;
+  }
+  input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:90px;line-height:1.5}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .filepick{
+    display:flex;align-items:center;gap:10px;border:1px dashed var(--line);border-radius:10px;
+    padding:11px 12px;background:#0d1420;cursor:pointer;font-size:13.5px;color:var(--muted);
+  }
+  .filepick input{display:none}
+  .filepick .name{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btn{
+    width:100%;height:48px;border:0;border-radius:12px;font-weight:800;font-size:14.5px;color:#fff;
+    background:linear-gradient(140deg,var(--accent),var(--accent-deep));cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-ghost{background:none;border:1px solid var(--line);color:var(--muted);height:40px;font-size:13px}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:4px}
+  .error{color:var(--danger);font-size:13px;margin-top:10px;display:none}
+  .error.show{display:block}
+  .steps{margin-top:16px;display:none}
+  .steps.show{display:block}
+  .step{display:flex;align-items:center;gap:10px;font-size:13.5px;padding:6px 0;color:var(--muted)}
+  .step .dot{width:18px;height:18px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:11px}
+  .step.busy .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .7s linear infinite}
+  .step.done{color:var(--text)}
+  .step.done .dot{border-color:var(--success);background:var(--success);color:#062018}
+  .step.fail{color:var(--danger)}
+  .step.fail .dot{border-color:var(--danger);background:var(--danger);color:#2b0a0a}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .success{display:none;text-align:center;padding:6px 0}
+  .success.show{display:block}
+  .success .big{font-size:16px;font-weight:800;margin-bottom:6px}
+  .success p{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .pill{font-size:11px;font-weight:700;color:var(--success);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.28);padding:4px 10px;border-radius:999px}
+  ol{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.7}
+  a{color:#60a5fa}
+  code{background:#0d1420;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CJ Music — Admin</h1>
+  <p class="sub">Add a song directly to the live catalog.</p>
+
+  <!-- ===== Auth screen ===== -->
+  <div class="card" id="authCard">
+    <label for="token">GitHub token</label>
+    <input type="password" id="token" placeholder="github_pat_…" autocomplete="off">
+    <p class="hint">
+      Create a <b>fine-grained</b> token at
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>:
+    </p>
+    <ol>
+      <li>Repository access → only <code>my-tools</code></li>
+      <li>Permissions → Contents → <b>Read and write</b></li>
+      <li>Generate, then paste the token here</li>
+    </ol>
+    <div style="margin-top:14px">
+      <button class="btn" id="connectBtn">Connect</button>
+    </div>
+    <div class="error" id="authError"></div>
+    <p class="hint" style="margin-top:14px">
+      The token stays only in this browser's local storage and is sent only to <code>api.github.com</code> — nothing else sees it.
+    </p>
+  </div>
+
+  <!-- ===== Main form ===== -->
+  <div id="mainScreen" style="display:none">
+    <div class="topbar">
+      <span class="pill" id="whoami">Connected</span>
+      <button class="btn btn-ghost" id="logoutBtn" style="width:auto;padding:0 14px">Log out</button>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <form id="songForm">
+        <div class="field">
+          <label for="title">Title *</label>
+          <input type="text" id="title" required>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="album">Album (optional)</label>
+            <input type="text" id="album" list="albumList" placeholder="e.g. Popcorn">
+            <datalist id="albumList"></datalist>
+          </div>
+          <div class="field">
+            <label for="genre">Genre / language (optional)</label>
+            <input type="text" id="genre" placeholder="e.g. Hebrew">
+          </div>
+        </div>
+        <div class="field">
+          <label for="lyrics">Lyrics (optional)</label>
+          <textarea id="lyrics" placeholder="Paste lyrics here — line breaks are kept as typed."></textarea>
+        </div>
+        <div class="field">
+          <label>Audio file *</label>
+          <label class="filepick" id="audioPick">
+            <input type="file" id="audio" accept="audio/*" required>
+            <span>🎵</span><span class="name" id="audioName">Choose an mp3…</span>
+          </label>
+        </div>
+        <div class="field">
+          <label>Cover art (optional)</label>
+          <label class="filepick" id="artPick">
+            <input type="file" id="art" accept="image/*">
+            <span>🖼️</span><span class="name" id="artName">Choose an image…</span>
+          </label>
+        </div>
+
+        <div class="field" style="margin-top:18px">
+          <button class="btn" id="submitBtn" type="submit">Add song</button>
+        </div>
+      </form>
+
+      <div class="error" id="formError"></div>
+
+      <div class="steps" id="steps">
+        <div class="step" id="step-audio"><span class="dot"></span><span>Uploading audio</span></div>
+        <div class="step" id="step-art"><span class="dot"></span><span>Uploading cover art</span></div>
+        <div class="step" id="step-catalog"><span class="dot"></span><span>Updating the catalog</span></div>
+      </div>
+
+      <div class="success" id="success">
+        <div class="big">Added ✓</div>
+        <p><span id="successTitle"></span> is committed. The live site will pick it up on its next deploy (usually under a minute).</p>
+        <button class="btn btn-ghost" id="addAnotherBtn" style="width:100%">Add another</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const OWNER = "cheskyshain-stack";
+const REPO = "my-tools";
+const BRANCH = "main";
+const API = "https://api.github.com";
+const TOKEN_KEY = "cjMusicAdminToken";
+
+const $ = id => document.getElementById(id);
+
+function ghHeaders(token){
+  return {
+    "Authorization": "Bearer " + token,
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+}
+
+async function verifyToken(token){
+  const res = await fetch(`${API}/repos/${OWNER}/${REPO}`, { headers: ghHeaders(token) });
+  if(!res.ok){
+    if(res.status === 401) throw new Error("That token was rejected — check it's valid and hasn't expired.");
+    if(res.status === 404) throw new Error("Token doesn't have access to this repo — check its repository access setting.");
+    throw new Error(`Couldn't reach the repo (${res.status}).`);
+  }
+  return res.json();
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(",")[1]);
+    r.onerror = () => reject(new Error("Couldn't read " + file.name));
+    r.readAsDataURL(file);
+  });
+}
+
+function b64ToUtf8(b64){
+  const binary = atob(b64.replace(/\n/g, ""));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder("utf-8").decode(bytes);
+}
+function utf8ToB64(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+async function putFile(token, path, base64Content, message, sha){
+  const body = { message, content: base64Content, branch: BRANCH };
+  if(sha) body.sha = sha;
+  const res = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: "PUT",
+    headers: { ...ghHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Upload failed (${res.status}) for ${path}`);
+  }
+  return res.json();
+}
+
+async function getFile(token, path){
+  const res = await fetch(`${API}/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`, { headers: ghHeaders(token) });
+  if(!res.ok) throw new Error(`Couldn't read ${path} (${res.status})`);
+  const data = await res.json();
+  return { content: b64ToUtf8(data.content), sha: data.sha };
+}
+
+/* ===== Auth flow ===== */
+function showMain(){
+  $("authCard").style.display = "none";
+  $("mainScreen").style.display = "block";
+  loadAlbumList();
+}
+function showAuth(){
+  $("authCard").style.display = "block";
+  $("mainScreen").style.display = "none";
+}
+
+$("connectBtn").addEventListener("click", async () => {
+  const token = $("token").value.trim();
+  $("authError").classList.remove("show");
+  if(!token){ $("authError").textContent = "Paste a token first."; $("authError").classList.add("show"); return; }
+  $("connectBtn").disabled = true;
+  $("connectBtn").textContent = "Connecting…";
+  try{
+    await verifyToken(token);
+    localStorage.setItem(TOKEN_KEY, token);
+    showMain();
+  }catch(err){
+    $("authError").textContent = err.message;
+    $("authError").classList.add("show");
+  }finally{
+    $("connectBtn").disabled = false;
+    $("connectBtn").textContent = "Connect";
+  }
+});
+
+$("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem(TOKEN_KEY);
+  $("token").value = "";
+  showAuth();
+});
+
+/* ===== Album autocomplete ===== */
+async function loadAlbumList(){
+  try{
+    const res = await fetch("/music/songs.json", { cache: "no-store" });
+    const list = await res.json();
+    const albums = [...new Set(list.map(s => s.album).filter(Boolean))];
+    $("albumList").innerHTML = albums.map(a => `<option value="${a.replace(/"/g,"&quot;")}">`).join("");
+  }catch(e){ /* non-critical */ }
+}
+
+/* ===== File pickers ===== */
+$("audio").addEventListener("change", () => {
+  $("audioName").textContent = $("audio").files[0]?.name || "Choose an mp3…";
+});
+$("art").addEventListener("change", () => {
+  $("artName").textContent = $("art").files[0]?.name || "Choose an image…";
+});
+
+/* ===== Steps UI ===== */
+function resetSteps(){
+  ["step-audio","step-art","step-catalog"].forEach(id => {
+    const el = $(id);
+    el.classList.remove("busy","done","fail");
+    el.querySelector(".dot").textContent = "";
+  });
+  $("steps").classList.add("show");
+  $("success").classList.remove("show");
+  $("formError").classList.remove("show");
+}
+function stepStart(id){ $(id).classList.add("busy"); }
+function stepDone(id){ $(id).classList.remove("busy"); $(id).classList.add("done"); $(id).querySelector(".dot").textContent = "✓"; }
+function stepFail(id){ $(id).classList.remove("busy"); $(id).classList.add("fail"); $(id).querySelector(".dot").textContent = "!"; }
+function stepSkip(id){ $(id).style.display = "none"; }
+
+/* ===== Submit ===== */
+$("songForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(!token){ showAuth(); return; }
+
+  const title = $("title").value.trim();
+  const album = $("album").value.trim();
+  const genre = $("genre").value.trim();
+  const lyrics = $("lyrics").value;
+  const audioFile = $("audio").files[0];
+  const artFile = $("art").files[0];
+
+  $("formError").classList.remove("show");
+  if(!title){ $("formError").textContent = "Title is required."; $("formError").classList.add("show"); return; }
+  if(!audioFile){ $("formError").textContent = "Pick an audio file."; $("formError").classList.add("show"); return; }
+
+  $("submitBtn").disabled = true;
+  resetSteps();
+  $("step-art").style.display = artFile ? "flex" : "none";
+
+  try{
+    const id = "song-" + Date.now();
+    const audioExt = (audioFile.name.split(".").pop() || "mp3").toLowerCase();
+    const audioRepoPath = `music/${id}.${audioExt}`;
+
+    stepStart("step-audio");
+    const audioB64 = await fileToBase64(audioFile);
+    await putFile(token, audioRepoPath, audioB64, `Add song: ${title}`);
+    stepDone("step-audio");
+
+    let artRelPath = "";
+    if(artFile){
+      stepStart("step-art");
+      const artExt = (artFile.name.split(".").pop() || "jpg").toLowerCase();
+      artRelPath = `art/${id}.${artExt}`;
+      const artB64 = await fileToBase64(artFile);
+      await putFile(token, `music/${artRelPath}`, artB64, `Add cover art for: ${title}`);
+      stepDone("step-art");
+    }
+
+    stepStart("step-catalog");
+    const { content, sha } = await getFile(token, "music/songs.json");
+    const list = JSON.parse(content);
+    const entry = { title, audio: `${id}.${audioExt}` };
+    if(album) entry.album = album;
+    if(genre) entry.genre = genre;
+    if(artRelPath) entry.artwork = artRelPath;
+    entry.lyrics = lyrics || "";
+    list.push(entry);
+    const updatedB64 = utf8ToB64(JSON.stringify(list, null, 2));
+    await putFile(token, "music/songs.json", updatedB64, `Add song to catalog: ${title}`, sha);
+    stepDone("step-catalog");
+
+    $("successTitle").textContent = title;
+    $("success").classList.add("show");
+    $("songForm").reset();
+    $("audioName").textContent = "Choose an mp3…";
+    $("artName").textContent = "Choose an image…";
+    loadAlbumList();
+  }catch(err){
+    const busy = document.querySelector(".step.busy");
+    if(busy) stepFail(busy.id);
+    $("formError").textContent = err.message;
+    $("formError").classList.add("show");
+  }finally{
+    $("submitBtn").disabled = false;
+  }
+});
+
+$("addAnotherBtn").addEventListener("click", () => {
+  $("success").classList.remove("show");
+  $("steps").classList.remove("show");
+});
+
+/* ===== Boot ===== */
+(function(){
+  const saved = localStorage.getItem(TOKEN_KEY);
+  if(saved){
+    $("token").value = saved;
+    verifyToken(saved).then(showMain).catch(() => { localStorage.removeItem(TOKEN_KEY); showAuth(); });
+  }else{
+    showAuth();
+  }
+})();
+</script>
+</body>
+</html>

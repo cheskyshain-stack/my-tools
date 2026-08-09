@@ -1,0 +1,37 @@
+[
+  { "title": "Al Hanisim", "audio": "al-hanisim.mp3", "lyrics": "" },
+  { "title": "Ari", "audio": "ari.mp3", "lyrics": "" },
+  { "title": "Baby Boy", "audio": "baby-boy.mp3", "lyrics": "" },
+  { "title": "Erev Shabbos", "audio": "erev-shabbos.mp3", "lyrics": "" },
+  { "title": "Homemade Pizza Night", "audio": "homemade-pizza-night.mp3", "lyrics": "" },
+  { "title": "Miriam", "audio": "miriam.mp3", "lyrics": "" },
+  { "title": "Money", "audio": "money.mp3", "lyrics": "" },
+  { "title": "Oy oy oy, Shabbos", "audio": "oy-oy-oy-shabbos.mp3", "lyrics": "" },
+
+  { "title": "Popcorn", "audio": "popcorn-en.mp3", "album": "Popcorn", "genre": "English", "lyrics": "" },
+  { "title": "Попкорн", "audio": "popcorn-ru.mp3", "album": "Popcorn", "genre": "Russian", "lyrics": "" },
+  { "title": "פופקורן", "audio": "popcorn-he.mp3", "album": "Popcorn", "genre": "Hebrew", "lyrics": "" },
+  { "title": "爆米花", "audio": "popcorn-zh.mp3", "album": "Popcorn", "genre": "Chinese", "lyrics": "" },
+
+  { "title": "Shmuel Siyum", "audio": "shmuel-siyum.mp3", "lyrics": "" },
+  { "title": "Shmuel", "audio": "shmuel.mp3", "lyrics": "" },
+  { "title": "Spit-Up Symphony", "audio": "spit-up-symphony.mp3", "lyrics": "" },
+  { "title": "The Kids", "audio": "the-kids.mp3", "lyrics": "" },
+
+  { "title": "The Little Leaf", "audio": "the-little-leaf.mp3", "album": "The Little Leaf", "lyrics": "" },
+  { "title": "The Little Leaf (1)", "audio": "the-little-leaf-1.mp3", "album": "The Little Leaf", "lyrics": "" },
+  { "title": "The Little Leaf (2)", "audio": "the-little-leaf-2.mp3", "album": "The Little Leaf", "lyrics": "" },
+
+  { "title": "There was once a homeless man", "audio": "there-was-once-a-homeless-man.mp3", "lyrics": "" },
+  { "title": "There was once a man", "audio": "there-was-once-a-man.mp3", "lyrics": "" },
+  { "title": "Yomi Daf", "audio": "yomi-daf.mp3", "lyrics": "" },
+
+  { "title": "אילו פינו", "audio": "ilu-finu.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "חֲזָרָה", "audio": "chazara.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "יבשה שלי acapella", "audio": "yabasha-sheli-acapella.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "לַיְּהוּדִים הָיְתָה אוֹרָה", "audio": "layehudim-hayta-ora.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "מַה נִּשְׁתַּנָּה", "audio": "mah-nishtana.mp3", "genre": "Hebrew", "featured": true, "lyrics": "" },
+  { "title": "מֹשֶׁה אֱמֶת", "audio": "moshe-emet.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "מודה אני לפניך", "audio": "modeh-ani-lefanecha.mp3", "genre": "Hebrew", "lyrics": "" },
+  { "title": "שָׁלוֹם עֲלֵיכֶם", "audio": "shalom-aleichem.mp3", "genre": "Hebrew", "lyrics": "" }
+]
