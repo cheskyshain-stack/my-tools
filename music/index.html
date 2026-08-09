@@ -226,6 +226,7 @@ main{
 .rail::-webkit-scrollbar{ display:none; }
 .tile{
   width:150px; flex:none; scroll-snap-align:start; text-align:left;
+  display:flex; flex-direction:column;
   transition:transform .18s var(--ease);
 }
 .tile:active{ transform:scale(.97); }
@@ -278,7 +279,7 @@ main{
 .album .art{ width:100%; aspect-ratio:1; border-radius:var(--r-lg); box-shadow:var(--shadow-sm); }
 .album .t{ margin:10px 0 2px; font-family:var(--display); font-weight:600; font-size:15.5px; letter-spacing:-.01em; }
 .album .s{ font-family:var(--mono); font-size:11px; color:var(--dim); }
-.album{ text-align:left; transition:transform .18s var(--ease); }
+.album{ text-align:left; display:flex; flex-direction:column; transition:transform .18s var(--ease); }
 .album:active{ transform:scale(.975); }
 
 .back{
@@ -912,6 +913,13 @@ function durText(song){
   const d = S.durations[keyOf(song)];
   return d ? fmt(d) : "—:—";
 }
+function displayGenre(song){
+  // "Hebrew" isn't shown as a chip/tag on the public site (most songs are
+  // Hebrew, so it's just noise) — other genres (used e.g. to tell the
+  // Popcorn language versions apart) still show normally.
+  if (!song || !song.genre || song.genre.toLowerCase() === "hebrew") return "";
+  return song.genre;
+}
 function albumNameFor(song){
   if (!song || !song.albumId) return "";
   const a = albumMeta.find(x => x.id === song.albumId);
@@ -1021,7 +1029,7 @@ function renderHero(){
   const h3 = document.createElement("h3"); h3.textContent = s.title;
   const ar = document.createElement("p"); ar.className = "artist"; ar.textContent = ARTIST;
   const ch = document.createElement("div"); ch.className = "chips";
-  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, displayGenre(s), durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
   meta.append(h3, ar, ch);
   body.appendChild(meta);
   el.appendChild(body);
@@ -1062,7 +1070,7 @@ function tile(i, badge){
   const art = artNode(s);
   if (badge){ const t = document.createElement("span"); t.className = "badge"; t.textContent = badge; art.appendChild(t); }
   const t1 = document.createElement("div"); t1.className = "t"; t1.textContent = s.title;
-  const t2 = document.createElement("div"); t2.className = "s"; t2.textContent = [s.year, s.genre].filter(Boolean).join(" · ");
+  const t2 = document.createElement("div"); t2.className = "s"; t2.textContent = [s.year, displayGenre(s)].filter(Boolean).join(" · ");
   b.append(art, t1, t2);
   b.onclick = () => playSong(i, { from: "Latest releases" });
   return b;
@@ -1090,7 +1098,7 @@ function songRow(i, opts){
   info.className = "info";
   const t = document.createElement("div"); t.className = "t"; t.textContent = s.title;
   const sub = document.createElement("div"); sub.className = "s";
-  sub.textContent = [ARTIST, albumNameFor(s), s.genre].filter(Boolean).join(" · ");
+  sub.textContent = [ARTIST, albumNameFor(s), displayGenre(s)].filter(Boolean).join(" · ");
   info.append(t, sub);
   b.appendChild(info);
 
@@ -1384,7 +1392,7 @@ function paintNowPlaying(){
   $("fTitle").textContent = s.title;
   fillArt($("fArt"), s);
   const ch = $("fChips"); ch.innerHTML = "";
-  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, displayGenre(s), durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
 
   const dl = $("fDownload");
   dl.style.display = s.download === false ? "none" : "grid";
@@ -1559,7 +1567,7 @@ audio.addEventListener("loadedmetadata", () => {
 function paintNowPlayingChips(){
   const s = currentSong(); if (!s) return;
   const ch = $("fChips"); ch.innerHTML = "";
-  [albumNameFor(s), s.year, s.genre, durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
+  [albumNameFor(s), s.year, displayGenre(s), durText(s)].filter(Boolean).forEach(v => ch.appendChild(chip(v)));
 }
 audio.addEventListener("ended", () => next(true));
 audio.addEventListener("error", () => {
