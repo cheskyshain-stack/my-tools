@@ -767,6 +767,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
             <input type="range" id="fVol" min="0" max="1" step="0.01" aria-label="Volume" />
           </div>
           <button class="speed" id="fSpeed">1.0×</button>
+          <button class="speed" id="fBoost" aria-label="Loudness boost">🔊 2.4×</button>
         </div>
 
         <div class="extras">
@@ -1605,6 +1606,23 @@ $("fSpeed").onclick = () => {
   paintTransport();
   toast("Speed " + S.speed + "×");
 };
+
+const BOOST_LEVELS = [1, 1.8, 2.4, 3, 3.5];
+function paintBoost(){
+  const amt = boost.getAmount();
+  $("fBoost").textContent = "🔊 " + amt.toFixed(1) + "×";
+  $("fBoost").classList.toggle("on", amt !== 1);
+}
+$("fBoost").onclick = () => {
+  const cur = boost.getAmount();
+  const closestIdx = BOOST_LEVELS.reduce((bestI, v, i) =>
+    Math.abs(v - cur) < Math.abs(BOOST_LEVELS[bestI] - cur) ? i : bestI, 0);
+  const next = BOOST_LEVELS[(closestIdx + 1) % BOOST_LEVELS.length];
+  boost.setAmount(next);
+  paintBoost();
+  toast("Loudness boost " + next.toFixed(1) + "×");
+};
+paintBoost();
 
 function share(){
   const s = currentSong(); if (!s) return;
