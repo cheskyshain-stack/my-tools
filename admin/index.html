@@ -341,7 +341,12 @@ async function putFile(token, path, base64Content, message, sha){
     if(res.status === 403 && /not accessible/i.test(msg)){
       msg += " — your token can read this repo but can't write to it. On github.com, check the token's Repository access is set to this repo (not \"Public repositories\") and its Contents permission is \"Read and write\", then regenerate it.";
     }
-    throw new Error(msg);
+    const conflict = res.status === 409 || res.status === 422 || /does not match/i.test(msg);
+    const wrapped = new Error(conflict
+      ? "Someone else's change (maybe another tab, or a change I just pushed) landed at the same moment as yours. Reloading the library with the latest version — please try your change again."
+      : msg);
+    wrapped.conflict = conflict;
+    throw wrapped;
   }
   return res.json();
 }
@@ -490,7 +495,24 @@ function renderLibrary(){
   $("libraryBody").innerHTML = html;
 }
 
+/* A single in-flight-save lock shared by every mutation below — prevents
+   two overlapping saves from racing each other and tripping GitHub's
+   sha-conflict check (one write landing while another's stale sha is
+   still in flight). */
+let libraryBusy = false;
+function setLibraryBusy(busy){
+  libraryBusy = busy;
+  $("libraryBody").style.opacity = busy ? ".5" : "1";
+  $("libraryBody").style.pointerEvents = busy ? "none" : "auto";
+}
+async function handleLibraryError(err){
+  $("libraryError").textContent = err.message;
+  $("libraryError").classList.add("show");
+  if(err.conflict) await loadLibrary();
+}
+
 $("libraryBody").addEventListener("click", e => {
+  if(libraryBusy) return;
   const editSong = e.target.closest("[data-edit-song]");
   if(editSong){ openSongModal(editSong.dataset.editSong); return; }
   const editAlbum = e.target.closest("[data-edit-album]");
@@ -499,11 +521,14 @@ $("libraryBody").addEventListener("click", e => {
   if(move && !move.disabled){ moveSong(move.dataset.move, parseInt(move.dataset.dir, 10)); }
 });
 $("libraryBody").addEventListener("change", e => {
+  if(libraryBusy) return;
   const sel = e.target.closest("[data-reassign]");
   if(sel){ reassignAlbum(sel.dataset.reassign, sel.value || null); }
 });
 
 async function moveSong(id, dir){
+  if(libraryBusy) return;
+  setLibraryBusy(true);
   const token = localStorage.getItem(TOKEN_KEY);
   try{
     await commitSongs(token, list => {
@@ -521,12 +546,15 @@ async function moveSong(id, dir){
     }, `Reorder: ${id}`);
     await loadLibrary();
   }catch(err){
-    $("libraryError").textContent = err.message;
-    $("libraryError").classList.add("show");
+    await handleLibraryError(err);
+  }finally{
+    setLibraryBusy(false);
   }
 }
 
 async function reassignAlbum(songId, newAlbumId){
+  if(libraryBusy) return;
+  setLibraryBusy(true);
   const token = localStorage.getItem(TOKEN_KEY);
   try{
     await commitSongs(token, list => {
@@ -537,8 +565,9 @@ async function reassignAlbum(songId, newAlbumId){
     }, `Move song to ${newAlbumId || "Unassigned"}: ${songId}`);
     await loadLibrary();
   }catch(err){
-    $("libraryError").textContent = err.message;
-    $("libraryError").classList.add("show");
+    await handleLibraryError(err);
+  }finally{
+    setLibraryBusy(false);
   }
 }
 
@@ -586,11 +615,13 @@ $("esArtFile").addEventListener("change", () => { $("esArtName").textContent = $
 $("esAudioFile").addEventListener("change", () => { $("esAudioName").textContent = $("esAudioFile").files[0]?.name || "Replace audio…"; });
 
 $("esSaveBtn").addEventListener("click", async () => {
+  if(libraryBusy) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const id = currentEditingSongId;
   const title = $("esTitle").value.trim();
   if(!title){ setModalError("song", "Title is required."); return; }
 
+  setLibraryBusy(true);
   setModalBusy("song", true); setModalError("song", "");
   try{
     const albumId = $("esAlbum").value || undefined;
@@ -639,15 +670,19 @@ $("esSaveBtn").addEventListener("click", async () => {
     await loadLibrary();
   }catch(err){
     setModalError("song", err.message);
+    if(err.conflict) await loadLibrary();
   }finally{
     setModalBusy("song", false);
+    setLibraryBusy(false);
   }
 });
 
 $("esDeleteBtn").addEventListener("click", async () => {
+  if(libraryBusy) return;
   if(!confirm("Delete this song? It's removed from the catalog — the underlying audio/art files stay in the repo.")) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const id = currentEditingSongId;
+  setLibraryBusy(true);
   setModalBusy("song", true); setModalError("song", "");
   try{
     await commitSongs(token, list => list.filter(s => s.id !== id), `Delete song: ${id}`);
@@ -655,8 +690,10 @@ $("esDeleteBtn").addEventListener("click", async () => {
     await loadLibrary();
   }catch(err){
     setModalError("song", err.message);
+    if(err.conflict) await loadLibrary();
   }finally{
     setModalBusy("song", false);
+    setLibraryBusy(false);
   }
 });
 
@@ -683,10 +720,12 @@ $("albumModalScrim").onclick = closeAlbumModal;
 $("eaArtFile").addEventListener("change", () => { $("eaArtName").textContent = $("eaArtFile").files[0]?.name || "Choose image…"; });
 
 $("eaSaveBtn").addEventListener("click", async () => {
+  if(libraryBusy) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const name = $("eaName").value.trim();
   if(!name){ setModalError("album", "Album name is required."); return; }
 
+  setLibraryBusy(true);
   setModalBusy("album", true); setModalError("album", "");
   try{
     const releaseDate = $("eaReleaseDate").value;
@@ -723,15 +762,19 @@ $("eaSaveBtn").addEventListener("click", async () => {
     await loadLibrary();
   }catch(err){
     setModalError("album", err.message);
+    if(err.conflict) await loadLibrary();
   }finally{
     setModalBusy("album", false);
+    setLibraryBusy(false);
   }
 });
 
 $("eaDeleteBtn").addEventListener("click", async () => {
+  if(libraryBusy) return;
   if(!confirm("Delete this album? Its songs move to Unassigned — they are not deleted.")) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const id = currentEditingAlbumId;
+  setLibraryBusy(true);
   setModalBusy("album", true); setModalError("album", "");
   try{
     await commitSongs(token, list => { list.forEach(s => { if(s.albumId === id) delete s.albumId; }); return list; }, `Unlink songs from deleted album: ${id}`);
@@ -740,8 +783,10 @@ $("eaDeleteBtn").addEventListener("click", async () => {
     await loadLibrary();
   }catch(err){
     setModalError("album", err.message);
+    if(err.conflict) await loadLibrary();
   }finally{
     setModalBusy("album", false);
+    setLibraryBusy(false);
   }
 });
 
