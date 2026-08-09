@@ -81,5 +81,24 @@ function createAudioBoost(audioEl, amount){
   }
   function getAmount(){ return amount; }
 
+  // Keep in sync with changes made by OTHER same-origin documents. The
+  // shell's persistent mini-player and the full /music/ app are separate
+  // documents (parent window + iframe) - the shell loads once and stays
+  // alive for the whole visit, so without this its boost amount would
+  // freeze at whatever it was when the shell first loaded and never learn
+  // about a change made later from within /music/, leaving the two out of
+  // sync (one louder/clearer than the other). The native 'storage' event
+  // fires on every OTHER same-origin window when localStorage changes
+  // (never on the window that made the change itself) - exactly the
+  // parent-shell / child-iframe relationship here, no messaging needed.
+  window.addEventListener("storage", (e) => {
+    if (e.key !== CJ_BOOST_KEY || e.newValue == null) return;
+    const v = parseFloat(e.newValue);
+    if (isFinite(v) && v > 0){
+      amount = v;
+      if (gain) gain.gain.value = amount;
+    }
+  });
+
   return { ensure, resume, setAmount, getAmount };
 }

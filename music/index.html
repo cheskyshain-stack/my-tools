@@ -885,7 +885,14 @@ const S = {
   playing: false,
   shuffle: store.get("shuffle", false),
   repeat: store.get("repeat", "off"),   // off | all | one
-  volume: store.get("volume", 0.85),
+  // Default full (1.0), matching the shell's mini-player, which never
+  // touches audio.volume at all and so always plays at full volume. The
+  // old default here was 0.85 - a silent 15% cut applied before the
+  // loudness boost on top, with no way to even see or undo it on mobile
+  // since the volume slider only shows on desktop. Anyone who already has
+  // that old 0.85 saved gets migrated back to full here too, since it was
+  // never a deliberate choice for them (no visible control to make one).
+  volume: (() => { const v = store.get("volume", 1); return v === 0.85 ? 1 : v; })(),
   muted: store.get("muted", false),
   speed: store.get("speed", 1),
   favorites: new Set(store.get("favorites", [])),
