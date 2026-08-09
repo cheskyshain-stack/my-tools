@@ -1196,9 +1196,18 @@ function openAlbum(name, keepScroll){
   // Only when this is a genuine "open this album" tap (e.g. from a tile in
   // the Home screen's Collections rail) - not when renderLists() re-calls
   // this with keepScroll=true just to keep an already-open album's detail
-  // view populated after a re-render. Switching views on THAT call would
-  // yank the user back to Albums even if they'd since moved to another tab.
-  if (!keepScroll) switchView("albums");
+  // view populated after a re-render. Switching views (or pushing another
+  // history layer) on THAT call would yank the user back to Albums even
+  // if they'd since moved to another tab, and would stack up a fresh
+  // layer on every re-render instead of just the one real "open" action.
+  if (!keepScroll){
+    switchView("albums");
+    // Give the album detail its own Back-press layer, same idea as the
+    // full player - but only if it isn't already showing (switching
+    // between two open albums, if that ever happens, shouldn't stack a
+    // second layer for the same screen).
+    if ($("albumDetail").hidden) pushUiLayer("albumOpen");
+  }
   S.albumOpen = name;
   const a = albums().find(x => x.name === name);
   if (!a) return;
@@ -1224,9 +1233,14 @@ function openAlbum(name, keepScroll){
   if (!keepScroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 $("albumBack").onclick = () => {
-  S.albumOpen = null;
-  $("albumDetail").hidden = true;
-  $("albumGridWrap").hidden = false;
+  // Unwind the history layer pushed when this album was opened (if any -
+  // it won't be there if this album was reached some other way, e.g.
+  // being kept populated across a re-render) so a later Back press
+  // doesn't land on a dangling entry. See openFull()/closeFull() above
+  // for the same pattern; the popstate listener there does the actual
+  // closing.
+  if (uiStack[uiStack.length - 1] === "albumOpen") history.back();
+  else closeAlbumUI();
 };
 
 /* ============================================================================
@@ -1677,26 +1691,59 @@ document.querySelectorAll(".nav button").forEach(b => {
     window.scrollTo({ top: 0 });
     if (b.dataset.view === "search") setTimeout(() => $("q").focus(), 220);
     if (b.dataset.view === "albums"){
-      // Always land on the collections grid, never a previously-opened album.
-      S.albumOpen = null;
-      $("albumDetail").hidden = true;
-      $("albumGridWrap").hidden = false;
+      // Always land on the collections grid, never a previously-opened
+      // album. If an album's own history layer is currently on top (the
+      // user tapped this tab directly instead of the in-app back arrow
+      // or phone Back), unwind it the same way those do, so the layer
+      // doesn't dangle and misfire on a later, unrelated Back press.
+      // uiStack is defined further below - safe here since this only
+      // runs on a click, well after the whole script has executed once.
+      if (uiStack[uiStack.length - 1] === "albumOpen"){
+        history.back();
+      } else {
+        S.albumOpen = null;
+        $("albumDetail").hidden = true;
+        $("albumGridWrap").hidden = false;
+      }
     }
   };
 });
+
+/* ============================================================================
+   Layered "extra" screens on Back — full player, an open album, and the
+   leave-confirmation guard can each be pushed independently, and a user
+   can chain them in ANY order depending on what they actually do (e.g.
+   open an album → play a song from it → expand to the full player is a
+   completely normal flow, and produces three nested layers in that
+   order). Rather than have each one guess whether it's "on top" by
+   checking its own marker/DOM state against whatever the others are
+   doing, track them in one explicit stack and always close whichever is
+   ACTUALLY on top - correct regardless of the order they were opened in.
+
+   The leave-guard is pushed lazily, the first time a song actually starts
+   playing - NOT unconditionally at page load. The shell (this page's
+   parent, hosting it in an iframe) pushes its own history entry for "now
+   showing /music/" right as this page finishes loading, which happens
+   AFTER this script already ran (inline scripts run during parsing, well
+   before the page is considered "loaded"). Pushing eagerly at parse time
+   put our layer BELOW the shell's own entry once the shell caught up, so
+   the very first Back press popped the shell's layer instead - the shell
+   navigated away immediately, before any of this ever ran. Waiting for
+   the first "play" event sidesteps that race, since it only happens well
+   after the page (and the shell's own push) has settled.
+   ============================================================================ */
+const uiStack = [];
+function pushUiLayer(kind){
+  uiStack.push(kind);
+  try{ history.pushState({ cjLayer: kind }, "", location.href); }catch(e){}
+}
 
 function openFull(){
   if ($("full").classList.contains("open")) return;
   $("full").classList.add("open");
   $("full").setAttribute("aria-hidden","false");
   sizeWave();
-  // Give the full player its own history entry so the phone's Back
-  // button closes just this overlay first, instead of leaving /music/
-  // entirely. pushState() here only affects this iframe's own popstate
-  // firing - the shell frame's own history entry is untouched, so the
-  // shell won't react to it (its page-to-page Back handling is separate
-  // and still kicks in on the *next* Back, once this entry is gone).
-  try{ history.pushState({ cjFullPlayer: true }, "", location.href); }catch(e){}
+  pushUiLayer("fullPlayer");
 }
 function closeFullUI(){
   $("full").classList.remove("open");
@@ -1704,59 +1751,43 @@ function closeFullUI(){
   closeSheets();
 }
 function closeFull(){
-  // If we pushed a history entry for the open state, unwind it with a
+  // If a history entry is pushed for the open state, unwind it with a
   // real back navigation so the stack stays clean (no dangling entry
-  // that would otherwise eat a second, unrelated Back press later).
-  // The popstate listener below does the actual closing.
-  if (history.state && history.state.cjFullPlayer) history.back();
+  // that would otherwise eat a later, unrelated Back press). The
+  // popstate listener below does the actual closing.
+  if (uiStack[uiStack.length - 1] === "fullPlayer") history.back();
   else closeFullUI();
 }
 
-/* ============================================================================
-   Leave guard — warn before actually leaving /music/ while a song is
-   playing, instead of silently cutting the music with no notice (there is
-   no cross-page mini-player anymore; leaving just stops playback).
-   Works the same way the full-player's own Back handling above does: push
-   one extra history entry, so the first real Back press lands on this
-   popstate handler instead of immediately navigating away, giving us a
-   chance to confirm first. Declining re-pushes the same guard so the next
-   Back press is caught too.
+function closeAlbumUI(){
+  S.albumOpen = null;
+  $("albumDetail").hidden = true;
+  $("albumGridWrap").hidden = false;
+}
 
-   Pushed lazily, the first time a song actually starts playing - NOT
-   unconditionally at page load. The shell (the parent page hosting this
-   in an iframe) pushes its own history entry for "now showing /music/"
-   right as this page finishes loading, and that push happens AFTER this
-   script already ran (inline scripts run during parsing, well before the
-   page is considered "loaded"). Pushing this guard eagerly at parse time
-   put it BELOW the shell's own entry once the shell caught up, so the
-   very first Back press was popping the shell's layer, not this one - the
-   shell navigated away immediately, before this guard ever got a chance
-   to run. Waiting for the first "play" event sidesteps that race
-   entirely, since it only happens well after the page (and the shell's
-   own push) has settled.
-   ============================================================================ */
 let leaveGuardPushed = false;
 function ensureLeaveGuard(){
   if (leaveGuardPushed) return;
-  try{ history.pushState({ cjLeaveGuard: true }, "", location.href); leaveGuardPushed = true; }catch(e){}
+  leaveGuardPushed = true;
+  pushUiLayer("leaveGuard");
 }
 
-window.addEventListener("popstate", (e) => {
-  if ($("full").classList.contains("open") && !(e.state && e.state.cjFullPlayer)){
+window.addEventListener("popstate", () => {
+  const kind = uiStack.pop();
+  if (kind === "fullPlayer"){
     closeFullUI();
-    return;
-  }
-  if (!(e.state && e.state.cjLeaveGuard)){
+  } else if (kind === "albumOpen"){
+    closeAlbumUI();
+  } else if (kind === "leaveGuard"){
     if (S.playing){
       const ok = confirm("Leave CJ Music? Playback will stop.");
-      if (!ok){
-        try{ history.pushState({ cjLeaveGuard: true }, "", location.href); }catch(e){}
-        return;
-      }
+      if (!ok){ pushUiLayer("leaveGuard"); return; } // stay - re-trap for next time
       audio.pause();
     }
     history.back(); // completes the real exit — pops the shell's own /music/ entry
   }
+  // kind undefined - our stack was already empty, nothing of ours to
+  // close, this Back press is leaving /music/ for real.
 });
 $("miniExpand").onclick = openFull;
 $("dExpand").onclick = openFull;
