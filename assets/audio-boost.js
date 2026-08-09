@@ -3,32 +3,31 @@
    ----------------------------------------------------------------------------
    HTML5 <audio>.volume tops out at 1.0, which isn't loud enough for some
    recordings. Routing playback through Web Audio lets us push past that
-   ceiling. This is the ONE canonical implementation, loaded by both the
-   full player (music/index.html) and the persistent mini-player in the
-   site shell (index.html) — previously each had its own separate copy,
-   which is exactly the kind of drift that causes inconsistent behavior
-   between the two.
+   ceiling. Currently used by the full player (music/index.html) only.
 
-   A plain gain multiplier alone runs into a ceiling fast: push it too
-   high and the loud parts of the track clip (harsh, crackly distortion),
-   which caps how much louder you can safely go. A DynamicsCompressorNode
-   ahead of the gain levels the track first — it pulls loud peaks down and
-   effectively raises quiet parts relative to them — so the gain boost
-   afterward can be pushed noticeably harder while staying clean. This is
-   the same basic technique broadcast/streaming loudness normalization
-   uses, not just a bigger multiplier.
+   Chain: source -> compressor -> gain -> limiter -> destination.
+   - compressor: levels the track first (pulls loud peaks down, effectively
+     raises quiet parts relative to them) so the gain boost afterward can
+     be pushed noticeably harder while staying clean - the same basic
+     technique broadcast/streaming loudness normalization uses, not just
+     a bigger multiplier.
+   - gain: the actual user-controlled boost amount.
+   - limiter: a hard ceiling AFTER the gain (threshold -1dB, ratio 20:1)
+     so the boosted signal is guaranteed not to clip regardless of the
+     chosen amount or how hot the source recording already is - the
+     compressor alone only reduces dynamic range going in, it doesn't
+     guarantee the gain stage's output afterward stays under 0dBFS.
 
-   The level is user-adjustable and persisted (shared across the full
-   player and the shell's mini-player, since both read the same saved
-   value) rather than a single fixed guess baked into the code.
+   The level is user-adjustable and persisted, rather than a single fixed
+   guess baked into the code.
 
    Usage:
-     const boost = createAudioBoost(audioEl);       // reads the saved level, defaults to 2.4x
+     const boost = createAudioBoost(audioEl);       // reads the saved level, defaults to 3x
      await boost.resume();  audioEl.play();          // right before playing
-     boost.setAmount(3.0);                           // live-adjust + persist
+     boost.setAmount(3.5);                           // live-adjust + persist
    ============================================================================ */
 const CJ_BOOST_KEY = "cjMusicBoostAmount";
-const CJ_BOOST_DEFAULT = 2.4;
+const CJ_BOOST_DEFAULT = 3;
 function getSavedBoostAmount(){
   try{
     const v = parseFloat(localStorage.getItem(CJ_BOOST_KEY));

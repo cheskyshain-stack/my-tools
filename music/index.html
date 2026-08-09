@@ -767,7 +767,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
             <input type="range" id="fVol" min="0" max="1" step="0.01" aria-label="Volume" />
           </div>
           <button class="speed" id="fSpeed">1.0×</button>
-          <button class="speed" id="fBoost" aria-label="Loudness boost">🔊 2.4×</button>
+          <button class="speed" id="fBoost" aria-label="Loudness boost">🔊 3.0×</button>
         </div>
 
         <div class="extras">
@@ -1620,7 +1620,10 @@ $("fSpeed").onclick = () => {
   toast("Speed " + S.speed + "×");
 };
 
-const BOOST_LEVELS = [1, 1.8, 2.4, 3, 3.5];
+// Ceiling raised now that a limiter (see assets/audio-boost.js) guards
+// the output - pushing gain harder no longer risks clipping distortion,
+// so there's room to go louder than before if 3x still isn't enough.
+const BOOST_LEVELS = [1, 1.8, 2.4, 3, 3.5, 4.5, 5.5];
 function paintBoost(){
   const amt = boost.getAmount();
   $("fBoost").textContent = "🔊 " + amt.toFixed(1) + "×";
