@@ -22,5 +22,13 @@
     "description": "",
     "releaseDate": "",
     "visible": true
+  },
+  {
+    "id": "remix",
+    "name": "Remix",
+    "artwork": "",
+    "description": "",
+    "releaseDate": "",
+    "visible": true
   }
 ]
