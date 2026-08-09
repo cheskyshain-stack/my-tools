@@ -119,7 +119,8 @@ button:disabled:active { transform: none; }
 /* ===== Start Screen ===== */
 #startScreen { overflow-y: auto; padding: 20px 16px calc(20px + var(--safe-bottom)); }
 .start-header { text-align: center; padding: 24px 0 8px; }
-.start-header .logo { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+.start-header .logo { line-height: 1; margin-bottom: 8px; display: flex; justify-content: center; color: var(--accent); }
+.start-header .logo svg { width: 46px; height: 46px; fill: currentColor; stroke: var(--text-primary); stroke-width: 1; stroke-linejoin: round; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
 .start-header h1 { margin: 0; font-family: "Fraunces", Georgia, serif; font-size: 28px; font-weight: 600; letter-spacing: -0.4px; }
 .start-header p { margin: 4px 0 0; color: var(--text-secondary); font-size: 14px; }
 
@@ -200,7 +201,9 @@ button:disabled:active { transform: none; }
 .icon-btn {
   width: 40px; height: 40px; border-radius: 12px; background: var(--btn-bg);
   display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  color: var(--text-primary);
 }
+.icon-btn svg { width: 19px; height: 19px; flex-shrink: 0; }
 .status-pill {
   flex: 1; text-align: center; font-size: 13px; font-weight: 600;
   padding: 8px 10px; border-radius: 12px; background: var(--bg-panel);
@@ -215,7 +218,8 @@ button:disabled:active { transform: none; }
 .player-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .player-info .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid var(--border-color); }
 .player-info .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.captured-row { display: flex; flex-wrap: wrap; gap: 1px; font-size: 13px; min-height: 16px; color: var(--text-secondary); }
+.captured-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1px; min-height: 16px; color: var(--text-secondary); }
+.captured-row .piece-svg { width: 13px; height: 13px; fill: currentColor; stroke: none; filter: none; }
 .clock {
   font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 700;
   padding: 6px 12px; border-radius: 10px; background: var(--btn-bg); min-width: 74px; text-align: center;
@@ -281,14 +285,17 @@ button:disabled:active { transform: none; }
 
 .piece {
   width: 88%; height: 88%; display: flex; align-items: center; justify-content: center;
-  font-size: min(9vw, 52px); line-height: 1; cursor: grab; user-select: none;
+  line-height: 1; cursor: grab; user-select: none;
   transition: transform 0.18s ease;
   position: relative; z-index: 2;
 }
 .piece.dragging { cursor: grabbing; z-index: 10; transition: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4)); }
-.piece.white-piece { color: #fdfdfd; text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 0 1px #000; }
-.piece.black-piece { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,0.25); }
+.piece.white-piece { color: #fdfdfd; }
+.piece.black-piece { color: #2a2a2a; }
 .piece.anim-move { transition: transform 0.22s cubic-bezier(0.4,0,0.2,1); }
+.piece-svg { width: 82%; height: 82%; fill: currentColor; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }
+.piece.white-piece .piece-svg { stroke: #262626; stroke-width: 1; stroke-linejoin: round; }
+.piece.black-piece .piece-svg { stroke: #f2f2f2; stroke-width: 1; stroke-linejoin: round; }
 
 [data-colorblind="true"] .square.selected::before { background: rgba(37,131,247,0.55); box-shadow: inset 0 0 0 4px rgba(37,131,247,0.9); }
 [data-colorblind="true"] .move-dot { outline: 2px dashed rgba(20,20,20,0.5); }
@@ -356,12 +363,18 @@ button:disabled:active { transform: none; }
 
 .promo-choices { display: flex; gap: 10px; justify-content: center; margin: 8px 0 4px; }
 .promo-choices button {
-  width: 62px; height: 62px; border-radius: 14px; font-size: 34px;
+  width: 62px; height: 62px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center; background: var(--btn-bg);
 }
+.promo-choices button .piece-svg { width: 74%; height: 74%; }
+.promo-choices button.white-piece { color: #fdfdfd; }
+.promo-choices button.white-piece .piece-svg { stroke: #262626; stroke-width: 1; stroke-linejoin: round; }
+.promo-choices button.black-piece { color: #2a2a2a; }
+.promo-choices button.black-piece .piece-svg { stroke: #f2f2f2; stroke-width: 1; stroke-linejoin: round; }
 
 .gameover-box { text-align: center; }
-.gameover-box .result-icon { font-size: 54px; margin-bottom: 6px; }
+.gameover-box .result-icon { font-size: 54px; margin-bottom: 6px; display: flex; justify-content: center; }
+.gameover-box .result-icon svg { width: 54px; height: 54px; fill: var(--accent); stroke: var(--text-primary); stroke-width: 1; stroke-linejoin: round; }
 .gameover-box h2 { margin: 0 0 4px; font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 24px; letter-spacing: -0.3px; }
 .gameover-box .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 18px; }
 
@@ -425,13 +438,67 @@ button:disabled:active { transform: none; }
 </style>
 </head>
 <body data-app-theme="dark" data-board-theme="walnut" data-colorblind="false">
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <!-- Chess pieces - flat minimal set, colored via currentColor/CSS -->
+    <symbol id="cjp-pawn" viewBox="0 0 45 45">
+      <circle cx="22.5" cy="12.5" r="6.3"/>
+      <path d="M16.5 33c0-6.5 3.3-9 4.3-13h3.4c1 4 4.3 6.5 4.3 13z"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <symbol id="cjp-knight" viewBox="0 0 45 45">
+      <polygon points="13,33 13,24 10,20 18,12 24,15 21,19 25,22 29,26 29,33"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <symbol id="cjp-bishop" viewBox="0 0 45 45">
+      <circle cx="22.5" cy="9" r="2.3"/>
+      <path d="M22.5 12c5 3 6 10 3 13.5 2.5 1.8 4.5 4.5 4.5 7.5H15c0-3 2-5.7 4.5-7.5-3-3.5-2-10.5 3-13.5z"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <symbol id="cjp-rook" viewBox="0 0 45 45">
+      <rect x="12" y="7" width="4.2" height="6"/>
+      <rect x="20.4" y="7" width="4.2" height="6"/>
+      <rect x="28.8" y="7" width="4.2" height="6"/>
+      <rect x="12" y="12.5" width="21" height="3.5"/>
+      <path d="M14.5 16h16l-2 17h-12z"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <symbol id="cjp-queen" viewBox="0 0 45 45">
+      <circle cx="11.5" cy="15" r="2.1"/>
+      <circle cx="17.5" cy="10" r="2.1"/>
+      <circle cx="22.5" cy="8" r="2.3"/>
+      <circle cx="27.5" cy="10" r="2.1"/>
+      <circle cx="33.5" cy="15" r="2.1"/>
+      <path d="M13 17h19l-2.5 4h-14z"/>
+      <path d="M17 21h11c1 4-2.5 6-2 12h-7c.5-6-2-8-2-12z"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <symbol id="cjp-king" viewBox="0 0 45 45">
+      <rect x="21" y="4" width="3" height="8"/>
+      <rect x="18" y="6.5" width="9" height="3"/>
+      <rect x="15.5" y="15" width="14" height="3.5" rx="1"/>
+      <path d="M18 18.5h9c1 4-2 6-1.5 11.5h-6c.5-5.5-2.5-7.5-1.5-11.5z"/>
+      <rect x="9" y="33" width="27" height="4" rx="1.5"/>
+    </symbol>
+    <!-- UI icons - stroke style, inherit currentColor -->
+    <symbol id="cji-menu" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></g></symbol>
+    <symbol id="cji-history" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 5v4h4"/><path d="M12 8v4l3 2"/></g></symbol>
+    <symbol id="cji-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g></symbol>
+    <symbol id="cji-redo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></g></symbol>
+    <symbol id="cji-flip" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v14"/><path d="M4 7l4-4 4 4"/><path d="M16 21V7"/><path d="M12 17l4 4 4-4"/></g></symbol>
+    <symbol id="cji-pause" viewBox="0 0 24 24"><g fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></g></symbol>
+    <symbol id="cji-sound-on" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 8a5 5 0 0 1 0 8"/><path d="M19.5 5.5a9 9 0 0 1 0 13"/></g></symbol>
+    <symbol id="cji-sound-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="16" y1="9" x2="21" y2="14"/><line x1="21" y1="9" x2="16" y2="14"/></g></symbol>
+    <symbol id="cji-more" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></g></symbol>
+  </defs>
+</svg>
 <a class="cj-float" href="/" aria-label="CJ Portal home" title="CJ Portal Home"><img src="/chess/icon.png" alt="Chess"></a>
 <div id="app">
 
   <!-- ===================== START SCREEN ===================== -->
   <section id="startScreen" class="screen active" aria-label="Game setup">
     <div class="start-header">
-      <div class="logo">♞</div>
+      <div class="logo"><svg viewBox="0 0 45 45"><use href="#cjp-knight"></use></svg></div>
       <h1>Chess</h1>
       <p>A clean, complete chess game</p>
     </div>
@@ -448,112 +515,73 @@ button:disabled:active { transform: none; }
     </div>
 
     <div class="card">
-      <h2>Game Mode</h2>
-      <div class="option-group" id="modeGroup">
-        <button class="option-btn selected" data-value="computer">Vs Computer</button>
-        <button class="option-btn" data-value="local">2 Player</button>
-      </div>
-    </div>
-
-    <div class="card" id="colorCard">
-      <h2>Play As</h2>
-      <div class="option-group" id="colorGroup">
-        <button class="option-btn selected" data-value="w">White</button>
-        <button class="option-btn" data-value="b">Black</button>
-        <button class="option-btn" data-value="random">Random</button>
-      </div>
-    </div>
-
-    <div class="card" id="difficultyCard">
-      <h2>Computer Difficulty</h2>
-      <div class="option-group" id="difficultyGroup">
-        <button class="option-btn selected" data-value="easy">Easy</button>
-        <button class="option-btn" data-value="medium">Medium</button>
-        <button class="option-btn" data-value="hard">Hard</button>
-      </div>
-    </div>
-
-    <div class="card" id="autoflipCard" style="display:none;">
-      <div class="toggle-row">
-        <div class="label">Flip board each move
-          <span class="desc">Board rotates for the player on turn</span>
+      <div class="settings-section">
+        <h4>Game Mode</h4>
+        <div class="option-group" id="modeGroup">
+          <button class="option-btn selected" data-value="computer">Vs Computer</button>
+          <button class="option-btn" data-value="local">2 Player</button>
         </div>
-        <label class="switch"><input type="checkbox" id="setupAutoFlip"><span class="track"><span class="thumb"></span></span></label>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>Timer</h2>
-      <div class="option-group" id="timerGroup">
-        <button class="option-btn selected" data-value="0">None</button>
-        <button class="option-btn" data-value="1">1 min</button>
-        <button class="option-btn" data-value="3">3 min</button>
-        <button class="option-btn" data-value="5">5 min</button>
-        <button class="option-btn" data-value="10">10 min</button>
-        <button class="option-btn" data-value="15">15 min</button>
-        <button class="option-btn" data-value="custom">Custom</button>
+      <div class="settings-section" id="colorCard">
+        <h4>Play As</h4>
+        <div class="option-group" id="colorGroup">
+          <button class="option-btn selected" data-value="w">White</button>
+          <button class="option-btn" data-value="b">Black</button>
+          <button class="option-btn" data-value="random">Random</button>
+        </div>
       </div>
-      <div class="custom-time-row" id="customTimeRow" style="display:none;">
-        <input type="number" id="customMinutes" placeholder="Minutes" min="1" max="180" inputmode="numeric">
-      </div>
-      <h2 style="margin-top:14px;">Increment</h2>
-      <div class="option-group" id="incrementGroup">
-        <button class="option-btn selected" data-value="0">0s</button>
-        <button class="option-btn" data-value="1">1s</button>
-        <button class="option-btn" data-value="2">2s</button>
-        <button class="option-btn" data-value="5">5s</button>
-        <button class="option-btn" data-value="custom">Custom</button>
-      </div>
-      <div class="custom-time-row" id="customIncrementRow" style="display:none;">
-        <input type="number" id="customIncrement" placeholder="Seconds" min="0" max="60" inputmode="numeric">
-      </div>
-    </div>
 
-    <div class="card">
-      <h2>Board</h2>
-      <div class="option-group" id="boardThemeGroup">
-        <button class="option-btn selected" data-value="walnut">Walnut</button>
-        <button class="option-btn" data-value="emerald">Emerald</button>
-        <button class="option-btn" data-value="ocean">Ocean</button>
-        <button class="option-btn" data-value="slate">Slate</button>
-        <button class="option-btn" data-value="coral">Coral</button>
+      <div class="settings-section" id="difficultyCard">
+        <h4>Computer Difficulty</h4>
+        <div class="option-group" id="difficultyGroup">
+          <button class="option-btn selected" data-value="easy">Easy</button>
+          <button class="option-btn" data-value="medium">Medium</button>
+          <button class="option-btn" data-value="hard">Hard</button>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>Preferences</h2>
-      <div class="toggle-row">
-        <div class="label">Dark theme</div>
-        <label class="switch"><input type="checkbox" id="setupDarkTheme" checked><span class="track"><span class="thumb"></span></span></label>
-      </div>
-      <div class="toggle-row">
-        <div class="label">Sound effects</div>
-        <label class="switch"><input type="checkbox" id="setupSound" checked><span class="track"><span class="thumb"></span></span></label>
-      </div>
-      <div class="toggle-row">
-        <div class="label">Show coordinates</div>
-        <label class="switch"><input type="checkbox" id="setupCoords" checked><span class="track"><span class="thumb"></span></span></label>
-      </div>
-      <div class="toggle-row">
-        <div class="label">Legal move hints</div>
-        <label class="switch"><input type="checkbox" id="setupHints" checked><span class="track"><span class="thumb"></span></span></label>
-      </div>
-      <div class="toggle-row">
-        <div class="label">Colorblind-friendly board</div>
-        <label class="switch"><input type="checkbox" id="setupColorblind"><span class="track"><span class="thumb"></span></span></label>
+      <div class="settings-section">
+        <h4>Timer</h4>
+        <div class="option-group" id="timerGroup">
+          <button class="option-btn selected" data-value="0">None</button>
+          <button class="option-btn" data-value="5">5 min</button>
+          <button class="option-btn" data-value="10">10 min</button>
+          <button class="option-btn" data-value="custom">Custom</button>
+        </div>
+        <div class="custom-time-row" id="customTimeRow" style="display:none;">
+          <input type="number" id="customMinutes" placeholder="Minutes" min="1" max="180" inputmode="numeric">
+        </div>
+        <div id="incrementRow" style="display:none;">
+          <h4 style="margin-top:14px;">Increment</h4>
+          <div class="option-group" id="incrementGroup">
+            <button class="option-btn selected" data-value="0">0s</button>
+            <button class="option-btn" data-value="1">1s</button>
+            <button class="option-btn" data-value="2">2s</button>
+            <button class="option-btn" data-value="5">5s</button>
+            <button class="option-btn" data-value="custom">Custom</button>
+          </div>
+          <div class="custom-time-row" id="customIncrementRow" style="display:none;">
+            <input type="number" id="customIncrement" placeholder="Seconds" min="0" max="60" inputmode="numeric">
+          </div>
+        </div>
       </div>
     </div>
 
     <button class="start-btn" id="btnStartGame">Start Game</button>
+
+    <div id="cj-share"></div>
+    <script src="/assets/share-widget.js" defer></script>
+
     <div style="height:12px;"></div>
   </section>
 
   <!-- ===================== GAME SCREEN ===================== -->
   <section id="gameScreen" class="screen" aria-label="Chess board">
     <div class="top-bar">
-      <button class="icon-btn" id="btnMenu" aria-label="Back to menu" title="Menu">☰</button>
+      <button class="icon-btn" id="btnMenu" aria-label="Back to menu" title="Menu"><svg><use href="#cji-menu"></use></svg></button>
       <div class="status-pill" id="statusPill" role="status" aria-live="polite">White to move</div>
-      <button class="icon-btn" id="btnHistory" aria-label="Move history" title="Move history">📜</button>
+      <button class="icon-btn" id="btnHistory" aria-label="Move history" title="Move history"><svg><use href="#cji-history"></use></svg></button>
     </div>
 
     <div class="player-bar" id="topPlayerBar">
@@ -584,12 +612,12 @@ button:disabled:active { transform: none; }
     </div>
 
     <div class="bottom-bar" id="bottomBar">
-      <button class="icon-btn" id="btnUndo" aria-label="Undo move" title="Undo">↶</button>
-      <button class="icon-btn" id="btnRedo" aria-label="Redo move" title="Redo">↷</button>
-      <button class="icon-btn" id="btnFlip" aria-label="Flip board" title="Flip board">🔄</button>
-      <button class="icon-btn" id="btnPause" aria-label="Pause game" title="Pause">⏸</button>
-      <button class="icon-btn" id="btnSound" aria-label="Toggle sound" title="Sound">🔊</button>
-      <button class="icon-btn" id="btnMoreMenu" aria-label="More options" title="More">⋯</button>
+      <button class="icon-btn" id="btnUndo" aria-label="Undo move" title="Undo"><svg><use href="#cji-undo"></use></svg></button>
+      <button class="icon-btn" id="btnRedo" aria-label="Redo move" title="Redo"><svg><use href="#cji-redo"></use></svg></button>
+      <button class="icon-btn" id="btnFlip" aria-label="Flip board" title="Flip board"><svg><use href="#cji-flip"></use></svg></button>
+      <button class="icon-btn" id="btnPause" aria-label="Pause game" title="Pause"><svg><use href="#cji-pause"></use></svg></button>
+      <button class="icon-btn" id="btnSound" aria-label="Toggle sound" title="Sound"><svg><use href="#cji-sound-on"></use></svg></button>
+      <button class="icon-btn" id="btnMoreMenu" aria-label="More options" title="More"><svg><use href="#cji-more"></use></svg></button>
     </div>
   </section>
 
@@ -696,7 +724,15 @@ button:disabled:active { transform: none; }
       </div>
       <div class="settings-section">
         <h4>Board</h4>
-        <div class="toggle-row"><div class="label">Show coordinates</div>
+        <div class="label" style="margin-bottom:6px;">Board theme</div>
+        <div class="option-group" id="settingBoardThemeGroup">
+          <button class="option-btn" data-value="walnut">Walnut</button>
+          <button class="option-btn" data-value="emerald">Emerald</button>
+          <button class="option-btn" data-value="ocean">Ocean</button>
+          <button class="option-btn" data-value="slate">Slate</button>
+          <button class="option-btn" data-value="coral">Coral</button>
+        </div>
+        <div class="toggle-row" style="margin-top:10px;"><div class="label">Show coordinates</div>
           <label class="switch"><input type="checkbox" id="settingCoords"><span class="track"><span class="thumb"></span></span></label></div>
         <div class="toggle-row"><div class="label">Legal move hints</div>
           <label class="switch"><input type="checkbox" id="settingHints"><span class="track"><span class="thumb"></span></span></label></div>
@@ -1348,10 +1384,12 @@ const $ = id => document.getElementById(id);
 function on(el, ev, fn, opts) { el.addEventListener(ev, fn, opts); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-const PIECE_GLYPH = {
-  P:'♙', N:'♘', B:'♗', R:'♖', Q:'♕', K:'♔',
-  p:'♟', n:'♞', b:'♝', r:'♜', q:'♛', k:'♚'
+const PIECE_SYMBOL_ID = {
+  p: 'cjp-pawn', n: 'cjp-knight', b: 'cjp-bishop', r: 'cjp-rook', q: 'cjp-queen', k: 'cjp-king'
 };
+function pieceSVG(piece) {
+  return '<svg class="piece-svg" viewBox="0 0 45 45"><use href="#' + PIECE_SYMBOL_ID[piece.toLowerCase()] + '"></use></svg>';
+}
 
 /* =========================================================================
    SOUND MANAGER  -  simple Web Audio synthesized effects, no external files
@@ -1551,14 +1589,13 @@ wireOptionGroup('modeGroup', v => {
   setupConfig.mode = v;
   $('colorCard').style.display = v === 'computer' ? '' : 'none';
   $('difficultyCard').style.display = v === 'computer' ? '' : 'none';
-  $('autoflipCard').style.display = v === 'local' ? '' : 'none';
 });
 wireOptionGroup('colorGroup', v => setupConfig.color = v);
 wireOptionGroup('difficultyGroup', v => setupConfig.difficulty = v);
-wireOptionGroup('boardThemeGroup', v => { setupConfig.boardTheme = v; document.body.setAttribute('data-board-theme', v); });
 wireOptionGroup('timerGroup', v => {
   setupConfig.timer = v;
   $('customTimeRow').style.display = v === 'custom' ? 'flex' : 'none';
+  $('incrementRow').style.display = v === '0' ? 'none' : 'block';
 });
 wireOptionGroup('incrementGroup', v => {
   setupConfig.increment = v;
@@ -1566,32 +1603,16 @@ wireOptionGroup('incrementGroup', v => {
 });
 on($('customMinutes'), 'input', e => setupConfig.customMinutes = parseInt(e.target.value,10) || 5);
 on($('customIncrement'), 'input', e => setupConfig.customIncrement = parseInt(e.target.value,10) || 0);
-on($('setupAutoFlip'), 'change', e => setupConfig.autoFlip = e.target.checked);
 
 function applyAppTheme(theme) { document.body.setAttribute('data-app-theme', theme); }
-
-on($('setupDarkTheme'), 'change', e => { State.settings.appTheme = e.target.checked ? 'dark' : 'light'; applyAppTheme(State.settings.appTheme); saveSettings(); syncSettingsModalFromState(); });
-on($('setupSound'), 'change', e => { State.settings.sound = e.target.checked; SoundManager.enabled = e.target.checked; saveSettings(); syncSettingsModalFromState(); });
-on($('setupCoords'), 'change', e => { State.settings.coords = e.target.checked; saveSettings(); syncSettingsModalFromState(); });
-on($('setupHints'), 'change', e => { State.settings.hints = e.target.checked; saveSettings(); syncSettingsModalFromState(); });
-on($('setupColorblind'), 'change', e => { State.settings.colorblind = e.target.checked; document.body.setAttribute('data-colorblind', String(e.target.checked)); saveSettings(); syncSettingsModalFromState(); });
 
 function initSetupScreenFromSettings() {
   applyAppTheme(State.settings.appTheme);
   document.body.setAttribute('data-board-theme', State.settings.boardTheme);
   document.body.setAttribute('data-colorblind', String(State.settings.colorblind));
-  $('setupDarkTheme').checked = State.settings.appTheme === 'dark';
-  $('setupSound').checked = State.settings.sound;
-  $('setupCoords').checked = State.settings.coords;
-  $('setupHints').checked = State.settings.hints;
-  $('setupColorblind').checked = State.settings.colorblind;
   SoundManager.enabled = State.settings.sound;
-  setBoardThemeButtons(State.settings.boardTheme);
+  setupConfig.boardTheme = State.settings.boardTheme;
   setDifficultyButtons(setupConfig.difficulty, 'difficultyGroup');
-}
-function setBoardThemeButtons(theme) {
-  document.querySelectorAll('#boardThemeGroup .option-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === theme));
-  setupConfig.boardTheme = theme;
 }
 function setDifficultyButtons(diff, groupId) {
   document.querySelectorAll('#' + groupId + ' .option-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === diff));
@@ -1622,7 +1643,6 @@ on($('btnStartGame'), 'click', () => {
     difficulty: setupConfig.difficulty,
     timerMinutes: setupConfig.timer === 'custom' ? clamp(setupConfig.customMinutes,1,180) : parseInt(setupConfig.timer,10),
     incrementSeconds: setupConfig.increment === 'custom' ? clamp(setupConfig.customIncrement,0,60) : parseInt(setupConfig.increment,10),
-    autoFlip: setupConfig.autoFlip,
   });
   showScreen('gameScreen');
 });
@@ -1764,7 +1784,7 @@ function renderBoard() {
     if (piece) {
       const pieceEl = document.createElement('div');
       pieceEl.className = 'piece ' + (colorOf(piece) === WHITE ? 'white-piece' : 'black-piece');
-      pieceEl.textContent = PIECE_GLYPH[piece];
+      pieceEl.innerHTML = pieceSVG(piece);
       pieceEl.dataset.sq = s;
       pieceEl.setAttribute('aria-hidden', 'true');
       cell.appendChild(pieceEl);
@@ -1786,10 +1806,10 @@ function renderCapturedPieces() {
   const topColor = State.orientation === WHITE ? BLACK : WHITE;
   const bottomColor = State.orientation;
   // captured pieces belonging to a color are shown on the opposing player's row
-  const fmt = arr => arr.map(p => PIECE_GLYPH[colorOf(p)===WHITE ? p.toUpperCase() : p.toLowerCase()]).join('');
+  const fmt = arr => arr.map(p => pieceSVG(p)).join('');
   // pieces captured FROM white are shown near black's bar (black captured them) and vice versa
-  $('topCaptured').textContent = topColor === WHITE ? fmt(game.capturedPieces.b) : fmt(game.capturedPieces.w);
-  $('bottomCaptured').textContent = bottomColor === WHITE ? fmt(game.capturedPieces.b) : fmt(game.capturedPieces.w);
+  $('topCaptured').innerHTML = topColor === WHITE ? fmt(game.capturedPieces.b) : fmt(game.capturedPieces.w);
+  $('bottomCaptured').innerHTML = bottomColor === WHITE ? fmt(game.capturedPieces.b) : fmt(game.capturedPieces.w);
 }
 
 function updateStatusPill() {
@@ -1976,10 +1996,9 @@ function showPromotionModal(color, callback) {
   ['Q','R','B','N'].forEach(p => {
     const btn = document.createElement('button');
     const glyph = color === WHITE ? p : p.toLowerCase();
-    btn.textContent = PIECE_GLYPH[glyph];
+    btn.classList.add(color === WHITE ? 'white-piece' : 'black-piece');
+    btn.innerHTML = pieceSVG(glyph);
     btn.setAttribute('aria-label', 'Promote to ' + p);
-    btn.style.color = color === WHITE ? '#fdfdfd' : '#1a1a1a';
-    btn.style.textShadow = color === WHITE ? '0 1px 2px rgba(0,0,0,0.6)' : 'none';
     on(btn, 'click', () => { closeModal('promoModal'); callback(p); });
     choicesEl.appendChild(btn);
   });
@@ -2111,7 +2130,7 @@ function endGame(kind, winner, reason) {
   const icon = $('gameOverIcon'), title = $('gameOverTitle'), subtitle = $('gameOverSubtitle');
   let didHumanWin = false;
   if (kind === 'checkmate') {
-    icon.textContent = '♛';
+    icon.innerHTML = '<svg viewBox="0 0 45 45"><use href="#cjp-queen"></use></svg>';
     title.textContent = 'Checkmate!';
     const winnerLabel = winner === WHITE ? 'White' : 'Black';
     subtitle.textContent = winnerLabel + ' wins';
@@ -2315,7 +2334,7 @@ on($('btnFullscreen'), 'click', () => {
    SOUND TOGGLE (bottom bar quick button)
    ========================================================================= */
 function updateSoundButton() {
-  $('btnSound').textContent = State.settings.sound ? '🔊' : '🔇';
+  $('btnSound').innerHTML = '<svg><use href="#' + (State.settings.sound ? 'cji-sound-on' : 'cji-sound-off') + '"></use></svg>';
 }
 on($('btnSound'), 'click', () => {
   State.settings.sound = !State.settings.sound;
@@ -2323,7 +2342,6 @@ on($('btnSound'), 'click', () => {
   updateSoundButton();
   saveSettings();
   syncSettingsModalFromState();
-  $('setupSound').checked = State.settings.sound;
 });
 
 /* =========================================================================
@@ -2453,22 +2471,24 @@ function syncSettingsModalFromState() {
   $('settingConfirm').checked = State.settings.confirmDialogs;
   $('settingConfetti').checked = State.settings.confetti;
   setDifficultyButtons(State.difficulty || State.settings.difficulty, 'settingDifficultyGroup');
+  setDifficultyButtons(State.settings.boardTheme, 'settingBoardThemeGroup');
 }
 on($('btnOpenSettings'), 'click', () => { closeModal('moreModal'); syncSettingsModalFromState(); openModal('settingsModal'); });
 on($('btnCloseSettings'), 'click', () => { closeModal('settingsModal'); saveSettings(); });
 
-on($('settingDarkTheme'), 'change', e => { State.settings.appTheme = e.target.checked?'dark':'light'; applyAppTheme(State.settings.appTheme); saveSettings(); $('setupDarkTheme').checked = e.target.checked; });
-on($('settingSound'), 'change', e => { State.settings.sound = e.target.checked; SoundManager.enabled = e.target.checked; updateSoundButton(); saveSettings(); $('setupSound').checked = e.target.checked; });
+on($('settingDarkTheme'), 'change', e => { State.settings.appTheme = e.target.checked?'dark':'light'; applyAppTheme(State.settings.appTheme); saveSettings(); });
+on($('settingSound'), 'change', e => { State.settings.sound = e.target.checked; SoundManager.enabled = e.target.checked; updateSoundButton(); saveSettings(); });
 on($('settingTimerSound'), 'change', e => { State.settings.timerSound = e.target.checked; saveSettings(); });
 on($('settingVibration'), 'change', e => { State.settings.vibration = e.target.checked; saveSettings(); });
-on($('settingCoords'), 'change', e => { State.settings.coords = e.target.checked; saveSettings(); renderBoard(); $('setupCoords').checked = e.target.checked; });
-on($('settingHints'), 'change', e => { State.settings.hints = e.target.checked; saveSettings(); renderBoard(); $('setupHints').checked = e.target.checked; });
+on($('settingCoords'), 'change', e => { State.settings.coords = e.target.checked; saveSettings(); renderBoard(); });
+on($('settingHints'), 'change', e => { State.settings.hints = e.target.checked; saveSettings(); renderBoard(); });
 on($('settingAnimation'), 'change', e => { State.settings.animation = e.target.checked; saveSettings(); });
-on($('settingColorblind'), 'change', e => { State.settings.colorblind = e.target.checked; document.body.setAttribute('data-colorblind', String(e.target.checked)); saveSettings(); $('setupColorblind').checked = e.target.checked; });
+on($('settingColorblind'), 'change', e => { State.settings.colorblind = e.target.checked; document.body.setAttribute('data-colorblind', String(e.target.checked)); saveSettings(); });
 on($('settingAutoFlip'), 'change', e => { State.settings.autoFlip = e.target.checked; saveSettings(); });
 on($('settingConfirm'), 'change', e => { State.settings.confirmDialogs = e.target.checked; saveSettings(); });
 on($('settingConfetti'), 'change', e => { State.settings.confetti = e.target.checked; saveSettings(); });
 wireOptionGroup('settingDifficultyGroup', v => { State.difficulty = v; State.settings.difficulty = v; saveSettings(); updatePlayerLabels(); persistGame(); });
+wireOptionGroup('settingBoardThemeGroup', v => { State.settings.boardTheme = v; setupConfig.boardTheme = v; document.body.setAttribute('data-board-theme', v); saveSettings(); });
 
 on($('btnResetData'), 'click', () => {
   showConfirm('Reset all saved data?', 'This clears your saved game and settings.', () => {
