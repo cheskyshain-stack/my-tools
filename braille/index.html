@@ -12,37 +12,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Braille">
 <style>
-  /* ============ Design tokens ============ */
-  :root{
-    --bg:#f5f3ee;
-    --panel:#ffffff;
-    --ink:#22252b;
-    --muted:#6b7180;
-    --line:#dcd8ce;
-    --accent:#2f5d62;        /* deep teal */
-    --accent-ink:#ffffff;
-    --chip:#ece9e1;
-    --focus:#c98f2b;         /* amber focus ring */
-    --shadow:0 1px 3px rgba(30,32,38,.08);
-  }
-  body.dark{
-    --bg:#15171c;
-    --panel:#1e2128;
-    --ink:#e8e6df;
-    --muted:#9aa0ab;
-    --line:#33363e;
-    --accent:#5ba8ae;
-    --accent-ink:#10262a;
-    --chip:#282b33;
-    --shadow:0 1px 3px rgba(0,0,0,.4);
-  }
-
+  /* Design tokens (--bg/--panel/--ink etc) are defined further down, in
+     the <style> block after /assets/cj.css - that one loads later and
+     wins the cascade for every one of these custom properties, so this
+     is the block that actually determines what renders. It already
+     handles dark-as-default with a working light-mode toggle (#darkBtn) -
+     no separate token definition needed here. */
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;overscroll-behavior-y:none}
   body{
     background:var(--bg);
     color:var(--ink);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew","Noto Sans",sans-serif;
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew","Noto Sans",sans-serif;
     line-height:1.45;
     padding:12px 12px 40px;
     max-width:760px;
@@ -55,7 +36,7 @@
   .cell{display:grid;grid-template-columns:repeat(2,10px);grid-template-rows:repeat(3,10px);gap:4px}
   .cell span{width:10px;height:10px;border-radius:50%;background:var(--accent);opacity:.25}
   .cell span.on{opacity:1}
-  h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:.01em}
+  h1{font-family:"Fraunces",Georgia,serif;font-size:1.25rem;margin:0;font-weight:600;letter-spacing:.01em}
   h1 small{display:block;font-size:.72rem;font-weight:400;color:var(--muted)}
   .spacer{flex:1}
 
@@ -64,19 +45,20 @@
   button{
     font:inherit;
     font-size:.9rem;
-    padding:10px 14px;
-    border-radius:10px;
+    padding:10px 16px;
+    border-radius:999px;
     border:1px solid var(--line);
     background:var(--panel);
     color:var(--ink);
     box-shadow:var(--shadow);
     cursor:pointer;
+    transition:transform .16s cubic-bezier(.22,.9,.28,1);
     -webkit-tap-highlight-color:transparent;
   }
-  button:active{transform:translateY(1px)}
+  button:active{transform:scale(.965)}
   button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-  button.small{padding:8px 12px;font-size:.85rem}
+  button.primary{background:linear-gradient(140deg,#F5B841,#C98A1C);color:var(--accent-ink);border-color:transparent;font-weight:700;box-shadow:0 10px 22px rgba(245,184,65,.26)}
+  button.small{padding:8px 14px;font-size:.85rem}
 
 
   /* ============ Text areas ============ */
@@ -87,7 +69,7 @@
     font:inherit;
     font-size:1.05rem;
     padding:12px;
-    border-radius:12px;
+    border-radius:16px;
     border:1px solid var(--line);
     background:var(--panel);
     color:var(--ink);
@@ -110,12 +92,12 @@
   .toast.show{opacity:1}
 
   /* ============ Reference chart ============ */
-  details{margin-top:22px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+  details{margin-top:22px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:var(--shadow)}
   summary{padding:12px 14px;cursor:pointer;font-weight:600;font-size:.9rem}
   .chart{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 14px}
   .chart h3{width:100%;font-size:.8rem;color:var(--muted);margin:10px 0 2px;text-transform:uppercase;letter-spacing:.06em}
   .chip{
-    background:var(--chip);border-radius:8px;padding:6px 8px;
+    background:var(--chip);border-radius:10px;padding:6px 8px;
     font-size:.85rem;display:flex;flex-direction:column;align-items:center;min-width:44px;
   }
   .chip b{font-size:1.25rem;font-weight:400}
@@ -138,9 +120,9 @@
 <style>
   /* CJ Portal dark palette — light mode stays available via the toggle */
   :root{
-    --bg:#080b12;--panel:#101622;--ink:#f8fafc;--muted:#94a3b8;
-    --line:#243044;--accent:#2f7df6;--accent-ink:#fff;--focus:#16d7e8;
-    --chip:#152238;--shadow:0 8px 22px rgba(0,0,0,.30);
+    --bg:#050A18;--panel:#121D38;--ink:#EDF2FF;--muted:#93A3C7;
+    --line:rgba(255,255,255,.08);--accent:#F5B841;--accent-ink:#1A1000;--focus:#F5B841;
+    --chip:#182747;--shadow:0 8px 22px rgba(0,0,0,.40);
   }
   body.light{
     --bg:#f5f7fc;--panel:#fff;--ink:#172033;--muted:#6b7280;
@@ -149,7 +131,8 @@
   }
   body.light{background:var(--bg)!important}
   body{max-width:760px;margin:0 auto;padding:0 12px 40px}
-  button.primary{background:linear-gradient(135deg,#2f7df6,#1763cf);border-color:#2f7df6}
+  button.primary{background:linear-gradient(140deg,#F5B841,#C98A1C);border-color:transparent;box-shadow:0 10px 22px rgba(245,184,65,.26)}
+  body.light button.primary{background:linear-gradient(135deg,#2f7df6,#1763cf);border-color:#2f7df6;box-shadow:none}
   #darkBtn{white-space:nowrap}
   textarea{background:var(--panel);border-color:var(--line);color:var(--ink)}
   textarea::placeholder{color:var(--muted)}

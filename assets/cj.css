@@ -2,7 +2,13 @@
    CJ APPS — SHARED DESIGN SYSTEM
    Link this AFTER an app's own <style> block so it wins.
    <link rel="stylesheet" href="/assets/cj.css">
+
+   Tokens below match CJ Music (music/index.html) exactly, which is
+   the reference design for every app on the site: serif display type
+   + navy/gold palette + generous rounding + soft layered shadows.
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @keyframes cjLogoDock{
   0%{opacity:0;transform:translate(clamp(80px,28vw,260px),clamp(35px,10vh,110px)) scale(2.4);filter:blur(2px)}
@@ -11,30 +17,81 @@
 }
 
 :root{
-  --cj-bg:#080b12;
-  --cj-card:#101622;
-  --cj-card-hover:#141c2a;
-  --cj-text:#f8fafc;
-  --cj-muted:#94a3b8;
-  --cj-line:#243044;
-  --cj-accent:#2f7df6;
-  --cj-accent-deep:#1763cf;
+  /* Core surface/text - matches CJ Music's --ink/--surface/--card/--text */
+  --cj-bg:#050A18;
+  --cj-card:#121D38;
+  --cj-card-hover:#182747;
+  --cj-text:#EDF2FF;
+  --cj-muted:#93A3C7;
+  --cj-dim:#67779C;
+  --cj-line:rgba(255,255,255,.08);
+  --cj-line-soft:rgba(255,255,255,.05);
+
+  /* Accents - gold is the primary CJ Music accent, blue is secondary */
+  --cj-gold:#F5B841;
+  --cj-gold-deep:#C98A1C;
+  --cj-accent:#4C7DF0;
+  --cj-accent-deep:#2B4FB8;
   --cj-accent-2:#16d7e8;
   --cj-success:#10b981;
   --cj-danger:#ef4444;
   --cj-warn:#fbbf24;
-  --cj-shadow:0 10px 28px rgba(0,0,0,.28);
+
+  /* Radius + shadow + motion scale */
+  --cj-r-sm:10px;
+  --cj-r-md:16px;
+  --cj-r-lg:22px;
+  --cj-r-xl:30px;
+  --cj-shadow:0 18px 44px rgba(0,0,0,.55);
+  --cj-shadow-sm:0 8px 20px rgba(0,0,0,.4);
+  --cj-ease:cubic-bezier(.22,.9,.28,1);
+
+  /* Type */
+  --cj-display:"Fraunces","Iowan Old Style",Georgia,serif;
+  --cj-body:"Plus Jakarta Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --cj-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
 }
 
 html,body{
   background:
-    radial-gradient(circle at 12% 0%,rgba(47,125,246,.16),transparent 26rem),
-    radial-gradient(circle at 90% 10%,rgba(22,215,232,.08),transparent 22rem),
+    radial-gradient(1100px 620px at 12% -8%,rgba(76,125,240,.20),transparent 62%),
+    radial-gradient(900px 520px at 92% 4%,rgba(245,184,65,.10),transparent 60%),
     var(--cj-bg);
+  background-attachment:fixed;
 }
 body{
   color:var(--cj-text);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-family:var(--cj-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- Shared button/chip look (opt-in via class) ---------- */
+.cj-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:46px;padding:0 20px;border-radius:999px;border:0;
+  font-family:var(--cj-body);font-weight:700;font-size:14px;letter-spacing:.01em;
+  cursor:pointer;transition:transform .16s var(--cj-ease),filter .16s var(--cj-ease),background .16s;
+}
+.cj-btn:active{transform:scale(.965)}
+.cj-btn-primary{
+  background:linear-gradient(140deg,var(--cj-gold),var(--cj-gold-deep));
+  color:#1A1000;box-shadow:0 10px 26px rgba(245,184,65,.26);
+}
+.cj-btn-accent{
+  background:linear-gradient(135deg,var(--cj-accent),var(--cj-accent-deep));
+  color:#fff;box-shadow:0 10px 26px rgba(76,125,240,.28);
+}
+.cj-btn-ghost{
+  background:rgba(255,255,255,.07);border:1px solid var(--cj-line);color:var(--cj-text);
+}
+.cj-chip{
+  font-family:var(--cj-mono);font-size:10.5px;letter-spacing:.02em;
+  padding:4px 9px;border-radius:999px;
+  background:rgba(255,255,255,.055);border:1px solid var(--cj-line-soft);color:var(--cj-muted);
+}
+.cj-card{
+  background:var(--cj-card);border:1px solid var(--cj-line);
+  border-radius:var(--cj-r-lg);box-shadow:var(--cj-shadow);
 }
 
 /* ---------- Standard page header (scrolling pages) ---------- */
@@ -52,6 +109,7 @@ body{
 }
 .cj-page-header h1{
   margin:0;text-align:left;color:var(--cj-text);
+  font-family:var(--cj-display);font-weight:600;
   font-size:clamp(1.25rem,4.5vw,1.8rem);letter-spacing:-.4px;line-height:1.15;
 }
 
