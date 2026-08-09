@@ -415,7 +415,7 @@ main{
   transition:height .28s var(--ease); }
 .wave .fill{ overflow:hidden; width:0%; transition:width .25s linear; }
 .wave .fill .bars i{ background:linear-gradient(180deg, var(--gold), var(--gold-deep)); }
-.wave.live .fill .bars i{ animation:pulse 1.25s ease-in-out infinite; }
+.wave.playing .fill .bars i{ animation:pulse 1.25s ease-in-out infinite; }
 .wave .fill .bars{ width:var(--wave-w, 100%); }
 @keyframes pulse{ 0%,100%{ opacity:.82 } 50%{ opacity:1 } }
 .wave .knob{
@@ -1421,7 +1421,13 @@ function paintTransport(){
   $("miniPlay").setAttribute("aria-label", playing ? "Pause" : "Play");
   $("fPlay").setAttribute("aria-label", playing ? "Pause" : "Play");
   $("liveTag").classList.toggle("on", playing);
-  $("wave").classList.toggle("live", playing);
+  // "playing", not "live" - the wave element must never carry the bare
+  // .live class. That name is already used, unrelated, by the top bar's
+  // "Playing" badge (#liveTag), whose max-width:46vw rule would otherwise
+  // leak onto the wave too (a class-name collision, not a specificity
+  // issue - .wave.playing only matches when BOTH classes are present, so
+  // it can't accidentally match the badge either).
+  $("wave").classList.toggle("playing", playing);
   $("fArt").classList.toggle("spin", playing);
 
   [$("fShuffle"), $("dShuffle")].forEach(b => {
