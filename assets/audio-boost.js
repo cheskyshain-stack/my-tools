@@ -38,7 +38,7 @@ function getSavedBoostAmount(){
 
 function createAudioBoost(audioEl, amount){
   amount = amount || getSavedBoostAmount();
-  let ctx, gain, compressor, source;
+  let ctx, gain, compressor, limiter, source;
 
   function ensure(){
     if (source) return;
@@ -56,7 +56,25 @@ function createAudioBoost(audioEl, amount){
       gain = ctx.createGain();
       gain.gain.value = amount;
 
-      source.connect(compressor).connect(gain).connect(ctx.destination);
+      // A hard ceiling AFTER the gain, not just the leveling compressor
+      // before it. The compressor reduces dynamic range going in, but the
+      // gain stage multiplies whatever comes out of it - at the higher
+      // boost levels (up to 3.5x = +10.9dB) that can still push loud
+      // passages past 0dBFS on some recordings, which is heard as harsh,
+      // crackly clipping distortion ("the sound is not good"), not
+      // low-volume. This limiter only engages right at the ceiling
+      // (threshold -1dB, ratio 20:1 - the max the API allows, essentially
+      // brick-wall) so it stays inaudible/transparent until something
+      // would actually clip, regardless of boost level or how hot the
+      // source recording already is.
+      limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -1;
+      limiter.knee.value = 0;
+      limiter.ratio.value = 20;
+      limiter.attack.value = 0.001;
+      limiter.release.value = 0.1;
+
+      source.connect(compressor).connect(gain).connect(limiter).connect(ctx.destination);
     }catch(e){ /* Web Audio unavailable — falls back to normal, unboosted volume */ }
   }
 
