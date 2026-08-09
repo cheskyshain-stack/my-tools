@@ -120,10 +120,12 @@
   },
   {
     "id": "yomi-daf",
-    "title": "Yomi Daf",
+    "title": "Daf Yomi",
     "audio": "yomi-daf.mp3",
     "lyrics": "",
-    "albumId": "best-songs"
+    "albumId": "best-songs",
+    "visible": true,
+    "download": true
   },
   {
     "id": "popcorn",
