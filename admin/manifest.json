@@ -1,5 +1,5 @@
 {
-  "name": "CJ Music — Admin",
+  "name": "CJ Music - Admin",
   "short_name": "CJ Music Admin",
   "description": "Manage the CJ Music song catalog.",
   "start_url": "/admin/",

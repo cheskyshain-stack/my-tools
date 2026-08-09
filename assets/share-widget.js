@@ -1,5 +1,5 @@
 /* ============================================================
-   CJ PORTAL — Share widget
+   CJ PORTAL - Share widget
    Drop `<div id="cj-share"></div>` wherever the section should sit,
    then `<script src="/assets/share-widget.js" defer></script>`.
    Renders a single subtle "Share" button; clicking it pops open a
@@ -12,7 +12,7 @@
 (function () {
   var SHARE_URL = window.location.origin + window.location.pathname;
   var SHARE_TITLE = document.title || 'CJ Portal';
-  var SHARE_TEXT = SHARE_TITLE + ' — on CJ Portal';
+  var SHARE_TEXT = SHARE_TITLE + ' - on CJ Portal';
   var qrLoaded = false;
 
   var ICONS = {

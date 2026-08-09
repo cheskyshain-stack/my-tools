@@ -1,5 +1,5 @@
 /* ============================================================================
-   CJ Music — shared playback volume boost
+   CJ Music - shared playback volume boost
    ----------------------------------------------------------------------------
    HTML5 <audio>.volume tops out at 1.0, which isn't loud enough for some
    recordings. Routing playback through Web Audio lets us push past that
@@ -74,11 +74,11 @@ function createAudioBoost(audioEl, amount){
       limiter.release.value = 0.1;
 
       source.connect(compressor).connect(gain).connect(limiter).connect(ctx.destination);
-    }catch(e){ /* Web Audio unavailable — falls back to normal, unboosted volume */ }
+    }catch(e){ /* Web Audio unavailable - falls back to normal, unboosted volume */ }
   }
 
   // Call this right before (or together with) audioEl.play(). Resuming a
-  // suspended AudioContext is asynchronous — calling it without awaiting
+  // suspended AudioContext is asynchronous - calling it without awaiting
   // and immediately starting playback anyway is a real race: playback can
   // begin while the context is still "suspended", so the boost isn't
   // actually in effect yet for however long that takes to resolve. That's

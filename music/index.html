@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>CJ Music — Charlie Jaffa</title>
+<title>CJ Music - Charlie Jaffa</title>
 <meta name="theme-color" content="#050A18" />
-<meta name="description" content="CJ Music — the official music app for Charlie Jaffa." />
+<meta name="description" content="CJ Music - the official music app for Charlie Jaffa." />
 <link rel="manifest" href="/music/manifest.json">
 <link rel="apple-touch-icon" href="/music/logo.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   CJ MUSIC — design tokens
+   CJ MUSIC - design tokens
    ============================================================ */
 :root{
   --ink:        #050A18;
@@ -411,7 +411,7 @@ main{
 .now .artist{ margin:0 0 10px; color:var(--muted); font-size:14px; font-weight:500; }
 .now .chips{ justify-content:center; }
 
-/* waveform seek — the signature element */
+/* waveform seek - the signature element */
 .wave{
   position:relative; height:56px; width:100%; touch-action:none; cursor:pointer;
   display:flex; align-items:center;
@@ -519,7 +519,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
 }
 
 /* ============================================================
-   Desktop — left rail + full-width player bar
+   Desktop - left rail + full-width player bar
    ============================================================ */
 @media (min-width:1000px){
   body{ font-size:15px; }
@@ -750,7 +750,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
       <div class="art" id="fArt"></div>
       <div class="side">
         <div class="now">
-          <h2 id="fTitle">—</h2>
+          <h2 id="fTitle">-</h2>
           <p class="artist">Charlie Jaffa</p>
           <div class="chips" id="fChips"></div>
         </div>
@@ -823,7 +823,7 @@ input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:0; border-r
 <script src="/assets/audio-boost.js"></script>
 <script>
 /* ============================================================================
-   CJ MUSIC — Charlie Jaffa
+   CJ MUSIC - Charlie Jaffa
    ----------------------------------------------------------------------------
    EDIT ONLY THIS ARRAY TO MANAGE THE APP.
    Everything on every screen is generated from it.
@@ -927,11 +927,11 @@ function fmt(sec){
 function durText(song){
   if (song.duration) return song.duration;
   const d = S.durations[keyOf(song)];
-  return d ? fmt(d) : "—:—";
+  return d ? fmt(d) : "-:-";
 }
 function displayGenre(song){
   // "Hebrew" isn't shown as a chip/tag on the public site (most songs are
-  // Hebrew, so it's just noise) — other genres (used e.g. to tell the
+  // Hebrew, so it's just noise) - other genres (used e.g. to tell the
   // Popcorn language versions apart) still show normally.
   if (!song || !song.genre || song.genre.toLowerCase() === "hebrew") return "";
   return song.genre;
@@ -1023,7 +1023,7 @@ function featured(){
 }
 
 /* ============================================================================
-   Rendering — hero
+   Rendering - hero
    ============================================================================ */
 function renderHero(){
   const i = featured();
@@ -1077,7 +1077,7 @@ function renderHero(){
 }
 
 /* ============================================================================
-   Rendering — tiles, rows, albums
+   Rendering - tiles, rows, albums
    ============================================================================ */
 function tile(i, badge){
   const s = songs[i];
@@ -1279,7 +1279,7 @@ $("q").addEventListener("input", renderSearch);
 $("qClear").onclick = () => { $("q").value = ""; renderSearch(); $("q").focus(); };
 
 /* ============================================================================
-   Waveform (signature seek bar) — deterministic shape per song
+   Waveform (signature seek bar) - deterministic shape per song
    ============================================================================ */
 const BAR_COUNT = 68;
 function seededHeights(seed, count){
@@ -1356,7 +1356,7 @@ function load(index, autoplay, from){
   else { S.playing = false; paintTransport(); }
 }
 
-// Shared boost implementation — see assets/audio-boost.js
+// Shared boost implementation - see assets/audio-boost.js
 const boost = createAudioBoost(audio);
 
 async function start(){
@@ -1601,7 +1601,7 @@ audio.addEventListener("ended", () => next(true));
 audio.addEventListener("error", () => {
   const s = currentSong();
   S.playing = false; paintTransport();
-  toast(s ? "Can’t play " + s.audio + " — check it’s in this folder" : "Audio file not found");
+  toast(s ? "Can’t play " + s.audio + " - check it’s in this folder" : "Audio file not found");
 });
 audio.addEventListener("volumechange", () => {
   S.volume = audio.volume; S.muted = audio.muted;
@@ -1672,7 +1672,7 @@ paintBoost();
 function share(){
   const s = currentSong(); if (!s) return;
   const url = location.href.split("#")[0];
-  const data = { title: s.title + " — " + ARTIST, text: "Listen to “" + s.title + "” by " + ARTIST + " on CJ Music", url };
+  const data = { title: s.title + " - " + ARTIST, text: "Listen to “" + s.title + "” by " + ARTIST + " on CJ Music", url };
   if (navigator.share){
     navigator.share(data).catch(() => {});
   } else if (navigator.clipboard){
@@ -1719,7 +1719,7 @@ document.querySelectorAll(".nav button").forEach(b => {
 });
 
 /* ============================================================================
-   Layered "extra" screens on Back — full player, an open album, and the
+   Layered "extra" screens on Back - full player, an open album, and the
    leave-confirmation guard can each be pushed independently, and a user
    can chain them in ANY order depending on what they actually do (e.g.
    open an album → play a song from it → expand to the full player is a
@@ -1793,7 +1793,7 @@ window.addEventListener("popstate", () => {
       if (!ok){ pushUiLayer("leaveGuard"); return; } // stay - re-trap for next time
       audio.pause();
     }
-    history.back(); // completes the real exit — pops the shell's own /music/ entry
+    history.back(); // completes the real exit - pops the shell's own /music/ entry
   }
   // kind undefined - our stack was already empty, nothing of ours to
   // close, this Back press is leaving /music/ for real.

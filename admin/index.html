@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080b12">
 <meta name="robots" content="noindex, nofollow">
-<title>CJ Music — Admin</title>
+<title>CJ Music - Admin</title>
 <link rel="manifest" href="/admin/manifest.json">
 <link rel="apple-touch-icon" href="/music/logo.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -115,7 +115,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>CJ Music — Admin</h1>
+  <h1>CJ Music - Admin</h1>
   <p class="sub">Manage your songs and albums.</p>
 
   <!-- ===== Auth screen ===== -->
@@ -136,7 +136,7 @@
     </div>
     <div class="error" id="authError"></div>
     <p class="hint" style="margin-top:14px">
-      The token stays only in this browser's local storage and is sent only to <code>api.github.com</code> — nothing else sees it.
+      The token stays only in this browser's local storage and is sent only to <code>api.github.com</code> - nothing else sees it.
     </p>
   </div>
 
@@ -181,7 +181,7 @@
           </div>
           <div class="field">
             <label for="lyrics">Lyrics (optional)</label>
-            <textarea id="lyrics" placeholder="Paste lyrics here — line breaks are kept as typed."></textarea>
+            <textarea id="lyrics" placeholder="Paste lyrics here - line breaks are kept as typed."></textarea>
           </div>
           <div class="field">
             <label>Audio file *</label>
@@ -307,8 +307,8 @@ async function verifyToken(token){
   if(!res.ok){
     const body = await res.json().catch(() => ({}));
     const detail = body.message ? ` GitHub said: "${body.message}"` : "";
-    if(res.status === 401) throw new Error("That token was rejected — check it's valid and hasn't expired." + detail);
-    if(res.status === 404) throw new Error("Token doesn't have access to this repo — check its repository access setting." + detail);
+    if(res.status === 401) throw new Error("That token was rejected - check it's valid and hasn't expired." + detail);
+    if(res.status === 404) throw new Error("Token doesn't have access to this repo - check its repository access setting." + detail);
     throw new Error(`Couldn't reach the repo (${res.status}).` + detail);
   }
   return res.json();
@@ -347,11 +347,11 @@ async function putFile(token, path, base64Content, message, sha){
     const err = await res.json().catch(() => ({}));
     let msg = err.message || `Upload failed (${res.status}) for ${path}`;
     if(res.status === 403 && /not accessible/i.test(msg)){
-      msg += " — your token can read this repo but can't write to it. On github.com, check the token's Repository access is set to this repo (not \"Public repositories\") and its Contents permission is \"Read and write\", then regenerate it.";
+      msg += " - your token can read this repo but can't write to it. On github.com, check the token's Repository access is set to this repo (not \"Public repositories\") and its Contents permission is \"Read and write\", then regenerate it.";
     }
     const conflict = res.status === 409 || res.status === 422 || /does not match/i.test(msg);
     const wrapped = new Error(conflict
-      ? "Someone else's change (maybe another tab, or a change I just pushed) landed at the same moment as yours. Reloading the library with the latest version — please try your change again."
+      ? "Someone else's change (maybe another tab, or a change I just pushed) landed at the same moment as yours. Reloading the library with the latest version - please try your change again."
       : msg);
     wrapped.conflict = conflict;
     throw wrapped;
@@ -372,7 +372,7 @@ async function commitSongs(token, mutateFn, message){
   const { content, sha } = await getFile(token, "music/songs.json");
   const list = mutateFn(JSON.parse(content));
   await putFile(token, "music/songs.json", utf8ToB64(JSON.stringify(list, null, 2)), message, sha);
-  return list; // the just-committed state, straight from GitHub's API — always
+  return list; // the just-committed state, straight from GitHub's API - always
                // current, unlike the publicly deployed songs.json, which can
                // lag behind a fresh commit until the next deploy finishes
 }
@@ -490,7 +490,7 @@ function renderLibrary(){
         <button type="button" class="icon-btn" data-edit-album="${escapeHtml(a.id)}">✎ Edit</button>
       </div>
       <div class="lib-rows">
-        ${members.length ? members.map(s => songRowHtml(s, memberIds)).join("") : '<div class="empty-hint">No songs yet — move some in from Unassigned.</div>'}
+        ${members.length ? members.map(s => songRowHtml(s, memberIds)).join("") : '<div class="empty-hint">No songs yet - move some in from Unassigned.</div>'}
       </div>
     </div>`;
   });
@@ -507,7 +507,7 @@ function renderLibrary(){
   $("libraryBody").innerHTML = html;
 }
 
-/* A single in-flight-save lock shared by every mutation below — prevents
+/* A single in-flight-save lock shared by every mutation below - prevents
    two overlapping saves from racing each other and tripping GitHub's
    sha-conflict check (one write landing while another's stale sha is
    still in flight). */
@@ -665,7 +665,7 @@ $("esSaveBtn").addEventListener("click", async () => {
 
     const updated = await commitSongs(token, list => {
       const s = list.find(x => x.id === id);
-      if(!s) throw new Error("Song not found in the catalog — it may have been deleted elsewhere.");
+      if(!s) throw new Error("Song not found in the catalog - it may have been deleted elsewhere.");
       s.title = title;
       if(albumId) s.albumId = albumId; else delete s.albumId;
       if(genre) s.genre = genre; else delete s.genre;
@@ -694,7 +694,7 @@ $("esSaveBtn").addEventListener("click", async () => {
 
 $("esDeleteBtn").addEventListener("click", async () => {
   if(libraryBusy) return;
-  if(!confirm("Delete this song? It's removed from the catalog — the underlying audio/art files stay in the repo.")) return;
+  if(!confirm("Delete this song? It's removed from the catalog - the underlying audio/art files stay in the repo.")) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const id = currentEditingSongId;
   setLibraryBusy(true);
@@ -764,7 +764,7 @@ $("eaSaveBtn").addEventListener("click", async () => {
         list.push({ id, name, artwork: newArtwork || "", description, releaseDate, visible });
       }else{
         const a = list.find(x => x.id === id);
-        if(!a) throw new Error("Album not found — it may have been deleted elsewhere.");
+        if(!a) throw new Error("Album not found - it may have been deleted elsewhere.");
         a.name = name;
         a.description = description;
         a.releaseDate = releaseDate;
@@ -788,7 +788,7 @@ $("eaSaveBtn").addEventListener("click", async () => {
 
 $("eaDeleteBtn").addEventListener("click", async () => {
   if(libraryBusy) return;
-  if(!confirm("Delete this album? Its songs move to Unassigned — they are not deleted.")) return;
+  if(!confirm("Delete this album? Its songs move to Unassigned - they are not deleted.")) return;
   const token = localStorage.getItem(TOKEN_KEY);
   const id = currentEditingAlbumId;
   setLibraryBusy(true);

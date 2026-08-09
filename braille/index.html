@@ -118,7 +118,7 @@
 
 <link rel="stylesheet" href="/assets/cj.css">
 <style>
-  /* CJ Portal dark palette — light mode stays available via the toggle */
+  /* CJ Portal dark palette - light mode stays available via the toggle */
   :root{
     --bg:#050A18;--panel:#121D38;--ink:#EDF2FF;--muted:#93A3C7;
     --line:rgba(255,255,255,.08);--accent:#2583F7;--accent-ink:#fff;--focus:#00C8FF;
@@ -151,7 +151,7 @@
 
 <label for="output">Braille output</label>
 <textarea id="output" readonly placeholder="⠠⠃⠗⠁⠊⠇⠇⠑  ⠁⠏⠏⠑⠁⠗⠎   ⠓⠑⠗⠑"></textarea>
-<div class="hint" id="modeHint">Language: — (detected automatically, live)</div>
+<div class="hint" id="modeHint">Language: - (detected automatically, live)</div>
 
 <div class="row">
   <button id="fontUp" class="small" title="Increase Braille font">A＋</button>
@@ -273,7 +273,7 @@ function translate(){
   input.dir = lang === "he" ? "rtl" : "ltr";   // braille output stays LTR
   hint.textContent = input.value.trim()
     ? `Language: ${lang === "he" ? "עברית" : "English"} (detected automatically, live)`
-    : "Language: — (detected automatically, live)";
+    : "Language: - (detected automatically, live)";
 }
 
 function showToast(msg){
