@@ -1700,9 +1700,34 @@ function closeFull(){
   if (history.state && history.state.cjFullPlayer) history.back();
   else closeFullUI();
 }
+
+/* ============================================================================
+   Leave guard — warn before actually leaving /music/ while a song is
+   playing, instead of silently cutting the music with no notice (there is
+   no cross-page mini-player anymore; leaving just stops playback).
+   Works the same way the full-player's own Back handling above does: push
+   one extra history entry up front, so the first real Back press lands on
+   this popstate handler instead of immediately navigating away, giving us
+   a chance to confirm first. Declining re-pushes the same guard so the
+   next Back press is caught too.
+   ============================================================================ */
+try{ history.pushState({ cjLeaveGuard: true }, "", location.href); }catch(e){}
+
 window.addEventListener("popstate", (e) => {
   if ($("full").classList.contains("open") && !(e.state && e.state.cjFullPlayer)){
     closeFullUI();
+    return;
+  }
+  if (!(e.state && e.state.cjLeaveGuard)){
+    if (S.playing){
+      const ok = confirm("Leave CJ Music? Playback will stop.");
+      if (!ok){
+        try{ history.pushState({ cjLeaveGuard: true }, "", location.href); }catch(e){}
+        return;
+      }
+      audio.pause();
+    }
+    history.back(); // completes the real exit — pops the shell's own /music/ entry
   }
 });
 $("miniExpand").onclick = openFull;
@@ -1811,43 +1836,6 @@ function boot(){
   paintTime();
   setTimeout(prefetchDurations, 900);
 }
-
-/* ============================================================================
-   Hand off to the persistent mini-player (when embedded in the site shell)
-   ============================================================================
-   Two mechanisms, since relying on just one isn't reliable enough:
-   1. `pagehide` push — fires (usually) right as the page unloads and
-      posts the current state to the parent. Synchronous, so it's allowed
-      to run even during unload, but some mobile browsers can still tear
-      the page down before it's processed.
-   2. window.__cjMusicNowPlaying() — a plain function exposed for the
-      parent shell to call directly (same-origin, no messaging involved).
-      The shell polls this while /music/ is the active page, so it always
-      has an up-to-date snapshot ready even if `pagehide` doesn't fire in
-      time for a given navigation. */
-function currentPlaybackSnapshot(){
-  if (!S.playing || S.pos < 0) return null;
-  const queue = S.order.map(i => {
-    const s = songs[i];
-    const art = artFor(s);
-    return {
-      title: s.title,
-      audio: "/music/" + s.audio,
-      artwork: art ? "/music/" + art : ""
-    };
-  });
-  return { queue, pos: S.pos, currentTime: audio.currentTime };
-}
-window.__cjMusicNowPlaying = currentPlaybackSnapshot;
-
-window.addEventListener("pagehide", () => {
-  if (window.parent === window) return; // standalone — nothing to hand off to
-  const snap = currentPlaybackSnapshot();
-  if (!snap) return;
-  try{
-    window.parent.postMessage({ type: "cj-music-handoff", ...snap }, location.origin);
-  }catch(e){}
-});
 
 Promise.all([
   fetch("songs.json").then(r => r.json()),

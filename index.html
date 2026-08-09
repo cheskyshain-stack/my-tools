@@ -14,111 +14,30 @@
 <meta name="description" content="CJ Portal — smart tools and games. Shopping list, budget planner, QR codes, Braille, chess, sudoku and more.">
 <title>CJ Portal</title>
 <style>
-  :root{--mini-h:64px}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#080b12;overflow:hidden;overscroll-behavior-y:none}
   #shellFrame{border:0;width:100%;height:100vh;height:100dvh;display:block;background:#080b12}
-  body.mini-active #shellFrame{height:calc(100vh - var(--mini-h) - env(safe-area-inset-bottom));height:calc(100dvh - var(--mini-h) - env(safe-area-inset-bottom))}
-
-  .mini-bar{
-    position:fixed;left:0;right:0;bottom:0;z-index:1000;
-    height:calc(var(--mini-h) + env(safe-area-inset-bottom));
-    padding:0 12px env(safe-area-inset-bottom);
-    display:flex;align-items:center;gap:10px;
-    background:rgba(8,11,18,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-    border-top:1px solid #1f2937;
-    transform:translateY(100%);transition:transform .32s cubic-bezier(.22,.9,.28,1);
-    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  }
-  .mini-bar.show{transform:translateY(0)}
-  .mini-art{
-    width:42px;height:42px;border-radius:9px;flex:none;background:#141c2a;background-size:cover;background-position:center;
-    display:grid;place-items:center;color:#94a3b8;font-size:16px;cursor:pointer;
-  }
-  .mini-info{flex:1;min-width:0;cursor:pointer}
-  .mini-title{color:#f8fafc;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mini-sub{color:#64748b;font-size:11px;margin-top:1px}
-  .mini-btn{
-    width:34px;height:34px;flex:none;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:#f8fafc;
-    display:grid;place-items:center;font-size:13px;
-  }
-  .mini-btn:disabled{opacity:.3}
-  .mini-btn.play{width:40px;height:40px;background:linear-gradient(140deg,#3b82f6,#1d4ed8)}
 </style>
 </head>
 <body>
   <iframe id="shellFrame" src="/home/" title="CJ Portal"></iframe>
 
-  <div class="mini-bar" id="miniBar">
-    <div class="mini-art" id="miniArt" aria-label="Open Music">🎵</div>
-    <div class="mini-info" id="miniInfo">
-      <div class="mini-title" id="miniTitle">—</div>
-      <div class="mini-sub">CJ Music</div>
-    </div>
-    <button class="mini-btn" id="miniPrev" aria-label="Previous">⏮</button>
-    <button class="mini-btn play" id="miniPlayPause" aria-label="Pause">⏸</button>
-    <button class="mini-btn" id="miniNext" aria-label="Next">⏭</button>
-  </div>
-
-  <audio id="miniAudio" preload="none"></audio>
-
-<script src="/assets/audio-boost.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const iframe = $("shellFrame");
-const miniBar = $("miniBar");
-const miniAudio = $("miniAudio");
 
-/* ===== URL mirroring so Back/Forward stay inside the shell ===== */
+/* ===== URL mirroring so Back/Forward stay inside the shell =====
+   Sub-pages navigate the iframe on their own (normal <a> clicks work as
+   usual inside it); this just mirrors the iframe's URL into the real
+   address bar with pushState/replaceState, and mirrors it back on
+   Back/Forward via popstate - so the browser's own history controls feel
+   normal while every page keeps running in its own isolated document. */
 let firstLoad = true;
 let suppressPush = false;
 
-/* ===== Reliable playback handoff: poll /music/ while it's active =====
-   Don't rely solely on the outgoing page's `pagehide` firing in time
-   (mobile browsers can tear a navigating-away page down fast enough to
-   cut that off). Instead, keep a recent snapshot of what's playing by
-   calling the page's own exposed window.__cjMusicNowPlaying() directly
-   (same-origin, no messaging needed) while it's the active page, so a
-   snapshot is always ready the moment navigation actually happens. */
-let lastMusicState = null;
-let musicPollTimer = null;
-function startMusicPolling(){
-  stopMusicPolling();
-  musicPollTimer = setInterval(() => {
-    try{
-      const fn = iframe.contentWindow.__cjMusicNowPlaying;
-      lastMusicState = (typeof fn === "function") ? fn() : null;
-    }catch(e){ lastMusicState = null; }
-  }, 700);
-}
-function stopMusicPolling(){
-  if (musicPollTimer){ clearInterval(musicPollTimer); musicPollTimer = null; }
-}
-
 iframe.addEventListener("load", () => {
   try{
-    const wasPolling = !!musicPollTimer;
-    stopMusicPolling();
-
     const path = iframe.contentWindow.location.pathname;
-
-    // Just navigated away from /music/ - adopt the last known playback
-    // state if we have one (the postMessage handoff may also have
-    // already applied this via the 'message' listener; re-applying is
-    // harmless, at worst a tiny restart-from-nearly-the-same-spot blip).
-    if (wasPolling && path !== "/music/" && lastMusicState){
-      miniQueue = lastMusicState.queue;
-      loadMini(lastMusicState.pos, lastMusicState.currentTime, true);
-    }
-    lastMusicState = null;
-    if (path === "/music/"){
-      // The full app is taking over now - it resumes its own last-played
-      // song from its own "picking up where you left off" logic, so the
-      // shell's own audio needs to stop, not keep playing alongside it.
-      stopMiniPlayer();
-      startMusicPolling();
-    }
-
     const displayPath = path === "/home/" ? "/" : path;
     if (suppressPush){
       suppressPush = false;
@@ -136,117 +55,6 @@ window.addEventListener("popstate", (e) => {
   const target = (e.state && e.state.cjPath) || "/home/";
   suppressPush = true;
   iframe.src = target;
-});
-
-// Shared boost implementation — see assets/audio-boost.js
-const boost = createAudioBoost(miniAudio);
-
-/* ===== Minimal persistent player ===== */
-let miniQueue = [];
-let miniPos = -1;
-
-function showMiniBar(show){
-  miniBar.classList.toggle("show", show);
-  document.body.classList.toggle("mini-active", show);
-}
-
-// Stops and hides the shell's own mini-player. Used whenever /music/
-// becomes the active page again, so control hands back to the full app
-// instead of two separate audio elements both being able to play at
-// once (that was the real bug behind "two setups, sound goes low" —
-// the shell never used to give control back, only ever take it).
-function stopMiniPlayer(){
-  miniAudio.pause();
-  miniQueue = [];
-  miniPos = -1;
-  showMiniBar(false);
-}
-
-function loadMini(pos, startTime, autoplay){
-  const s = miniQueue[pos];
-  if (!s) return;
-  miniPos = pos;
-  miniAudio.src = s.audio;
-  $("miniTitle").textContent = s.title;
-  $("miniArt").style.backgroundImage = s.artwork ? `url('${s.artwork}')` : "none";
-  $("miniArt").textContent = s.artwork ? "" : "🎵";
-  showMiniBar(true);
-  $("miniPrev").disabled = miniPos <= 0;
-  $("miniNext").disabled = miniPos >= miniQueue.length - 1;
-
-  if (startTime){
-    const setStart = () => {
-      miniAudio.currentTime = startTime;
-      miniAudio.removeEventListener("loadedmetadata", setStart);
-    };
-    miniAudio.addEventListener("loadedmetadata", setStart);
-  }
-
-  if (autoplay){
-    // This handoff is triggered by page navigation (back button, another
-    // tab taking over, etc.) - not a direct tap on this page - so any
-    // "this came from a user gesture" allowance the browser might carry
-    // over is time-limited and can already be most of the way gone by
-    // the time we get here. Call play() immediately, in the same tick,
-    // rather than waiting on boost.resume() or the track's metadata to
-    // load first - both of those are safe to resolve in the background;
-    // waiting on them first only burns down that window for no benefit.
-    // If the browser still blocks it, play() rejects quietly and the
-    // mini-bar's own Play button (already visible) is the fallback.
-    boost.resume();
-    miniAudio.play().catch(() => {});
-  }
-}
-
-function miniNext(){ if (miniPos < miniQueue.length - 1) loadMini(miniPos + 1, 0, true); }
-function miniPrevTrack(){
-  if (miniAudio.currentTime > 3){ miniAudio.currentTime = 0; return; }
-  if (miniPos > 0) loadMini(miniPos - 1, 0, true);
-  else miniAudio.currentTime = 0;
-}
-async function miniToggle(){
-  if (miniPos < 0) return;
-  if (miniAudio.paused){
-    await boost.resume();
-    miniAudio.play().catch(() => {});
-  } else miniAudio.pause();
-}
-
-$("miniPlayPause").addEventListener("click", miniToggle);
-$("miniPrev").addEventListener("click", miniPrevTrack);
-$("miniNext").addEventListener("click", miniNext);
-miniAudio.addEventListener("play", () => { $("miniPlayPause").textContent = "⏸"; $("miniPlayPause").setAttribute("aria-label","Pause"); });
-miniAudio.addEventListener("pause", () => { $("miniPlayPause").textContent = "▶"; $("miniPlayPause").setAttribute("aria-label","Play"); });
-miniAudio.addEventListener("ended", miniNext);
-
-// Tapping the art/title jumps into the full music app to keep browsing —
-// its own "resume where you left off" logic picks the song back up there.
-function openFullPlayer(){
-  suppressPush = false;
-  iframe.src = "/music/";
-}
-$("miniArt").addEventListener("click", openFullPlayer);
-$("miniInfo").addEventListener("click", openFullPlayer);
-
-/* ===== Receive the handoff from music/index.html on its way out ===== */
-window.addEventListener("message", (e) => {
-  if (e.origin !== location.origin) return;
-  const data = e.data;
-  if (!data || data.type !== "cj-music-handoff") return;
-  if (!Array.isArray(data.queue) || data.queue.length === 0) return;
-  // This postMessage was queued by the page we just left (its `pagehide`
-  // handler) and can arrive late — on real mobile browsers especially,
-  // delivery can lag behind the iframe's own `load` event. If the iframe
-  // has already navigated back to /music/ by the time this shows up,
-  // /music/ already owns playback again (stopMiniPlayer() already ran for
-  // it); applying this stale handoff on top would revive the shell's bar
-  // with a leftover song, playing alongside whatever /music/ is now
-  // actually playing. Discard it instead.
-  try{
-    if (iframe.contentWindow.location.pathname === "/music/") return;
-  }catch(e){}
-  miniQueue = data.queue;
-  loadMini(data.pos, data.currentTime, true);
 });
 </script>
 </body>
