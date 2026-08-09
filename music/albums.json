@@ -38,5 +38,13 @@
     "description": "",
     "releaseDate": "",
     "visible": true
+  },
+  {
+    "id": "meal-soundtrack",
+    "name": "Meal Soundtrack",
+    "artwork": "",
+    "description": "",
+    "releaseDate": "",
+    "visible": true
   }
 ]

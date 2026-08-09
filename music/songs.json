@@ -154,5 +154,12 @@
     "albumId": "remix",
     "visible": true,
     "download": true
+  },
+  {
+    "id": "meal-soundtrack",
+    "title": "Meal Soundtrack",
+    "audio": "meal-soundtrack.mp3",
+    "lyrics": "",
+    "albumId": "meal-soundtrack"
   }
 ]
