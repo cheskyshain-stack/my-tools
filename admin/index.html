@@ -364,11 +364,15 @@ async function commitSongs(token, mutateFn, message){
   const { content, sha } = await getFile(token, "music/songs.json");
   const list = mutateFn(JSON.parse(content));
   await putFile(token, "music/songs.json", utf8ToB64(JSON.stringify(list, null, 2)), message, sha);
+  return list; // the just-committed state, straight from GitHub's API — always
+               // current, unlike the publicly deployed songs.json, which can
+               // lag behind a fresh commit until the next deploy finishes
 }
 async function commitAlbums(token, mutateFn, message){
   const { content, sha } = await getFile(token, "music/albums.json");
   const list = mutateFn(JSON.parse(content));
   await putFile(token, "music/albums.json", utf8ToB64(JSON.stringify(list, null, 2)), message, sha);
+  return list;
 }
 
 function slugify(str){
@@ -531,7 +535,7 @@ async function moveSong(id, dir){
   setLibraryBusy(true);
   const token = localStorage.getItem(TOKEN_KEY);
   try{
-    await commitSongs(token, list => {
+    const updated = await commitSongs(token, list => {
       const song = list.find(s => s.id === id);
       if(!song) return list;
       const groupIds = list.filter(s => (s.albumId || null) === (song.albumId || null)).map(s => s.id);
@@ -544,7 +548,8 @@ async function moveSong(id, dir){
       [list[i1], list[i2]] = [list[i2], list[i1]];
       return list;
     }, `Reorder: ${id}`);
-    await loadLibrary();
+    libSongs = updated;
+    renderLibrary();
   }catch(err){
     await handleLibraryError(err);
   }finally{
@@ -557,13 +562,14 @@ async function reassignAlbum(songId, newAlbumId){
   setLibraryBusy(true);
   const token = localStorage.getItem(TOKEN_KEY);
   try{
-    await commitSongs(token, list => {
+    const updated = await commitSongs(token, list => {
       const s = list.find(x => x.id === songId);
       if(!s) return list;
       if(newAlbumId) s.albumId = newAlbumId; else delete s.albumId;
       return list;
     }, `Move song to ${newAlbumId || "Unassigned"}: ${songId}`);
-    await loadLibrary();
+    libSongs = updated;
+    renderLibrary();
   }catch(err){
     await handleLibraryError(err);
   }finally{
@@ -649,7 +655,7 @@ $("esSaveBtn").addEventListener("click", async () => {
       newAudio = filename;
     }
 
-    await commitSongs(token, list => {
+    const updated = await commitSongs(token, list => {
       const s = list.find(x => x.id === id);
       if(!s) throw new Error("Song not found in the catalog — it may have been deleted elsewhere.");
       s.title = title;
@@ -667,7 +673,8 @@ $("esSaveBtn").addEventListener("click", async () => {
     }, `Edit song: ${title}`);
 
     closeSongModal();
-    await loadLibrary();
+    libSongs = updated;
+    renderLibrary();
   }catch(err){
     setModalError("song", err.message);
     if(err.conflict) await loadLibrary();
@@ -685,9 +692,10 @@ $("esDeleteBtn").addEventListener("click", async () => {
   setLibraryBusy(true);
   setModalBusy("song", true); setModalError("song", "");
   try{
-    await commitSongs(token, list => list.filter(s => s.id !== id), `Delete song: ${id}`);
+    const updated = await commitSongs(token, list => list.filter(s => s.id !== id), `Delete song: ${id}`);
     closeSongModal();
-    await loadLibrary();
+    libSongs = updated;
+    renderLibrary();
   }catch(err){
     setModalError("song", err.message);
     if(err.conflict) await loadLibrary();
@@ -743,7 +751,7 @@ $("eaSaveBtn").addEventListener("click", async () => {
       newArtwork = path;
     }
 
-    await commitAlbums(token, list => {
+    const updated = await commitAlbums(token, list => {
       if(isCreate){
         list.push({ id, name, artwork: newArtwork || "", description, releaseDate, visible });
       }else{
@@ -759,7 +767,8 @@ $("eaSaveBtn").addEventListener("click", async () => {
     }, isCreate ? `Create album: ${name}` : `Edit album: ${name}`);
 
     closeAlbumModal();
-    await loadLibrary();
+    libAlbums = updated;
+    renderLibrary();
   }catch(err){
     setModalError("album", err.message);
     if(err.conflict) await loadLibrary();
@@ -777,10 +786,12 @@ $("eaDeleteBtn").addEventListener("click", async () => {
   setLibraryBusy(true);
   setModalBusy("album", true); setModalError("album", "");
   try{
-    await commitSongs(token, list => { list.forEach(s => { if(s.albumId === id) delete s.albumId; }); return list; }, `Unlink songs from deleted album: ${id}`);
-    await commitAlbums(token, list => list.filter(a => a.id !== id), `Delete album: ${id}`);
+    const updatedSongs = await commitSongs(token, list => { list.forEach(s => { if(s.albumId === id) delete s.albumId; }); return list; }, `Unlink songs from deleted album: ${id}`);
+    const updatedAlbums = await commitAlbums(token, list => list.filter(a => a.id !== id), `Delete album: ${id}`);
     closeAlbumModal();
-    await loadLibrary();
+    libSongs = updatedSongs;
+    libAlbums = updatedAlbums;
+    renderLibrary();
   }catch(err){
     setModalError("album", err.message);
     if(err.conflict) await loadLibrary();
@@ -792,7 +803,13 @@ $("eaDeleteBtn").addEventListener("click", async () => {
 
 /* ===== Add song / Library screen toggle ===== */
 $("showAddSongBtn").onclick = () => { $("libraryScreen").style.display = "none"; $("addSongScreen").style.display = "block"; };
-$("backToLibraryBtn").onclick = () => { $("addSongScreen").style.display = "none"; $("libraryScreen").style.display = "block"; loadLibrary(); };
+$("backToLibraryBtn").onclick = () => {
+  $("addSongScreen").style.display = "none"; $("libraryScreen").style.display = "block";
+  // Just re-render from in-memory state (already current after any add) rather
+  // than re-fetching the public songs.json, which can lag behind a fresh commit.
+  renderLibrary();
+  populateAlbumSelect($("album"));
+};
 
 /* ===== File pickers (Add song form) ===== */
 $("audio").addEventListener("change", () => {
@@ -860,7 +877,7 @@ $("songForm").addEventListener("submit", async (e) => {
     }
 
     stepStart("step-catalog");
-    await commitSongs(token, list => {
+    libSongs = await commitSongs(token, list => {
       const entry = { id, title, audio: `${id}.${audioExt}` };
       if(albumId) entry.albumId = albumId;
       if(genre) entry.genre = genre;
