@@ -27,12 +27,14 @@
   --cj-line:rgba(255,255,255,.08);
   --cj-line-soft:rgba(255,255,255,.05);
 
-  /* Accents - gold is the primary CJ Music accent, blue is secondary */
+  /* Accents - CJ blue is the primary accent (selected tabs, buttons, active
+     controls); cyan is for subtle highlights/glows; gold is reserved for
+     rare special accents only. */
+  --cj-accent:#2583F7;
+  --cj-accent-deep:#1763CF;
+  --cj-cyan:#00C8FF;
   --cj-gold:#F5B841;
   --cj-gold-deep:#C98A1C;
-  --cj-accent:#4C7DF0;
-  --cj-accent-deep:#2B4FB8;
-  --cj-accent-2:#16d7e8;
   --cj-success:#10b981;
   --cj-danger:#ef4444;
   --cj-warn:#fbbf24;
@@ -54,8 +56,8 @@
 
 html,body{
   background:
-    radial-gradient(1100px 620px at 12% -8%,rgba(76,125,240,.20),transparent 62%),
-    radial-gradient(900px 520px at 92% 4%,rgba(245,184,65,.10),transparent 60%),
+    radial-gradient(1100px 620px at 12% -8%,rgba(37,131,247,.20),transparent 62%),
+    radial-gradient(900px 520px at 92% 4%,rgba(0,200,255,.10),transparent 60%),
     var(--cj-bg);
   background-attachment:fixed;
 }
@@ -74,12 +76,13 @@ body{
 }
 .cj-btn:active{transform:scale(.965)}
 .cj-btn-primary{
-  background:linear-gradient(140deg,var(--cj-gold),var(--cj-gold-deep));
-  color:#1A1000;box-shadow:0 10px 26px rgba(245,184,65,.26);
+  background:linear-gradient(140deg,var(--cj-accent),var(--cj-accent-deep));
+  color:#fff;box-shadow:0 10px 26px rgba(37,131,247,.3);
 }
 .cj-btn-accent{
-  background:linear-gradient(135deg,var(--cj-accent),var(--cj-accent-deep));
-  color:#fff;box-shadow:0 10px 26px rgba(76,125,240,.28);
+  /* Reserved for rare special accents - not the default action color. */
+  background:linear-gradient(135deg,var(--cj-gold),var(--cj-gold-deep));
+  color:#1A1000;box-shadow:0 10px 26px rgba(245,184,65,.26);
 }
 .cj-btn-ghost{
   background:rgba(255,255,255,.07);border:1px solid var(--cj-line);color:var(--cj-text);

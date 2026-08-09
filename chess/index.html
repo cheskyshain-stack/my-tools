@@ -20,7 +20,7 @@
   --light-square: #f0d9b5;
   --dark-square: #b58863;
   --board-border: #7a5a3a;
-  --accent: #4f8cff;
+  --accent: #2583F7;
   --accent-2: #34c77b;
   --danger: #e5484d;
   --warning: #f5a623;
@@ -187,7 +187,7 @@ button:disabled:active { transform: none; }
   width: 100%; padding: 16px; border-radius: 14px;
   background: linear-gradient(135deg, var(--accent), #6ba6ff);
   color: #fff; font-size: 17px; font-weight: 700;
-  box-shadow: 0 4px 14px rgba(79,140,255,0.4);
+  box-shadow: 0 4px 14px rgba(37,131,247,0.4);
   margin-top: 4px;
 }
 
@@ -259,7 +259,7 @@ button:disabled:active { transform: none; }
 .square.dark .coord { color: var(--light-square); }
 
 .square.selected::before {
-  content: ''; position: absolute; inset: 0; background: rgba(79,140,255,0.45);
+  content: ''; position: absolute; inset: 0; background: rgba(37,131,247,0.45);
 }
 .square.last-move::before {
   content: ''; position: absolute; inset: 0; background: rgba(245,166,35,0.35);
@@ -290,7 +290,7 @@ button:disabled:active { transform: none; }
 .piece.black-piece { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,0.25); }
 .piece.anim-move { transition: transform 0.22s cubic-bezier(0.4,0,0.2,1); }
 
-[data-colorblind="true"] .square.selected::before { background: rgba(79,140,255,0.55); box-shadow: inset 0 0 0 4px rgba(79,140,255,0.9); }
+[data-colorblind="true"] .square.selected::before { background: rgba(37,131,247,0.55); box-shadow: inset 0 0 0 4px rgba(37,131,247,0.9); }
 [data-colorblind="true"] .move-dot { outline: 2px dashed rgba(20,20,20,0.5); }
 
 .bottom-bar {
@@ -418,9 +418,10 @@ button:disabled:active { transform: none; }
 <style>
   /* Chess keeps its own theme engine — don't let the shared background win */
   html,body{background:var(--bg)!important}
-  :root{--accent:#2f7df6;--accent-2:#22c55e}
-  .start-btn{background:linear-gradient(135deg,#2f7df6,#1763cf);box-shadow:0 7px 20px rgba(47,125,246,.32)}
-  .option-btn.selected{background:linear-gradient(135deg,#2f7df6,#1763cf);border-color:#2f7df6}
+  :root{--accent:#2583F7;--accent-2:#22c55e;--cyan:#00C8FF}
+  .start-btn{background:linear-gradient(135deg,#2583F7,#1763CF);box-shadow:0 7px 20px rgba(37,131,247,.32)}
+  .option-btn.selected{background:linear-gradient(135deg,#2583F7,#1763CF);border-color:#2583F7}
+  .clock.active{box-shadow:0 0 0 2px rgba(0,200,255,.5),0 0 18px rgba(0,200,255,.35)}
 </style>
 </head>
 <body data-app-theme="dark" data-board-theme="walnut" data-colorblind="false">
