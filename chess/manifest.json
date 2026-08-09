@@ -5,8 +5,8 @@
   "start_url": "/chess/",
   "scope": "/chess/",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
   "icons": [
     { "src": "/chess/icon.png", "sizes": "395x396", "type": "image/png", "purpose": "any" }
   ]

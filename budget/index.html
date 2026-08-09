@@ -12,23 +12,23 @@
   <meta name="apple-mobile-web-app-title" content="Budget">
   <style>
     :root{
-      --bg:#eef2f7;
-      --card:#ffffff;
-      --text:#111827;
-      --muted:#64748b;
-      --line:#dbe3ee;
-      --soft:#f8fafc;
-      --blue:#2f6fed;
+      --bg:#080b12;
+      --card:#101622;
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --line:#1f2937;
+      --soft:#141c2a;
+      --blue:#4c7df0;
       --orange:#f59e0b;
-      --green:#0ea77d;
-      --purple:#7c3aed;
-      --teal:#0f9f94;
-      --pink:#d92d5f;
-      --ok:#078765;
-      --okbg:#eafcf5;
-      --bad:#c81e3a;
-      --badbg:#fff1f2;
-      --shadow:0 14px 38px rgba(15,23,42,.09);
+      --green:#10b981;
+      --purple:#8b5cf6;
+      --teal:#14b8a6;
+      --pink:#ec4899;
+      --ok:#34d399;
+      --okbg:rgba(16,185,129,.14);
+      --bad:#f87171;
+      --badbg:rgba(239,68,68,.14);
+      --shadow:0 10px 28px rgba(0,0,0,.32);
     }
 
     *{box-sizing:border-box;min-width:0}
@@ -308,8 +308,8 @@
       margin-top:8px;
       padding:8px 10px;
       border-radius:10px;
-      background:#fff7ed;
-      color:#9a3412;
+      background:rgba(245,158,11,.14);
+      color:#fbbf24;
       font-size:10px;
       font-weight:800;
     }
@@ -458,12 +458,12 @@
 
 <style id="premium-enhancements">
   :root{
-    --row-blue:#eef5ff;
-    --row-orange:#fff7e8;
-    --row-green:#ecfbf5;
-    --row-purple:#f6efff;
-    --row-teal:#ecfbfa;
-    --row-pink:#fff0f5;
+    --row-blue:rgba(76,125,240,.12);
+    --row-orange:rgba(245,158,11,.12);
+    --row-green:rgba(16,185,129,.12);
+    --row-purple:rgba(139,92,246,.12);
+    --row-teal:rgba(20,184,166,.12);
+    --row-pink:rgba(236,72,153,.12);
   }
 
   body{
@@ -535,13 +535,13 @@
       inset 0 1px 0 rgba(255,255,255,.9);
   }
 
-  .rows .budget-row:nth-child(1){background:linear-gradient(90deg,var(--row-blue),#fff 72%)}
-  .rows .budget-row:nth-child(2){background:linear-gradient(90deg,var(--row-orange),#fff 72%)}
-  .rows .budget-row:nth-child(3){background:linear-gradient(90deg,var(--row-green),#fff 72%)}
+  .rows .budget-row:nth-child(1){background:linear-gradient(90deg,var(--row-blue),transparent 72%)}
+  .rows .budget-row:nth-child(2){background:linear-gradient(90deg,var(--row-orange),transparent 72%)}
+  .rows .budget-row:nth-child(3){background:linear-gradient(90deg,var(--row-green),transparent 72%)}
 
-  .budget-card:nth-child(2) .rows .budget-row:nth-child(1){background:linear-gradient(90deg,var(--row-purple),#fff 72%)}
-  .budget-card:nth-child(2) .rows .budget-row:nth-child(2){background:linear-gradient(90deg,var(--row-teal),#fff 72%)}
-  .budget-card:nth-child(2) .rows .budget-row:nth-child(3){background:linear-gradient(90deg,var(--row-pink),#fff 72%)}
+  .budget-card:nth-child(2) .rows .budget-row:nth-child(1){background:linear-gradient(90deg,var(--row-purple),transparent 72%)}
+  .budget-card:nth-child(2) .rows .budget-row:nth-child(2){background:linear-gradient(90deg,var(--row-teal),transparent 72%)}
+  .budget-card:nth-child(2) .rows .budget-row:nth-child(3){background:linear-gradient(90deg,var(--row-pink),transparent 72%)}
 
   .icon{
     width:36px;
@@ -777,7 +777,7 @@ button{background:linear-gradient(135deg,#2f7df6,#1763cf)!important}
         <div class="label">Annual income</div>
         <div class="money-input">
           <span>$</span>
-          <input id="annualIncome" type="number" min="0" step="1000" value="300000" />
+          <input id="annualIncome" type="number" min="0" step="1000" value="100000" />
         </div>
       </div>
       <div class="metric">
@@ -986,7 +986,7 @@ button{background:linear-gradient(135deg,#2f7df6,#1763cf)!important}
 
     function reset(){
       const defaults = {
-        annualIncome:300000,
+        annualIncome:100000,
         fixedPct:50,
         variablePct:30,
         savingsPct:20,

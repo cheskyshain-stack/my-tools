@@ -158,6 +158,9 @@ nav button{background:#101622;border:1px solid var(--line);color:var(--text-dim)
 nav button.active{background:linear-gradient(135deg,#2f7df6,#1763cf);border-color:#2f7df6;color:#fff;box-shadow:0 8px 18px rgba(47,125,246,.25)}
 .list{width:min(100%,650px);margin:0 auto;padding:5px 12px 170px}
 .item{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:7px;padding:10px 11px;box-shadow:0 7px 18px rgba(0,0,0,.22)}
+.empty-state{text-align:center;padding:56px 24px;color:var(--text-dim)}
+.empty-state .big{font-size:34px;margin-bottom:10px}
+.empty-state p{margin:0;font-size:13.5px;line-height:1.6;max-width:280px;margin-inline:auto}
 .item-name{color:var(--text)}
 .qty-btn{background:#152238;color:#5ba2ff;border:1px solid #27405e;border-radius:8px;width:27px;height:27px}
 .qty-val{color:#fbbf24}
@@ -229,11 +232,23 @@ function switchTab(tab) {
   document.getElementById(`btn-${tab}`).classList.add('active');
 }
 
+const EMPTY_STATE = {
+  main: { icon: '🛒', text: 'Your list is empty. Type an item below and tap Add to get started — that\'s what it\'ll look like once you have one.' },
+  got:  { icon: '✅', text: 'Nothing marked as Got yet. Items you\'ve picked up while shopping will show up here.' },
+  no:   { icon: '❌', text: 'Nothing marked as Missing yet. Items you couldn\'t find will show up here.' }
+};
+
 function render() {
   ['main', 'got', 'no'].forEach(key => {
     const box = document.getElementById(`list-${key}`);
     box.innerHTML = '';
     store[key].sort((a,b) => a.id - b.id);
+
+    if (!store[key].length) {
+      const e = EMPTY_STATE[key];
+      box.innerHTML = `<div class="empty-state"><div class="big">${e.icon}</div><p>${e.text}</p></div>`;
+      return;
+    }
 
     store[key].forEach((item, idx) => {
       const el = document.createElement('div');
