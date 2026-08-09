@@ -119,16 +119,18 @@
     "albumId": "best-songs"
   },
   {
+    "id": "yomi-daf",
+    "title": "Daf Yomi",
+    "audio": "yomi-daf.mp3",
+    "lyrics": "",
+    "albumId": "best-songs",
+    "visible": true,
+    "download": true
+  },
+  {
     "id": "popcorn",
     "title": "Popcorn",
     "audio": "popcorn.mp3",
-    "lyrics": "",
-    "albumId": "best-songs"
-  },
-  {
-    "id": "yomi-daf",
-    "title": "Yomi Daf",
-    "audio": "yomi-daf.mp3",
     "lyrics": "",
     "albumId": "best-songs"
   },
