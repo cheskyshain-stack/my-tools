@@ -88,18 +88,18 @@
     "albumId": "best-songs"
   },
   {
+    "id": "money",
+    "title": "Money",
+    "audio": "money.mp3",
+    "lyrics": "",
+    "albumId": "best-songs"
+  },
+  {
     "id": "malei-shira-kayam",
     "title": "מלֵא שִׁירָה כַּיָּם",
     "audio": "malei-shira-kayam.mp3",
     "lyrics": "",
     "genre": "Hebrew",
-    "albumId": "best-songs"
-  },
-  {
-    "id": "money",
-    "title": "Money",
-    "audio": "money.mp3",
-    "lyrics": "",
     "albumId": "best-songs"
   },
   {
