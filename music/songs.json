@@ -112,16 +112,16 @@
     "lyrics": ""
   },
   {
+    "id": "yomi-daf",
+    "title": "Yomi Daf",
+    "audio": "yomi-daf.mp3",
+    "lyrics": ""
+  },
+  {
     "id": "shalom-aleichem",
     "title": "שָׁלוֹם עֲלֵיכֶם",
     "audio": "shalom-aleichem.mp3",
     "lyrics": "",
     "genre": "Hebrew"
-  },
-  {
-    "id": "yomi-daf",
-    "title": "Yomi Daf",
-    "audio": "yomi-daf.mp3",
-    "lyrics": ""
   }
 ]
