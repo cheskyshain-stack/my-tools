@@ -1667,8 +1667,37 @@ document.querySelectorAll(".nav button").forEach(b => {
   };
 });
 
-function openFull(){ $("full").classList.add("open"); $("full").setAttribute("aria-hidden","false"); sizeWave(); }
-function closeFull(){ $("full").classList.remove("open"); $("full").setAttribute("aria-hidden","true"); closeSheets(); }
+function openFull(){
+  if ($("full").classList.contains("open")) return;
+  $("full").classList.add("open");
+  $("full").setAttribute("aria-hidden","false");
+  sizeWave();
+  // Give the full player its own history entry so the phone's Back
+  // button closes just this overlay first, instead of leaving /music/
+  // entirely. pushState() here only affects this iframe's own popstate
+  // firing - the shell frame's own history entry is untouched, so the
+  // shell won't react to it (its page-to-page Back handling is separate
+  // and still kicks in on the *next* Back, once this entry is gone).
+  try{ history.pushState({ cjFullPlayer: true }, "", location.href); }catch(e){}
+}
+function closeFullUI(){
+  $("full").classList.remove("open");
+  $("full").setAttribute("aria-hidden","true");
+  closeSheets();
+}
+function closeFull(){
+  // If we pushed a history entry for the open state, unwind it with a
+  // real back navigation so the stack stays clean (no dangling entry
+  // that would otherwise eat a second, unrelated Back press later).
+  // The popstate listener below does the actual closing.
+  if (history.state && history.state.cjFullPlayer) history.back();
+  else closeFullUI();
+}
+window.addEventListener("popstate", (e) => {
+  if ($("full").classList.contains("open") && !(e.state && e.state.cjFullPlayer)){
+    closeFullUI();
+  }
+});
 $("miniExpand").onclick = openFull;
 $("dExpand").onclick = openFull;
 $("fClose").onclick = closeFull;
