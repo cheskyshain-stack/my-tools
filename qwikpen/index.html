@@ -30,8 +30,8 @@
 html, body {
   margin:0;
   width:100%;
-  height:100%;
-  overflow:hidden;
+  min-height:100%;
+  overflow-x:hidden;
   overscroll-behavior-y:none;
   background:var(--bg);
   color:var(--text);
@@ -43,13 +43,13 @@ body {
   padding:
     max(6px, env(safe-area-inset-top))
     max(8px, env(safe-area-inset-right))
-    max(6px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-bottom))
     max(8px, env(safe-area-inset-left));
 }
 
 .app {
   width:100%;
-  height:100%;
+  min-height:100%;
   display:flex;
   flex-direction:column;
   justify-content:flex-start;
@@ -58,7 +58,6 @@ body {
 
 .shell {
   width:min(100%, 470px);
-  max-height:100%;
   display:flex;
   flex-direction:column;
   gap:7px;
@@ -471,6 +470,9 @@ html,body{
         </div>
       </div>
     </section>
+
+    <div id="cj-share"></div>
+    <script src="/assets/share-widget.js" defer></script>
   </div>
 </main>
 
