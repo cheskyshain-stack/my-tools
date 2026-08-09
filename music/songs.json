@@ -81,16 +81,16 @@
     "albumId": "best-songs"
   },
   {
-    "id": "erev-shabbos",
-    "title": "Erev Shabbos",
-    "audio": "erev-shabbos.mp3",
+    "id": "money",
+    "title": "Money",
+    "audio": "money.mp3",
     "lyrics": "",
     "albumId": "best-songs"
   },
   {
-    "id": "money",
-    "title": "Money",
-    "audio": "money.mp3",
+    "id": "erev-shabbos",
+    "title": "Erev Shabbos",
+    "audio": "erev-shabbos.mp3",
     "lyrics": "",
     "albumId": "best-songs"
   },
