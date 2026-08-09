@@ -24,11 +24,13 @@
   },
   {
     "id": "eshet-chayil-2",
-    "title": "אשת חיל (2)",
+    "title": "אשת חיל",
     "audio": "eshet-chayil-2.mp3",
     "lyrics": "",
     "albumId": "remix",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "visible": true,
+    "download": true
   },
   {
     "id": "the-little-leaf",
@@ -42,7 +44,7 @@
     "title": "The Little Leaf (2)",
     "audio": "the-little-leaf-2.mp3",
     "lyrics": "",
-    "albumId": "the-little-leaf"
+    "albumId": "remix"
   },
   {
     "id": "chazara",
@@ -112,16 +114,16 @@
     "lyrics": ""
   },
   {
+    "id": "yomi-daf",
+    "title": "Yomi Daf",
+    "audio": "yomi-daf.mp3",
+    "lyrics": ""
+  },
+  {
     "id": "shalom-aleichem",
     "title": "שָׁלוֹם עֲלֵיכֶם",
     "audio": "shalom-aleichem.mp3",
     "lyrics": "",
     "genre": "Hebrew"
-  },
-  {
-    "id": "yomi-daf",
-    "title": "Yomi Daf",
-    "audio": "yomi-daf.mp3",
-    "lyrics": ""
   }
 ]
