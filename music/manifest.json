@@ -8,6 +8,6 @@
   "background_color": "#050A18",
   "theme_color": "#050A18",
   "icons": [
-    { "src": "/music/logo.png", "sizes": "367x359", "type": "image/png", "purpose": "any" }
+    { "src": "/music/logo.png", "sizes": "395x399", "type": "image/png", "purpose": "any" }
   ]
 }
