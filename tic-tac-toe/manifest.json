@@ -8,6 +8,6 @@
   "background_color": "#080b12",
   "theme_color": "#080b12",
   "icons": [
-    { "src": "/tic-tac-toe/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "/tic-tac-toe/icon.png", "sizes": "370x364", "type": "image/png", "purpose": "any" }
   ]
 }

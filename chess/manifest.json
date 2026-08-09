@@ -8,6 +8,6 @@
   "background_color": "#1a1a2e",
   "theme_color": "#1a1a2e",
   "icons": [
-    { "src": "/chess/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "/chess/icon.png", "sizes": "367x364", "type": "image/png", "purpose": "any" }
   ]
 }
