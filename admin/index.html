@@ -175,9 +175,11 @@ function ghHeaders(token){
 async function verifyToken(token){
   const res = await fetch(`${API}/repos/${OWNER}/${REPO}`, { headers: ghHeaders(token) });
   if(!res.ok){
-    if(res.status === 401) throw new Error("That token was rejected — check it's valid and hasn't expired.");
-    if(res.status === 404) throw new Error("Token doesn't have access to this repo — check its repository access setting.");
-    throw new Error(`Couldn't reach the repo (${res.status}).`);
+    const body = await res.json().catch(() => ({}));
+    const detail = body.message ? ` GitHub said: "${body.message}"` : "";
+    if(res.status === 401) throw new Error("That token was rejected — check it's valid and hasn't expired." + detail);
+    if(res.status === 404) throw new Error("Token doesn't have access to this repo — check its repository access setting." + detail);
+    throw new Error(`Couldn't reach the repo (${res.status}).` + detail);
   }
   return res.json();
 }
