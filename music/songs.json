@@ -53,79 +53,91 @@
     "title": "חֲזָרָה",
     "audio": "chazara.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "erev-shabbos",
     "title": "Erev Shabbos",
     "audio": "erev-shabbos.mp3",
-    "lyrics": ""
+    "lyrics": "",
+    "albumId": "best-songs"
   },
   {
     "id": "hatov",
     "title": "הטוב",
     "audio": "hatov.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "ilu-finu",
     "title": "אילו פינו",
     "audio": "ilu-finu.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "kabbalat-hatorah",
     "title": "קַבָּלַת הַתּוֹרָה",
     "audio": "kabbalat-hatorah.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "malei-shira-kayam",
     "title": "מלֵא שִׁירָה כַּיָּם",
     "audio": "malei-shira-kayam.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "modeh-ani-lefanecha",
     "title": "מודה אני לפניך",
     "audio": "modeh-ani-lefanecha.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "money",
     "title": "Money",
     "audio": "money.mp3",
-    "lyrics": ""
+    "lyrics": "",
+    "albumId": "best-songs"
   },
   {
     "id": "moshe-emet",
     "title": "מֹשֶׁה אֱמֶת",
     "audio": "moshe-emet.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   },
   {
     "id": "popcorn",
     "title": "Popcorn",
     "audio": "popcorn.mp3",
-    "lyrics": ""
+    "lyrics": "",
+    "albumId": "best-songs"
   },
   {
     "id": "yomi-daf",
     "title": "Yomi Daf",
     "audio": "yomi-daf.mp3",
-    "lyrics": ""
+    "lyrics": "",
+    "albumId": "best-songs"
   },
   {
     "id": "shalom-aleichem",
     "title": "שָׁלוֹם עֲלֵיכֶם",
     "audio": "shalom-aleichem.mp3",
     "lyrics": "",
-    "genre": "Hebrew"
+    "genre": "Hebrew",
+    "albumId": "best-songs"
   }
 ]

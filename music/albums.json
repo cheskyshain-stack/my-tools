@@ -1,5 +1,13 @@
 [
   {
+    "id": "best-songs",
+    "name": "Best Songs",
+    "artwork": "",
+    "description": "",
+    "releaseDate": "",
+    "visible": true
+  },
+  {
     "id": "hamavdil",
     "name": "Hamavdil",
     "artwork": "",
