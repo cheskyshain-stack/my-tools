@@ -1,0 +1,13 @@
+{
+  "name": "Stopwatch",
+  "short_name": "Stopwatch",
+  "description": "A ten second mechanical stopwatch that sweeps round and round.",
+  "start_url": "/stopwatch/",
+  "scope": "/stopwatch/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/stopwatch/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
