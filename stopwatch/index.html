@@ -141,7 +141,7 @@
     transition: transform 60ms ease, box-shadow 60ms ease;
   }
 
-  button.pusher:active:not(:disabled) {
+  button.pusher:active {
     transform: translateY(3px);
     box-shadow:
       inset 0 2px 5px rgba(0, 0, 0, 0.5),
@@ -149,12 +149,11 @@
       0 2px 5px rgba(0, 0, 0, 0.5);
   }
 
-  button.pusher:disabled {
-    opacity: 0.38;
-    cursor: default;
-  }
-
-  button.pusher.accent { color: #7d2018; }
+  /* The pusher that starts and stops is the one that reads coloured: green
+     while it is offering to start, red while it is offering to stop. */
+  button.pusher.go { color: #1c5c33; }
+  button.pusher.go.running { color: #7d2018; }
+  #btnReset { color: #3a3f47; }
 
   /* Landscape phones: dial on the left, pushers stacked on the right. */
   @media (orientation: landscape) and (max-height: 560px) {
@@ -306,9 +305,8 @@
   </div>
 
   <div id="controls">
-    <button class="pusher" id="btnStart" type="button">Start</button>
-    <button class="pusher" id="btnStop" type="button" disabled>Stop</button>
-    <button class="pusher accent" id="btnReset" type="button">Reset</button>
+    <button class="pusher" id="btnReset" type="button">Reset</button>
+    <button class="pusher go" id="btnToggle" type="button" aria-pressed="false">Start</button>
   </div>
 
   <div id="note" role="status" aria-live="polite"></div>
@@ -385,9 +383,15 @@
 
   var hand = document.getElementById("hand");
   var lapText = document.getElementById("lapText");
-  var btnStart = document.getElementById("btnStart");
-  var btnStop = document.getElementById("btnStop");
+  var btnToggle = document.getElementById("btnToggle");
   var btnReset = document.getElementById("btnReset");
+
+  // One pusher does both, so its label has to say what the next press will do.
+  function syncToggle() {
+    btnToggle.textContent = running ? "Stop" : "Start";
+    btnToggle.setAttribute("aria-pressed", running ? "true" : "false");
+    btnToggle.classList.toggle("running", running);
+  }
 
   var running = false;
   var startedAt = 0;      // performance.now() when the current run began
@@ -546,8 +550,7 @@
     if (running) { return; }
     running = true;
     startedAt = performance.now();
-    btnStart.disabled = true;
-    btnStop.disabled = false;
+    syncToggle();
     stayAwake();
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(frame);
@@ -557,8 +560,7 @@
     if (!running) { return; }
     carried = elapsed();
     running = false;
-    btnStart.disabled = false;
-    btnStop.disabled = true;
+    syncToggle();
     letSleep();
     cancelAnimationFrame(rafId);
     rafId = 0;
@@ -573,13 +575,11 @@
     cancelAnimationFrame(rafId);
     rafId = 0;
     if (wasRunning) { letSleep(); }
-    btnStart.disabled = false;
-    btnStop.disabled = true;
+    syncToggle();
     paint();
   }
 
-  btnStart.addEventListener("click", start);
-  btnStop.addEventListener("click", stop);
+  btnToggle.addEventListener("click", function () { running ? stop() : start(); });
   btnReset.addEventListener("click", reset);
 
   // Keyboard, for testing on a desktop.
@@ -611,6 +611,7 @@
     if (e.touches.length > 1) { e.preventDefault(); }
   }, { passive: false });
 
+  syncToggle();
   paint();
 })();
 </script>
