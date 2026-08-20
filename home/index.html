@@ -57,6 +57,24 @@
     @media(min-width:640px){
       .tools{grid-template-columns:repeat(3,1fr)}
     }
+
+    /* ===== Desktop =====
+       Everything above is sized off the viewport, which on a phone is the
+       point and on a monitor made 460px cards and pushed half the tools below
+       the fold. On a wide screen the swiper and the tab bar share one centred
+       column instead, the grid gets a fourth column, and there is finally room
+       to show each tool's description. */
+    @media(min-width:900px){
+      body{padding:30px 0 40px}
+      .tabbar,.swiper{width:min(1000px,100%);margin-inline:auto}
+      .swipe-page{padding-inline:16px}
+      .tools{grid-template-columns:repeat(auto-fit,210px);justify-content:center;gap:18px}
+      .tool{padding:16px 14px 15px;transition:background-color .14s ease,border-color .14s ease,transform .14s ease}
+      .tool:hover{transform:translateY(-3px)}
+      .tool-name{font-size:14.5px}
+      .tool-desc{display:block;margin-top:5px;font-size:12px;line-height:1.35;color:var(--muted);font-weight:500}
+      footer{margin-top:22px}
+    }
     @media(max-width:560px){
       body{padding-top:18px}
       .site-logo{width:min(220px,72vw);border-radius:16px}
