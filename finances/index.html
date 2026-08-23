@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Track income splits, business tax savings, and the 10% charity obligation in one place. Part of CJ Portal.">
+<title>Finances | CJ Portal</title>
+<link rel="manifest" href="/finances/manifest.json">
+<link rel="apple-touch-icon" href="/finances/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finances">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;overscroll-behavior-y:none}
+  body{
+    background:var(--cj-bg,#050A18);
+    color:var(--cj-text,#EDF2FF);
+    font-family:var(--cj-body,"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+    line-height:1.45;
+    padding:10px 12px calc(40px + env(safe-area-inset-bottom));
+    max-width:1000px;
+    margin:0 auto;
+  }
+
+  /* cj.css centres the standard header at 650px. This page runs to 1000px,
+     which left the brand floating over the middle of the content. */
+  body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
+
+  h2{font-family:var(--cj-display,Georgia,serif);font-weight:600;font-size:1.05rem;margin:0 0 12px;letter-spacing:-.2px}
+  h3{font-size:.82rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cj-dim,#67779C);margin:22px 0 10px}
+  p.hint{margin:0;color:var(--cj-muted,#93A3C7);font-size:12.5px}
+
+  /* ===== Tabs ===== */
+  .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:4px 0 16px;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{
+    flex:0 0 auto;height:38px;padding:0 15px;border-radius:999px;border:1px solid var(--cj-line,rgba(255,255,255,.08));
+    background:rgba(255,255,255,.04);color:var(--cj-muted,#93A3C7);
+    font:700 13px/1 inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .tabs button.on{background:linear-gradient(140deg,#2583F7,#1763CF);border-color:transparent;color:#fff}
+  .panel{display:none}
+  .panel.on{display:block}
+
+  /* ===== Cards and tiles ===== */
+  .card{
+    background:var(--cj-card,#121D38);border:1px solid var(--cj-line,rgba(255,255,255,.08));
+    border-radius:var(--cj-r-lg,20px);box-shadow:var(--cj-shadow,0 18px 44px rgba(0,0,0,.45));
+    padding:16px;margin-bottom:14px;
+  }
+  .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(min-width:720px){.tiles{grid-template-columns:repeat(4,1fr)}}
+  .tile{
+    background:var(--cj-card,#121D38);border:1px solid var(--cj-line,rgba(255,255,255,.08));
+    border-radius:16px;padding:13px 14px;min-width:0;
+  }
+  .tile .label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cj-dim,#67779C);
+    display:block;margin-bottom:6px;line-height:1.25}
+  .tile .value{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:19px;font-weight:600;letter-spacing:-.3px;
+    word-break:break-word}
+  .tile .sub{font-size:11.5px;color:var(--cj-muted,#93A3C7);margin-top:4px}
+  .tile.good .value{color:#34d399}
+  .tile.owe .value{color:#fbbf24}
+  .tile.wide{grid-column:1 / -1}
+  @media(min-width:720px){.tile.wide{grid-column:span 2}}
+
+  /* ===== Forms ===== */
+  label.field{display:block;margin:0 0 11px}
+  label.field span.cap{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--cj-muted,#93A3C7);margin-bottom:5px}
+  input,select,textarea{
+    width:100%;padding:11px 12px;border-radius:12px;
+    border:1px solid var(--cj-line,rgba(255,255,255,.10));
+    background:rgba(255,255,255,.05);color:var(--cj-text,#EDF2FF);
+    font:500 15px/1.3 inherit;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid rgba(37,131,247,.55);outline-offset:1px}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#93A3C7 50%),linear-gradient(135deg,#93A3C7 50%,transparent 50%);
+    background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  textarea{min-height:62px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.row2{grid-template-columns:1fr}}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    height:46px;padding:0 20px;border-radius:999px;border:0;
+    font:700 14px/1 inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff;box-shadow:0 10px 26px rgba(37,131,247,.28);
+  }
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--cj-line,rgba(255,255,255,.10));color:var(--cj-text,#EDF2FF);box-shadow:none}
+  .btn.danger{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.4);color:#fca5a5;box-shadow:none}
+  .btn.wide{width:100%}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+
+  /* Segmented control, for picking which thing you are entering */
+  .seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .seg button{
+    flex:1 1 auto;min-width:120px;height:40px;border-radius:12px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.08));background:rgba(255,255,255,.04);
+    color:var(--cj-muted,#93A3C7);font:700 12.5px/1 inherit;
+  }
+  .seg button.on{background:rgba(37,131,247,.16);border-color:rgba(37,131,247,.6);color:#cfe2ff}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 11px}
+  .chips button{
+    height:30px;padding:0 11px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.08));background:rgba(255,255,255,.04);
+    color:var(--cj-muted,#93A3C7);font:600 11.5px/1 inherit;
+  }
+
+  /* The live preview of what an entry will post */
+  .preview{border:1px dashed rgba(37,131,247,.35);border-radius:14px;padding:11px 13px;margin:2px 0 14px;background:rgba(37,131,247,.05)}
+  .preview .ln{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:3px 0}
+  .preview .ln span:last-child{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);white-space:nowrap}
+  .preview .ln.total{border-top:1px solid var(--cj-line,rgba(255,255,255,.10));margin-top:5px;padding-top:7px;font-weight:700}
+  .preview .muted{color:var(--cj-muted,#93A3C7)}
+
+  /* ===== Ledger ===== */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{
+    text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cj-dim,#67779C);
+    font-weight:800;padding:0 10px 8px;border-bottom:1px solid var(--cj-line,rgba(255,255,255,.08));
+  }
+  tbody td{padding:10px;border-bottom:1px solid var(--cj-line-soft,rgba(255,255,255,.05));vertical-align:top}
+  td.num{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);white-space:nowrap;text-align:right}
+  .pos{color:#34d399}
+  .neg{color:#f4a4a4}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.04em;
+    background:rgba(255,255,255,.07);color:var(--cj-muted,#93A3C7);white-space:nowrap}
+  .pill.income{background:rgba(16,185,129,.16);color:#6ee7b7}
+  .pill.transfer{background:rgba(37,131,247,.16);color:#9dc6ff}
+  .pill.tax{background:rgba(139,92,246,.16);color:#c4b5fd}
+  .pill.charity{background:rgba(0,200,255,.14);color:#7fe0ff}
+  .pill.donation{background:rgba(245,184,65,.16);color:#f7d08a}
+  .pill.adjust{background:rgba(148,163,184,.16);color:#cbd5e1}
+  .x{background:none;border:0;color:#7d8aa3;font-size:17px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}
+  .x:hover{color:#fca5a5;background:rgba(239,68,68,.12)}
+  .empty{padding:26px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13.5px}
+
+  /* Under 720px the table becomes a stack of little cards. */
+  @media(max-width:719px){
+    table,tbody,tr,td{display:block;width:100%}
+    thead{display:none}
+    tbody tr{
+      border:1px solid var(--cj-line,rgba(255,255,255,.08));border-radius:14px;padding:4px 2px;margin-bottom:10px;
+      background:rgba(255,255,255,.02);position:relative;
+    }
+    tbody td{border:0;padding:5px 12px;display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    tbody td::before{content:attr(data-label);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--cj-dim,#67779C);flex:0 0 auto;padding-top:2px}
+    tbody td:empty{display:none}
+    td.num{text-align:right}
+  }
+
+  .filters{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:6px}
+  @media(min-width:720px){.filters{grid-template-columns:repeat(4,1fr)}}
+  .filters label.field{margin:0}
+
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));
+    background:#0d1730;border:1px solid rgba(37,131,247,.5);color:#dce9ff;
+    padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
+    box-shadow:0 14px 34px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;max-width:92vw;text-align:center
+  }
+  .toast.show{opacity:1}
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/finances/icon.png" alt="Finances"></a>
+  <h1>Finances</h1>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="dash" class="on">Dashboard</button>
+  <button data-tab="add">Add</button>
+  <button data-tab="txns">Transactions</button>
+  <button data-tab="charity">Charity</button>
+  <button data-tab="data">Data</button>
+</nav>
+
+<!-- ============================ Dashboard ============================ -->
+<section class="panel on" id="panel-dash">
+  <div class="card">
+    <div class="row2">
+      <label class="field"><span class="cap">Period</span>
+        <select id="rangeMode">
+          <option value="all">All time</option>
+          <option value="month">This month</option>
+          <option value="lastmonth">Last month</option>
+          <option value="year">This year</option>
+          <option value="custom">Custom dates</option>
+        </select>
+      </label>
+      <div id="customRange" style="display:none">
+        <div class="row2">
+          <label class="field"><span class="cap">From</span><input type="date" id="rangeFrom"></label>
+          <label class="field"><span class="cap">To</span><input type="date" id="rangeTo"></label>
+        </div>
+      </div>
+    </div>
+    <p class="hint" id="rangeNote"></p>
+  </div>
+
+  <h3>Money in</h3>
+  <div class="tiles">
+    <div class="tile"><span class="label">Total income</span><span class="value" id="tIncome">$0.00</span><div class="sub" id="tIncomeSub"></div></div>
+    <div class="tile"><span class="label">To personal</span><span class="value" id="tToPersonal">$0.00</span><div class="sub">Both income splits</div></div>
+    <div class="tile"><span class="label">Business tax savings</span><span class="value" id="tTaxIn">$0.00</span><div class="sub">Set aside this period</div></div>
+    <div class="tile"><span class="label">Kept in business</span><span class="value" id="tRetained">$0.00</span><div class="sub">The 7.5% that stays</div></div>
+  </div>
+
+  <h3>Account balances <span id="asOf" style="text-transform:none;letter-spacing:0;font-weight:600"></span></h3>
+  <div class="tiles">
+    <div class="tile"><span class="label">Personal checking</span><span class="value" id="bPersonal">$0.00</span></div>
+    <div class="tile"><span class="label">Business checking</span><span class="value" id="bBusiness">$0.00</span></div>
+    <div class="tile"><span class="label">Business tax savings</span><span class="value" id="bTax">$0.00</span></div>
+    <div class="tile"><span class="label">Charity account</span><span class="value" id="bCharity">$0.00</span></div>
+  </div>
+
+  <h3>Charity</h3>
+  <div class="tiles">
+    <div class="tile"><span class="label">10% obligation</span><span class="value" id="cObligation">$0.00</span><div class="sub">10% of total income</div></div>
+    <div class="tile"><span class="label">Set aside</span><span class="value" id="cSetAside">$0.00</span><div class="sub">Into the charity account</div></div>
+    <div class="tile"><span class="label">Donations paid</span><span class="value" id="cDonated">$0.00</span><div class="sub">Out of the charity account</div></div>
+    <div class="tile" id="cOwedTile"><span class="label" id="cOwedLabel">Still owed</span><span class="value" id="cOwed">$0.00</span><div class="sub" id="cOwedSub"></div></div>
+  </div>
+</section>
+
+<!-- ============================== Add ================================ -->
+<section class="panel" id="panel-add">
+  <div class="seg" id="entryPicker">
+    <button data-form="personal" class="on">Personal income</button>
+    <button data-form="business">Business income</button>
+    <button data-form="donation">Charity donation</button>
+    <button data-form="transfer">Transfer</button>
+    <button data-form="adjust">Adjustment</button>
+  </div>
+
+  <!-- Personal income -->
+  <div class="card entryform" id="form-personal">
+    <h2>Personal income</h2>
+    <p class="hint" style="margin-bottom:14px">Paid every second Thursday. The company sends 90% to personal checking and 10% straight to the charity account.</p>
+    <div class="seg" id="personalMode">
+      <button data-mode="gross" class="on">Enter the gross</button>
+      <button data-mode="split">Enter both parts</button>
+    </div>
+    <label class="field"><span class="cap">Date</span><input type="date" id="pDate"></label>
+    <div class="chips" data-datechips="pDate">
+      <button data-chip="today">Today</button><button data-chip="thu">Last Thursday</button><button data-chip="fri">Last Friday</button>
+    </div>
+    <div id="pGrossWrap">
+      <label class="field"><span class="cap">Gross amount</span><input type="text" inputmode="decimal" id="pGross" placeholder="0.00"></label>
+    </div>
+    <div id="pSplitWrap" style="display:none">
+      <div class="row2">
+        <label class="field"><span class="cap">Personal amount</span><input type="text" inputmode="decimal" id="pPersonal" placeholder="0.00"></label>
+        <label class="field"><span class="cap">Charity amount</span><input type="text" inputmode="decimal" id="pCharity" placeholder="0.00"></label>
+      </div>
+    </div>
+    <div class="preview" id="pPreview"></div>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="pNotes" placeholder="Anything worth remembering"></label>
+    <button class="btn wide" id="pSave">Save personal income</button>
+  </div>
+
+  <!-- Business income -->
+  <div class="card entryform" id="form-business" style="display:none">
+    <h2>Business income</h2>
+    <p class="hint" style="margin-bottom:14px">Lands in business checking, then splits 60% personal, 25% tax savings, 7.5% charity, and 7.5% stays put.</p>
+    <label class="field"><span class="cap">Which payment</span>
+      <select id="bSource">
+        <option value="bizThu">Business, every 2 weeks on Thursday</option>
+        <option value="bizFri">Business, every Friday</option>
+      </select>
+    </label>
+    <label class="field"><span class="cap">Date</span><input type="date" id="bDate"></label>
+    <div class="chips" data-datechips="bDate">
+      <button data-chip="today">Today</button><button data-chip="thu">Last Thursday</button><button data-chip="fri">Last Friday</button>
+    </div>
+    <label class="field"><span class="cap">Payment amount</span><input type="text" inputmode="decimal" id="bAmount" placeholder="0.00"></label>
+    <div class="preview" id="bPreview"></div>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="bNotes" placeholder="Client, invoice number, anything"></label>
+    <button class="btn wide" id="bSave">Save business income</button>
+  </div>
+
+  <!-- Donation -->
+  <div class="card entryform" id="form-donation" style="display:none">
+    <h2>Charity donation</h2>
+    <p class="hint" style="margin-bottom:14px">Money actually paid out of the charity account.</p>
+    <label class="field"><span class="cap">Date</span><input type="date" id="dDate"></label>
+    <div class="chips" data-datechips="dDate"><button data-chip="today">Today</button></div>
+    <label class="field"><span class="cap">Paid to</span><input type="text" id="dPayee" placeholder="Who received it"></label>
+    <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="dAmount" placeholder="0.00"></label>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="dNotes"></label>
+    <button class="btn wide" id="dSave">Save donation</button>
+  </div>
+
+  <!-- Transfer -->
+  <div class="card entryform" id="form-transfer" style="display:none">
+    <h2>Transfer</h2>
+    <p class="hint" style="margin-bottom:14px">Any move between your own accounts that the splits did not already create.</p>
+    <label class="field"><span class="cap">Date</span><input type="date" id="tDate"></label>
+    <div class="chips" data-datechips="tDate"><button data-chip="today">Today</button></div>
+    <div class="row2">
+      <label class="field"><span class="cap">From</span><select id="tFrom"></select></label>
+      <label class="field"><span class="cap">To</span><select id="tTo"></select></label>
+    </div>
+    <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="tAmount" placeholder="0.00"></label>
+    <label class="field"><span class="cap">Description</span><input type="text" id="tDesc" placeholder="What this transfer is for"></label>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="tNotes"></label>
+    <button class="btn wide" id="tSave">Save transfer</button>
+  </div>
+
+  <!-- Adjustment -->
+  <div class="card entryform" id="form-adjust" style="display:none">
+    <h2>Adjustment</h2>
+    <p class="hint" style="margin-bottom:14px">Corrections, and the opening balances you start with. Use a minus sign to take money out.</p>
+    <label class="field"><span class="cap">Date</span><input type="date" id="aDate"></label>
+    <div class="chips" data-datechips="aDate"><button data-chip="today">Today</button></div>
+    <label class="field"><span class="cap">Account</span><select id="aAccount"></select></label>
+    <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="aAmount" placeholder="0.00 or -0.00"></label>
+    <label class="field"><span class="cap">Description</span><input type="text" id="aDesc" placeholder="Opening balance, correction, and so on"></label>
+    <label class="field" id="aGoalWrap" style="display:none">
+      <span class="cap">Count toward the 10% goal</span>
+      <select id="aGoal">
+        <option value="yes">Yes, treat it as money set aside</option>
+        <option value="no">No, leave the 10% figure alone</option>
+      </select>
+    </label>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="aNotes"></label>
+    <button class="btn wide" id="aSave">Save adjustment</button>
+  </div>
+</section>
+
+<!-- ========================== Transactions =========================== -->
+<section class="panel" id="panel-txns">
+  <div class="card">
+    <div class="filters">
+      <label class="field"><span class="cap">Search</span><input type="search" id="fText" placeholder="Description or notes"></label>
+      <label class="field"><span class="cap">Type</span><select id="fType"></select></label>
+      <label class="field"><span class="cap">Account</span><select id="fAccount"></select></label>
+      <label class="field"><span class="cap">Income source</span><select id="fSource"></select></label>
+      <label class="field"><span class="cap">From date</span><input type="date" id="fFrom"></label>
+      <label class="field"><span class="cap">To date</span><input type="date" id="fTo"></label>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" id="fClear">Clear filters</button>
+      <span class="hint" id="fCount" style="align-self:center"></span>
+    </div>
+  </div>
+  <div class="card" id="txnWrap"></div>
+</section>
+
+<!-- ============================= Charity ============================= -->
+<section class="panel" id="panel-charity">
+  <div class="card">
+    <h2>Where the 10% stands</h2>
+    <p class="hint" id="charityPeriodNote" style="margin-bottom:14px"></p>
+    <div class="tiles">
+      <div class="tile"><span class="label">10% obligation</span><span class="value" id="chObligation">$0.00</span></div>
+      <div class="tile"><span class="label">Set aside</span><span class="value" id="chSetAside">$0.00</span></div>
+      <div class="tile"><span class="label">Donations paid</span><span class="value" id="chDonated">$0.00</span></div>
+      <div class="tile"><span class="label">Account balance</span><span class="value" id="chBalance">$0.00</span></div>
+      <div class="tile wide" id="chOwedTile"><span class="label" id="chOwedLabel">Still owed to the charity account</span>
+        <span class="value" id="chOwed">$0.00</span><div class="sub" id="chOwedSub"></div></div>
+      <div class="tile wide"><span class="label">Set aside but not yet given</span><span class="value" id="chWaiting">$0.00</span>
+        <div class="sub">Sitting in the charity account, waiting to go out</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Add a donation</h2>
+    <label class="field"><span class="cap">Date</span><input type="date" id="cdDate"></label>
+    <div class="row2">
+      <label class="field"><span class="cap">Paid to</span><input type="text" id="cdPayee" placeholder="Who received it"></label>
+      <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="cdAmount" placeholder="0.00"></label>
+    </div>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="cdNotes"></label>
+    <button class="btn wide" id="cdSave">Save donation</button>
+  </div>
+
+  <div class="card">
+    <h2>Donations paid</h2>
+    <div id="donationList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Money set aside</h2>
+    <div id="setAsideList"></div>
+  </div>
+</section>
+
+<!-- ============================== Data ============================== -->
+<section class="panel" id="panel-data">
+  <div class="card">
+    <h2>Your data</h2>
+    <p class="hint">Everything lives in this browser, on this device. Nothing is sent anywhere. Clearing your browser data would take it with it, so export a copy now and then, and import it on your other device to move it across.</p>
+    <div class="btnrow" style="margin-top:14px">
+      <button class="btn" id="exportBtn">Export a copy</button>
+      <button class="btn ghost" id="importBtn">Import a file</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+    <p class="hint" id="dataStat" style="margin-top:14px"></p>
+  </div>
+  <div class="card">
+    <h2>Start over</h2>
+    <p class="hint">Deletes every transaction on this device. There is no undo, so export first.</p>
+    <div class="btnrow" style="margin-top:14px"><button class="btn danger" id="wipeBtn">Delete everything</button></div>
+  </div>
+  <div class="card">
+    <h2>How the splits work</h2>
+    <div class="preview" style="border-style:solid;border-color:rgba(255,255,255,.08);background:transparent">
+      <div class="ln"><span class="muted">Personal income</span><span></span></div>
+      <div class="ln"><span>Personal checking</span><span>90%</span></div>
+      <div class="ln"><span>Charity account</span><span>10%</span></div>
+      <div class="ln total"><span class="muted">Business income</span><span></span></div>
+      <div class="ln"><span>Personal checking</span><span>60%</span></div>
+      <div class="ln"><span>Business tax savings</span><span>25%</span></div>
+      <div class="ln"><span>Charity account</span><span>7.5%</span></div>
+      <div class="ln"><span>Stays in business checking</span><span>7.5%</span></div>
+    </div>
+    <p class="hint">The charity goal is 10% of all income. Business income only sends 7.5% across on its own, so the difference shows up as still owed until you top it up.</p>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===================== The shape of things ====================== */
+
+  var KEY = "cjFinancesV1";
+
+  var ACCOUNTS = {
+    personal: "Personal Checking",
+    business: "Business Checking",
+    tax: "Business Tax Savings",
+    charity: "Charity Account"
+  };
+
+  var SOURCES = {
+    personal: "Personal Income",
+    bizThu: "Business, biweekly Thursday",
+    bizFri: "Business, weekly Friday"
+  };
+
+  var TYPES = ["Income", "Transfer", "Tax savings", "Charity transfer", "Donation", "Adjustment"];
+
+  // Percentages are held as basis points so the arithmetic stays in integers.
+  var PERSONAL_CHARITY_BP = 1000;                 // 10% of a personal payment
+  var BIZ = { personal: 6000, tax: 2500, charity: 750 };   // the rest stays put
+  var GOAL_BP = 1000;                             // the charity goal, 10% of income
+
+  // Money is stored in whole cents. Dollars as floats drift once you start
+  // adding them up, and this ledger does nothing but add them up.
+  function money(cents) {
+    var neg = cents < 0;
+    var s = (Math.abs(cents) / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (neg ? "-$" : "$") + s;
+  }
+  function parseMoney(str) {
+    if (str === null || str === undefined) { return null; }
+    var clean = String(str).replace(/[$,\s]/g, "");
+    if (!clean || !/^-?\d*\.?\d*$/.test(clean) || clean === "-" || clean === ".") { return null; }
+    var n = Number(clean);
+    if (!isFinite(n)) { return null; }
+    return Math.round(n * 100);
+  }
+  function share(cents, bp) { return Math.round(cents * bp / 10000); }
+
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function lastWeekday(target) {          // 4 = Thursday, 5 = Friday
+    var d = new Date();
+    var back = (d.getDay() - target + 7) % 7;
+    d.setDate(d.getDate() - back);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  // Dates are plain YYYY-MM-DD strings and are only ever compared as strings,
+  // which keeps time zones out of it entirely.
+  function prettyDate(iso) {
+    var p = iso.split("-");
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return Number(p[2]) + " " + months[Number(p[1]) - 1] + " " + p[0];
+  }
+
+  /* ============================ State ============================= */
+
+  var state = { version: 1, txns: [] };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) { return; }
+      var parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.txns)) { state = parsed; }
+    } catch (e) { /* a corrupt store should not stop the page loading */ }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { toast("Could not save. Is storage full?"); }
+  }
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function addTxns(rows) {
+    var group = uid();
+    var stamp = Date.now();
+    rows.forEach(function (r, i) {
+      r.id = uid();
+      r.group = group;
+      r.ts = stamp;      // when the entry was made
+      r.seq = i;         // and the order its rows were built in
+      state.txns.push(r);
+    });
+    save();
+    renderAll();
+  }
+
+  function removeGroup(group) {
+    state.txns = state.txns.filter(function (t) { return t.group !== group; });
+    save();
+    renderAll();
+  }
+
+  /* ========================= Calculations ========================= */
+
+  function inRange(t, from, to) {
+    if (from && t.date < from) { return false; }
+    if (to && t.date > to) { return false; }
+    return true;
+  }
+  function sum(list, fn) {
+    return list.reduce(function (acc, t) { return acc + (fn(t) || 0); }, 0);
+  }
+
+  // A balance is a point in time, so it counts everything up to the end of the
+  // period rather than only what happened inside it.
+  function balance(account, upTo) {
+    return sum(state.txns, function (t) {
+      if (upTo && t.date > upTo) { return 0; }
+      var n = 0;
+      if (t.to === account) { n += t.cents; }
+      if (t.from === account) { n -= t.cents; }
+      return n;
+    });
+  }
+
+  function period() {
+    var mode = el("rangeMode").value;
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth();
+    if (mode === "month") {
+      return { from: y + "-" + pad(m + 1) + "-01", to: y + "-" + pad(m + 1) + "-31", label: "this month" };
+    }
+    if (mode === "lastmonth") {
+      var lm = new Date(y, m - 1, 1);
+      var ly = lm.getFullYear(), lmm = lm.getMonth() + 1;
+      return { from: ly + "-" + pad(lmm) + "-01", to: ly + "-" + pad(lmm) + "-31", label: "last month" };
+    }
+    if (mode === "year") { return { from: y + "-01-01", to: y + "-12-31", label: "this year" }; }
+    if (mode === "custom") {
+      return { from: el("rangeFrom").value || "", to: el("rangeTo").value || "", label: "the chosen dates" };
+    }
+    return { from: "", to: "", label: "all time" };
+  }
+
+  function totals(p) {
+    var rows = state.txns.filter(function (t) { return inRange(t, p.from, p.to); });
+    var income = sum(rows, function (t) { return t.gross; });
+    var obligation = share(income, GOAL_BP);
+    var setAside = sum(rows, function (t) {
+      return (t.to === "charity" && !t.noGoal) ? t.cents : 0;
+    });
+    return {
+      rows: rows,
+      income: income,
+      toPersonal: sum(rows, function (t) { return t.to === "personal" ? t.cents : 0; }),
+      taxIn: sum(rows, function (t) { return t.to === "tax" ? t.cents : 0; }),
+      retained: sum(rows, function (t) { return t.retained; }),
+      obligation: obligation,
+      setAside: setAside,
+      donated: sum(rows, function (t) { return t.type === "Donation" ? t.cents : 0; }),
+      owed: obligation - setAside
+    };
+  }
+
+  /* ======================== Entry builders ======================== */
+
+  function personalRows(date, personalCents, charityCents, notes) {
+    var gross = personalCents + charityCents;
+    var rows = [];
+    if (personalCents !== 0) {
+      rows.push({ date: date, type: "Income", source: "personal", desc: "Personal income, 90% share",
+                  cents: personalCents, to: "personal", notes: notes, gross: gross });
+    }
+    if (charityCents !== 0) {
+      var row = { date: date, type: "Charity transfer", source: "personal", desc: "Personal income, 10% to charity",
+                  cents: charityCents, to: "charity", notes: notes };
+      // The gross rides on whichever row exists, so income is counted once.
+      if (personalCents === 0) { row.gross = gross; }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function businessRows(date, sourceKey, amount, notes) {
+    var toPersonal = share(amount, BIZ.personal);
+    var toTax = share(amount, BIZ.tax);
+    var toCharity = share(amount, BIZ.charity);
+    var retained = amount - toPersonal - toTax - toCharity;   // absorbs the rounding
+    var label = SOURCES[sourceKey];
+    return [
+      { date: date, type: "Income", source: sourceKey, desc: label + ", payment received",
+        cents: amount, to: "business", notes: notes, gross: amount, retained: retained },
+      { date: date, type: "Transfer", source: sourceKey, desc: "60% to personal",
+        cents: toPersonal, from: "business", to: "personal", notes: notes },
+      { date: date, type: "Tax savings", source: sourceKey, desc: "25% to tax savings",
+        cents: toTax, from: "business", to: "tax", notes: notes },
+      { date: date, type: "Charity transfer", source: sourceKey, desc: "7.5% to charity",
+        cents: toCharity, from: "business", to: "charity", notes: notes }
+    ];
+  }
+
+  /* ========================== Rendering =========================== */
+
+  function el(id) { return document.getElementById(id); }
+  function txt(id, s) { el(id).textContent = s; }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = el("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+
+  function renderDash() {
+    var p = period();
+    var t = totals(p);
+    var asOf = p.to || todayISO();
+
+    txt("tIncome", money(t.income));
+    txt("tIncomeSub", t.rows.filter(function (r) { return r.gross; }).length + " payments");
+    txt("tToPersonal", money(t.toPersonal));
+    txt("tTaxIn", money(t.taxIn));
+    txt("tRetained", money(t.retained));
+
+    txt("bPersonal", money(balance("personal", asOf)));
+    txt("bBusiness", money(balance("business", asOf)));
+    txt("bTax", money(balance("tax", asOf)));
+    txt("bCharity", money(balance("charity", asOf)));
+    txt("asOf", "as of " + prettyDate(asOf));
+
+    txt("cObligation", money(t.obligation));
+    txt("cSetAside", money(t.setAside));
+    txt("cDonated", money(t.donated));
+    paintOwed(t, "cOwedTile", "cOwedLabel", "cOwed", "cOwedSub");
+
+    txt("rangeNote", "Totals cover " + p.label + ". Balances are as they stand on " + prettyDate(asOf) + ".");
+  }
+
+  function paintOwed(t, tileId, labelId, valueId, subId) {
+    var tile = el(tileId);
+    tile.classList.remove("good", "owe");
+    if (t.owed > 0) {
+      tile.classList.add("owe");
+      txt(labelId, "Still owed to the charity account");
+      txt(valueId, money(t.owed));
+      txt(subId, "Move this across to be square at 10%");
+    } else {
+      tile.classList.add("good");
+      txt(labelId, t.owed === 0 ? "Square at 10%" : "Ahead of the 10%");
+      txt(valueId, money(-t.owed));
+      txt(subId, t.owed === 0 ? "Set aside matches the obligation" : "Set aside beyond what is owed");
+    }
+  }
+
+  function renderCharity() {
+    var p = period();
+    var t = totals(p);
+    var asOf = p.to || todayISO();
+    txt("chObligation", money(t.obligation));
+    txt("chSetAside", money(t.setAside));
+    txt("chDonated", money(t.donated));
+    txt("chBalance", money(balance("charity", asOf)));
+    txt("chWaiting", money(balance("charity", asOf)));
+    paintOwed(t, "chOwedTile", "chOwedLabel", "chOwed", "chOwedSub");
+    txt("charityPeriodNote", "Figures cover " + p.label + ", set on the Dashboard tab.");
+
+    var donations = state.txns.filter(function (x) { return x.type === "Donation"; });
+    el("donationList").innerHTML = donations.length
+      ? tableHTML(donations.sort(byDateDesc))
+      : '<div class="empty">No donations recorded yet.</div>';
+
+    var aside = state.txns.filter(function (x) { return x.to === "charity"; });
+    el("setAsideList").innerHTML = aside.length
+      ? tableHTML(aside.sort(byDateDesc))
+      : '<div class="empty">Nothing set aside yet.</div>';
+  }
+
+  // Newest day first, newest entry first within a day, but the rows of a single
+  // entry stay in the order they were built: the payment, then its splits.
+  function byDateDesc(a, b) {
+    if (a.date !== b.date) { return a.date < b.date ? 1 : -1; }
+    var at = a.ts || 0, bt = b.ts || 0;
+    if (at !== bt) { return bt - at; }
+    return (a.seq || 0) - (b.seq || 0);
+  }
+
+  function pillClass(type) {
+    return ({ "Income": "income", "Transfer": "transfer", "Tax savings": "tax",
+              "Charity transfer": "charity", "Donation": "donation", "Adjustment": "adjust" })[type] || "";
+  }
+
+  function accountCell(t) {
+    if (t.from && t.to) { return ACCOUNTS[t.from] + " to " + ACCOUNTS[t.to]; }
+    if (t.to) { return "Into " + ACCOUNTS[t.to]; }
+    if (t.from) { return "Out of " + ACCOUNTS[t.from]; }
+    return "";
+  }
+
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function tableHTML(rows) {
+    var body = rows.map(function (t) {
+      var signed = (t.from && !t.to) ? -t.cents : t.cents;
+      var cls = signed < 0 ? "neg" : "pos";
+      var src = t.source ? '<div class="hint" style="margin-top:2px">' + esc(SOURCES[t.source] || t.source) + "</div>" : "";
+      return '<tr>' +
+        '<td data-label="Date">' + prettyDate(t.date) + "</td>" +
+        '<td data-label="Description"><div>' + esc(t.desc) + src + "</div></td>" +
+        '<td class="num ' + cls + '" data-label="Amount">' + money(signed) + "</td>" +
+        '<td data-label="Account">' + esc(accountCell(t)) + "</td>" +
+        '<td data-label="Type"><span class="pill ' + pillClass(t.type) + '">' + esc(t.type) + "</span></td>" +
+        '<td data-label="Notes">' + esc(t.notes || "") + "</td>" +
+        '<td data-label=""><button class="x" data-del="' + t.group + '" title="Delete this entry">&times;</button></td>' +
+        "</tr>";
+    }).join("");
+    return '<table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th>' +
+      "<th>Account</th><th>Type</th><th>Notes</th><th></th></tr></thead><tbody>" + body + "</tbody></table>";
+  }
+
+  function renderTxns() {
+    var text = el("fText").value.trim().toLowerCase();
+    var type = el("fType").value, account = el("fAccount").value, source = el("fSource").value;
+    var from = el("fFrom").value, to = el("fTo").value;
+
+    var rows = state.txns.filter(function (t) {
+      if (type && t.type !== type) { return false; }
+      if (account && t.from !== account && t.to !== account) { return false; }
+      if (source && t.source !== source) { return false; }
+      if (!inRange(t, from, to)) { return false; }
+      if (text) {
+        var hay = (t.desc + " " + (t.notes || "") + " " + (SOURCES[t.source] || "")).toLowerCase();
+        if (hay.indexOf(text) === -1) { return false; }
+      }
+      return true;
+    }).sort(byDateDesc);
+
+    txt("fCount", rows.length + " of " + state.txns.length + " rows");
+    el("txnWrap").innerHTML = rows.length ? tableHTML(rows)
+      : '<div class="empty">Nothing matches. Try clearing the filters.</div>';
+  }
+
+  function renderData() {
+    var n = state.txns.length;
+    var groups = {};
+    state.txns.forEach(function (t) { groups[t.group] = 1; });
+    txt("dataStat", n + " rows from " + Object.keys(groups).length + " entries are stored on this device.");
+  }
+
+  function renderAll() {
+    renderDash();
+    renderTxns();
+    renderCharity();
+    renderData();
+    updatePreviews();
+  }
+
+  /* =========================== Previews =========================== */
+
+  function line(label, amount, cls) {
+    return '<div class="ln ' + (cls || "") + '"><span>' + label + "</span><span>" + money(amount) + "</span></div>";
+  }
+
+  function updatePreviews() {
+    // Personal
+    var mode = el("personalMode").querySelector("button.on").getAttribute("data-mode");
+    var pc, cc;
+    if (mode === "gross") {
+      var g = parseMoney(el("pGross").value) || 0;
+      cc = share(g, PERSONAL_CHARITY_BP);
+      pc = g - cc;
+    } else {
+      pc = parseMoney(el("pPersonal").value) || 0;
+      cc = parseMoney(el("pCharity").value) || 0;
+    }
+    el("pPreview").innerHTML =
+      line("Personal checking", pc) +
+      line("Charity account", cc) +
+      line("Gross", pc + cc, "total");
+
+    // Business
+    var b = parseMoney(el("bAmount").value) || 0;
+    var bp = share(b, BIZ.personal), bt = share(b, BIZ.tax), bch = share(b, BIZ.charity);
+    el("bPreview").innerHTML =
+      line("Into business checking", b) +
+      line("60% to personal", bp) +
+      line("25% to tax savings", bt) +
+      line("7.5% to charity", bch) +
+      line("Stays in business", b - bp - bt - bch, "total");
+  }
+
+  /* ============================ Wiring ============================ */
+
+  function fillSelect(node, obj, allLabel) {
+    var html = allLabel ? '<option value="">' + allLabel + "</option>" : "";
+    Object.keys(obj).forEach(function (k) {
+      html += '<option value="' + k + '">' + obj[k] + "</option>";
+    });
+    node.innerHTML = html;
+  }
+
+  function setupSelects() {
+    fillSelect(el("tFrom"), ACCOUNTS);
+    fillSelect(el("tTo"), ACCOUNTS);
+    el("tTo").value = "personal";
+    fillSelect(el("aAccount"), ACCOUNTS);
+    fillSelect(el("fAccount"), ACCOUNTS, "Every account");
+    fillSelect(el("fSource"), SOURCES, "Every source");
+    var typeHTML = '<option value="">Every type</option>';
+    TYPES.forEach(function (t) { typeHTML += '<option value="' + t + '">' + t + "</option>"; });
+    el("fType").innerHTML = typeHTML;
+  }
+
+  function setupDates() {
+    ["pDate", "bDate", "dDate", "tDate", "aDate", "cdDate"].forEach(function (id) {
+      el(id).value = todayISO();
+    });
+    document.querySelectorAll("[data-datechips]").forEach(function (wrap) {
+      var target = wrap.getAttribute("data-datechips");
+      wrap.querySelectorAll("button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var c = b.getAttribute("data-chip");
+          el(target).value = c === "today" ? todayISO() : lastWeekday(c === "thu" ? 4 : 5);
+        });
+      });
+    });
+  }
+
+  // Tabs
+  el("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) { return; }
+    el("tabs").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    var want = b.getAttribute("data-tab");
+    ["dash", "add", "txns", "charity", "data"].forEach(function (name) {
+      el("panel-" + name).classList.toggle("on", name === want);
+    });
+    window.scrollTo(0, 0);
+  });
+
+  // Which entry form is showing
+  el("entryPicker").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) { return; }
+    el("entryPicker").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    var want = b.getAttribute("data-form");
+    ["personal", "business", "donation", "transfer", "adjust"].forEach(function (name) {
+      el("form-" + name).style.display = name === want ? "" : "none";
+    });
+  });
+
+  // Gross or both parts
+  el("personalMode").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) { return; }
+    el("personalMode").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    var gross = b.getAttribute("data-mode") === "gross";
+    el("pGrossWrap").style.display = gross ? "" : "none";
+    el("pSplitWrap").style.display = gross ? "none" : "";
+    updatePreviews();
+  });
+
+  ["pGross", "pPersonal", "pCharity", "bAmount"].forEach(function (id) {
+    el(id).addEventListener("input", updatePreviews);
+  });
+
+  // Saving
+  el("pSave").addEventListener("click", function () {
+    var mode = el("personalMode").querySelector("button.on").getAttribute("data-mode");
+    var pc, cc;
+    if (mode === "gross") {
+      var g = parseMoney(el("pGross").value);
+      if (!g || g <= 0) { return toast("Enter the gross amount"); }
+      cc = share(g, PERSONAL_CHARITY_BP);
+      pc = g - cc;
+    } else {
+      pc = parseMoney(el("pPersonal").value);
+      cc = parseMoney(el("pCharity").value);
+      if (pc === null || cc === null) { return toast("Enter both amounts"); }
+      if (pc + cc <= 0) { return toast("The two parts add up to nothing"); }
+    }
+    addTxns(personalRows(el("pDate").value, pc, cc, el("pNotes").value.trim()));
+    el("pGross").value = ""; el("pPersonal").value = ""; el("pCharity").value = ""; el("pNotes").value = "";
+    updatePreviews();
+    toast("Personal income saved, " + money(pc + cc));
+  });
+
+  el("bSave").addEventListener("click", function () {
+    var amount = parseMoney(el("bAmount").value);
+    if (!amount || amount <= 0) { return toast("Enter the payment amount"); }
+    addTxns(businessRows(el("bDate").value, el("bSource").value, amount, el("bNotes").value.trim()));
+    el("bAmount").value = ""; el("bNotes").value = "";
+    updatePreviews();
+    toast("Business income saved, " + money(amount));
+  });
+
+  function saveDonation(dateId, payeeId, amountId, notesId) {
+    var amount = parseMoney(el(amountId).value);
+    if (!amount || amount <= 0) { return toast("Enter the amount"); }
+    var payee = el(payeeId).value.trim();
+    addTxns([{ date: el(dateId).value, type: "Donation", desc: payee ? "Donation to " + payee : "Donation",
+               cents: amount, from: "charity", notes: el(notesId).value.trim() }]);
+    el(payeeId).value = ""; el(amountId).value = ""; el(notesId).value = "";
+    toast("Donation saved, " + money(amount));
+  }
+  el("dSave").addEventListener("click", function () { saveDonation("dDate", "dPayee", "dAmount", "dNotes"); });
+  el("cdSave").addEventListener("click", function () { saveDonation("cdDate", "cdPayee", "cdAmount", "cdNotes"); });
+
+  el("tSave").addEventListener("click", function () {
+    var amount = parseMoney(el("tAmount").value);
+    if (!amount || amount <= 0) { return toast("Enter the amount"); }
+    var from = el("tFrom").value, to = el("tTo").value;
+    if (from === to) { return toast("Pick two different accounts"); }
+    var isCharity = to === "charity";
+    addTxns([{ date: el("tDate").value, type: isCharity ? "Charity transfer" : (to === "tax" ? "Tax savings" : "Transfer"),
+               desc: el("tDesc").value.trim() || (ACCOUNTS[from] + " to " + ACCOUNTS[to]),
+               cents: amount, from: from, to: to, notes: el("tNotes").value.trim() }]);
+    el("tAmount").value = ""; el("tDesc").value = ""; el("tNotes").value = "";
+    toast("Transfer saved, " + money(amount));
+  });
+
+  el("aAccount").addEventListener("change", function () {
+    el("aGoalWrap").style.display = el("aAccount").value === "charity" ? "" : "none";
+  });
+
+  el("aSave").addEventListener("click", function () {
+    var amount = parseMoney(el("aAmount").value);
+    if (amount === null || amount === 0) { return toast("Enter an amount"); }
+    var account = el("aAccount").value;
+    var row = { date: el("aDate").value, type: "Adjustment",
+                desc: el("aDesc").value.trim() || "Adjustment", cents: Math.abs(amount),
+                notes: el("aNotes").value.trim() };
+    if (amount > 0) { row.to = account; } else { row.from = account; }
+    if (account === "charity" && amount > 0 && el("aGoal").value === "no") { row.noGoal = true; }
+    addTxns([row]);
+    el("aAmount").value = ""; el("aDesc").value = ""; el("aNotes").value = "";
+    toast("Adjustment saved");
+  });
+
+  // Deleting, from any of the tables
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-del]");
+    if (!b) { return; }
+    var group = b.getAttribute("data-del");
+    var rows = state.txns.filter(function (t) { return t.group === group; });
+    var msg = rows.length > 1
+      ? "Delete this entry and all " + rows.length + " rows it created?"
+      : "Delete this row?";
+    if (window.confirm(msg)) { removeGroup(group); toast("Deleted"); }
+  });
+
+  // Filters
+  ["fText", "fType", "fAccount", "fSource", "fFrom", "fTo"].forEach(function (id) {
+    el(id).addEventListener("input", renderTxns);
+    el(id).addEventListener("change", renderTxns);
+  });
+  el("fClear").addEventListener("click", function () {
+    ["fText", "fType", "fAccount", "fSource", "fFrom", "fTo"].forEach(function (id) { el(id).value = ""; });
+    renderTxns();
+  });
+
+  // Period
+  el("rangeMode").addEventListener("change", function () {
+    el("customRange").style.display = el("rangeMode").value === "custom" ? "" : "none";
+    renderDash(); renderCharity();
+  });
+  el("rangeFrom").addEventListener("change", function () { renderDash(); renderCharity(); });
+  el("rangeTo").addEventListener("change", function () { renderDash(); renderCharity(); });
+
+  // Export and import
+  el("exportBtn").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cj-finances-" + todayISO() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast("Exported");
+  });
+  el("importBtn").addEventListener("click", function () { el("importFile").click(); });
+  el("importFile").addEventListener("change", function () {
+    var f = el("importFile").files[0];
+    if (!f) { return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.txns)) { throw new Error("not a finances file"); }
+        if (!window.confirm("Replace what is on this device with " + parsed.txns.length + " rows from the file?")) { return; }
+        state = { version: 1, txns: parsed.txns };
+        save();
+        renderAll();
+        toast("Imported " + parsed.txns.length + " rows");
+      } catch (err) { toast("That file did not look right"); }
+      el("importFile").value = "";
+    };
+    reader.readAsText(f);
+  });
+
+  el("wipeBtn").addEventListener("click", function () {
+    if (!window.confirm("Delete every transaction on this device?")) { return; }
+    if (!window.confirm("Really delete everything? There is no undo.")) { return; }
+    state = { version: 1, txns: [] };
+    save();
+    renderAll();
+    toast("Everything deleted");
+  });
+
+  load();
+  setupSelects();
+  setupDates();
+  renderAll();
+})();
+</script>
+</body>
+</html>
