@@ -135,8 +135,11 @@
   .pill.charity{background:rgba(0,200,255,.14);color:#7fe0ff}
   .pill.donation{background:rgba(245,184,65,.16);color:#f7d08a}
   .pill.adjust{background:rgba(148,163,184,.16);color:#cbd5e1}
-  .x{background:none;border:0;color:#7d8aa3;font-size:17px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}
-  .x:hover{color:#fca5a5;background:rgba(239,68,68,.12)}
+  .del{
+    border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.12);color:#fca5a5;
+    font:700 11.5px/1 inherit;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;
+  }
+  .del:active{transform:scale(.96)}
   .empty{padding:26px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13.5px}
 
   /* Under 720px the table becomes a stack of little cards. */
@@ -165,6 +168,11 @@
     box-shadow:0 14px 34px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;max-width:92vw;text-align:center
   }
   .toast.show{opacity:1}
+  .toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:14px}
+  .toast-action{
+    border:1px solid rgba(37,131,247,.55);background:rgba(37,131,247,.18);color:#cfe2ff;
+    font:800 12.5px/1 inherit;padding:8px 14px;border-radius:999px;cursor:pointer;flex:none;
+  }
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
 </head>
@@ -236,7 +244,7 @@
     <div class="tile"><span class="label">10% obligation</span><span class="value" id="cObligation">$0.00</span><div class="sub" id="cObligationSub">10% of income after tax</div></div>
     <div class="tile"><span class="label">Set aside</span><span class="value" id="cSetAside">$0.00</span><div class="sub">Into the charity account</div></div>
     <div class="tile"><span class="label">Donations paid</span><span class="value" id="cDonated">$0.00</span><div class="sub">Out of the charity account</div></div>
-    <div class="tile" id="cOwedTile"><span class="label" id="cOwedLabel">Still owed</span><span class="value" id="cOwed">$0.00</span><div class="sub" id="cOwedSub"></div></div>
+    <div class="tile" id="cOwedTile"><span class="label" id="cOwedLabel">Still to give</span><span class="value" id="cOwed">$0.00</span><div class="sub" id="cOwedSub"></div></div>
   </div>
 </section>
 
@@ -303,7 +311,10 @@
     <label class="field"><span class="cap">Date</span><input type="date" id="dDate"></label>
     <div class="chips" data-datechips="dDate"><button data-chip="today">Today</button></div>
     <label class="field"><span class="cap">Paid to</span><input type="text" id="dPayee" placeholder="Who received it"></label>
-    <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="dAmount" placeholder="0.00"></label>
+    <div class="row2">
+      <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="dAmount" placeholder="0.00"></label>
+      <label class="field"><span class="cap">Paid from</span><select id="dFrom"></select></label>
+    </div>
     <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="dNotes"></label>
     <button class="btn wide" id="dSave">Save donation</button>
   </div>
@@ -358,6 +369,7 @@
     </div>
     <div class="btnrow">
       <button class="btn ghost" id="fClear">Clear filters</button>
+      <button class="btn ghost" id="editToggle">Delete rows</button>
       <span class="hint" id="fCount" style="align-self:center"></span>
     </div>
   </div>
@@ -374,10 +386,8 @@
       <div class="tile"><span class="label">Set aside</span><span class="value" id="chSetAside">$0.00</span></div>
       <div class="tile"><span class="label">Donations paid</span><span class="value" id="chDonated">$0.00</span></div>
       <div class="tile"><span class="label">Account balance</span><span class="value" id="chBalance">$0.00</span></div>
-      <div class="tile wide" id="chOwedTile"><span class="label" id="chOwedLabel">Still owed to the charity account</span>
+      <div class="tile wide" id="chOwedTile"><span class="label" id="chOwedLabel">Still to give</span>
         <span class="value" id="chOwed">$0.00</span><div class="sub" id="chOwedSub"></div></div>
-      <div class="tile wide"><span class="label">Set aside but not yet given</span><span class="value" id="chWaiting">$0.00</span>
-        <div class="sub">Sitting in the charity account, waiting to go out</div></div>
     </div>
   </div>
 
@@ -388,12 +398,16 @@
       <label class="field"><span class="cap">Paid to</span><input type="text" id="cdPayee" placeholder="Who received it"></label>
       <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="cdAmount" placeholder="0.00"></label>
     </div>
+    <label class="field"><span class="cap">Paid from</span><select id="cdFrom"></select></label>
     <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="cdNotes"></label>
     <button class="btn wide" id="cdSave">Save donation</button>
   </div>
 
   <div class="card">
     <h2>Donations paid</h2>
+    <div class="btnrow" style="margin-bottom:12px">
+      <button class="btn ghost" id="editToggle2">Delete rows</button>
+    </div>
     <div id="donationList"></div>
   </div>
 
@@ -447,8 +461,9 @@
     </div>
     <p class="hint">The charity goal is 10% of income <strong>after tax</strong>. A business payment is taxed at 25%, so
       the 10% is reckoned on the remaining 75%, and a tenth of three quarters is 7.5%: exactly what the split already
-      sends across. Personal income has no tax withheld here, so the full 10% applies to it. Anything still owed comes
-      from an adjustment rather than from the splits.</p>
+      sends across. Personal income has no tax withheld here, so the full 10% applies to it. The splits <strong>fund</strong> the charity account. What settles the
+      obligation is giving the money away, so "still to give" counts down as donations are recorded, not when money
+      moves into the account. A donation paid from any other account counts just the same.</p>
   </div>
 </section>
 
@@ -521,6 +536,10 @@
   /* ============================ State ============================= */
 
   var state = { version: 1, txns: [], meta: { auto: true, lastBackup: "", snooze: "" } };
+  // Rows carry no delete control until this is switched on, and it resets on
+  // every load, so a stray tap on the ledger cannot remove anything.
+  var editMode = false;
+  var lastDeleted = null;
   var BACKUP_DAYS = 7;
 
   function meta() {
@@ -713,6 +732,7 @@
     var setAside = sum(rows, function (t) {
       return (t.to === "charity" && !t.noGoal) ? t.cents : 0;
     });
+    var donated = sum(rows, function (t) { return t.type === "Donation" ? t.cents : 0; });
     return {
       rows: rows,
       income: income,
@@ -722,8 +742,11 @@
       retained: sum(rows, function (t) { return t.retained; }),
       obligation: obligation,
       setAside: setAside,
-      donated: sum(rows, function (t) { return t.type === "Donation" ? t.cents : 0; }),
-      owed: obligation - setAside
+      donated: donated,
+      // What is still owed is what has not been given away yet. Moving money
+      // into the charity account earmarks it, it does not discharge it.
+      owed: obligation - donated,
+      notSetAside: obligation - setAside
     };
   }
 
@@ -771,12 +794,39 @@
   function txt(id, s) { el(id).textContent = s; }
 
   var toastTimer;
-  function toast(msg) {
+  function toast(msg, actionLabel, action) {
     var t = el("toast");
-    t.textContent = msg;
+    t.textContent = "";
+    var line = document.createElement("span");
+    line.textContent = msg;
+    t.appendChild(line);
+    t.classList.toggle("has-action", Boolean(actionLabel));
+    if (actionLabel) {
+      var b = document.createElement("button");
+      b.className = "toast-action";
+      b.textContent = actionLabel;
+      b.addEventListener("click", function () {
+        clearTimeout(toastTimer);
+        t.classList.remove("show");
+        action();
+      });
+      t.appendChild(b);
+    }
     t.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, actionLabel ? 9000 : 2200);
+  }
+
+  function setEditMode(on) {
+    editMode = on;
+    ["editToggle", "editToggle2"].forEach(function (id) {
+      var b = el(id);
+      if (!b) { return; }
+      b.textContent = on ? "Done" : "Delete rows";
+      b.classList.toggle("danger", on);
+    });
+    renderTxns();
+    renderCharity();
   }
 
   function renderDash() {
@@ -810,14 +860,16 @@
     tile.classList.remove("good", "owe");
     if (t.owed > 0) {
       tile.classList.add("owe");
-      txt(labelId, "Still owed to the charity account");
+      txt(labelId, "Still to give");
       txt(valueId, money(t.owed));
-      txt(subId, "Move this across to be square at 10%");
+      txt(subId, t.setAside >= t.obligation
+        ? "Set aside already, waiting to go out"
+        : "Of which " + money(t.notSetAside) + " is not even set aside yet");
     } else {
       tile.classList.add("good");
-      txt(labelId, t.owed === 0 ? "Square at 10%" : "Ahead of the 10%");
+      txt(labelId, t.owed === 0 ? "Square at 10%" : "Given beyond the 10%");
       txt(valueId, money(-t.owed));
-      txt(subId, t.owed === 0 ? "Set aside matches the obligation" : "Set aside beyond what is owed");
+      txt(subId, t.owed === 0 ? "Given exactly what is owed" : "More given than the 10% asks for");
     }
   }
 
@@ -830,7 +882,6 @@
     txt("chSetAside", money(t.setAside));
     txt("chDonated", money(t.donated));
     txt("chBalance", money(balance("charity", asOf)));
-    txt("chWaiting", money(balance("charity", asOf)));
     paintOwed(t, "chOwedTile", "chOwedLabel", "chOwed", "chOwedSub");
     txt("charityPeriodNote", "Figures cover " + p.label + ", set on the Dashboard tab.");
 
@@ -883,11 +934,12 @@
         '<td data-label="Account">' + esc(accountCell(t)) + "</td>" +
         '<td data-label="Type"><span class="pill ' + pillClass(t.type) + '">' + esc(t.type) + "</span></td>" +
         '<td data-label="Notes">' + esc(t.notes || "") + "</td>" +
-        '<td data-label=""><button class="x" data-del="' + t.group + '" title="Delete this entry">&times;</button></td>' +
+        (editMode ? '<td data-label=""><button class="del" data-del="' + t.group + '">Delete</button></td>' : "") +
         "</tr>";
     }).join("");
     return '<table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th>' +
-      "<th>Account</th><th>Type</th><th>Notes</th><th></th></tr></thead><tbody>" + body + "</tbody></table>";
+      "<th>Account</th><th>Type</th><th>Notes</th>" + (editMode ? "<th></th>" : "") +
+      "</tr></thead><tbody>" + body + "</tbody></table>";
   }
 
   function renderTxns() {
@@ -977,6 +1029,10 @@
     fillSelect(el("tTo"), ACCOUNTS);
     el("tTo").value = "personal";
     fillSelect(el("aAccount"), ACCOUNTS);
+    fillSelect(el("dFrom"), ACCOUNTS);
+    fillSelect(el("cdFrom"), ACCOUNTS);
+    el("dFrom").value = "charity";
+    el("cdFrom").value = "charity";
     fillSelect(el("fAccount"), ACCOUNTS, "Every account");
     fillSelect(el("fSource"), SOURCES, "Every source");
     var typeHTML = '<option value="">Every type</option>';
@@ -1067,17 +1123,20 @@
     toast("Business income saved, " + money(amount));
   });
 
-  function saveDonation(dateId, payeeId, amountId, notesId) {
+  function saveDonation(dateId, payeeId, amountId, notesId, fromId) {
     var amount = parseMoney(el(amountId).value);
     if (!amount || amount <= 0) { return toast("Enter the amount"); }
     var payee = el(payeeId).value.trim();
+    // Usually out of the charity account, but a donation paid from anywhere
+    // still counts against the 10%.
+    var from = el(fromId) ? el(fromId).value : "charity";
     addTxns([{ date: el(dateId).value, type: "Donation", desc: payee ? "Donation to " + payee : "Donation",
-               cents: amount, from: "charity", notes: el(notesId).value.trim() }]);
+               cents: amount, from: from, notes: el(notesId).value.trim() }]);
     el(payeeId).value = ""; el(amountId).value = ""; el(notesId).value = "";
     toast("Donation saved, " + money(amount));
   }
-  el("dSave").addEventListener("click", function () { saveDonation("dDate", "dPayee", "dAmount", "dNotes"); });
-  el("cdSave").addEventListener("click", function () { saveDonation("cdDate", "cdPayee", "cdAmount", "cdNotes"); });
+  el("dSave").addEventListener("click", function () { saveDonation("dDate", "dPayee", "dAmount", "dNotes", "dFrom"); });
+  el("cdSave").addEventListener("click", function () { saveDonation("cdDate", "cdPayee", "cdAmount", "cdNotes", "cdFrom"); });
 
   el("tSave").addEventListener("click", function () {
     var amount = parseMoney(el("tAmount").value);
@@ -1110,17 +1169,33 @@
     toast("Adjustment saved");
   });
 
-  // Deleting, from any of the tables
+  // Deleting, from any of the tables. Three things have to happen before a row
+  // is gone for good: switch deleting on, press Delete, confirm, and even then
+  // there is a window to put it back.
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-del]");
     if (!b) { return; }
     var group = b.getAttribute("data-del");
     var rows = state.txns.filter(function (t) { return t.group === group; });
+    if (!rows.length) { return; }
     var msg = rows.length > 1
       ? "Delete this entry and all " + rows.length + " rows it created?"
       : "Delete this row?";
-    if (window.confirm(msg)) { removeGroup(group); toast("Deleted"); }
+    if (!window.confirm(msg)) { return; }
+    lastDeleted = rows;
+    removeGroup(group);
+    toast("Deleted " + rows.length + (rows.length > 1 ? " rows" : " row"), "Undo", function () {
+      if (!lastDeleted) { return; }
+      state.txns = state.txns.concat(lastDeleted);
+      lastDeleted = null;
+      save();
+      renderAll();
+      toast("Put back");
+    });
   });
+
+  el("editToggle").addEventListener("click", function () { setEditMode(!editMode); });
+  el("editToggle2").addEventListener("click", function () { setEditMode(!editMode); });
 
   // Filters
   ["fText", "fType", "fAccount", "fSource", "fFrom", "fTo"].forEach(function (id) {
