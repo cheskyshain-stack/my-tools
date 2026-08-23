@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080b12">
 <meta name="description" content="Track income splits, business tax savings, and the 10% charity obligation in one place. Part of CJ Portal.">
-<title>Finances | CJ Portal</title>
+<title>Money Flow | CJ Portal</title>
 <link rel="manifest" href="/finances/manifest.json">
 <link rel="apple-touch-icon" href="/finances/icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Finances">
+<meta name="apple-mobile-web-app-title" content="Money Flow">
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;overscroll-behavior-y:none}
@@ -171,8 +171,8 @@
 <body>
 
 <header class="cj-page-header">
-  <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/finances/icon.png" alt="Finances"></a>
-  <h1>Finances</h1>
+  <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/finances/icon.png" alt="Money Flow"></a>
+  <h1>Money Flow</h1>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -182,6 +182,15 @@
   <button data-tab="charity">Charity</button>
   <button data-tab="data">Data</button>
 </nav>
+
+<div class="card" id="backupBanner" style="display:none;border-color:rgba(245,184,65,.45);background:rgba(245,184,65,.06)">
+  <h2 style="margin-bottom:6px">Weekly backup</h2>
+  <p class="hint" id="backupBannerText"></p>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn" id="backupNow">Save the copy now</button>
+    <button class="btn ghost" id="backupLater">Not today</button>
+  </div>
+</div>
 
 <!-- ============================ Dashboard ============================ -->
 <section class="panel on" id="panel-dash">
@@ -407,6 +416,19 @@
     <p class="hint" id="dataStat" style="margin-top:14px"></p>
   </div>
   <div class="card">
+    <h2>Automatic weekly backup</h2>
+    <p class="hint">Once a week the page saves a copy to your downloads by itself. A browser will not let a page start a
+      download before you have touched it, so it waits for your first tap on the page and saves the file then.</p>
+    <label class="field" style="margin-top:12px"><span class="cap">Weekly backup</span>
+      <select id="autoBackup">
+        <option value="on">On, save a copy every week</option>
+        <option value="off">Off, I will export by hand</option>
+      </select>
+    </label>
+    <p class="hint" id="backupStatus"></p>
+  </div>
+
+  <div class="card">
     <h2>Start over</h2>
     <p class="hint">Deletes every transaction on this device. There is no undo, so export first.</p>
     <div class="btnrow" style="margin-top:14px"><button class="btn danger" id="wipeBtn">Delete everything</button></div>
@@ -495,14 +517,20 @@
 
   /* ============================ State ============================= */
 
-  var state = { version: 1, txns: [] };
+  var state = { version: 1, txns: [], meta: { auto: true, lastBackup: "", snooze: "" } };
+  var BACKUP_DAYS = 7;
+
+  function meta() {
+    if (!state.meta) { state.meta = { auto: true, lastBackup: "", snooze: "" }; }
+    return state.meta;
+  }
 
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
       if (!raw) { return; }
       var parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.txns)) { state = parsed; }
+      if (parsed && Array.isArray(parsed.txns)) { state = parsed; meta(); }
     } catch (e) { /* a corrupt store should not stop the page loading */ }
   }
   function save() {
@@ -514,6 +542,7 @@
   }
 
   function addTxns(rows) {
+    if (!state.txns.length && !meta().lastBackup) { meta().lastBackup = todayISO(); }
     var group = uid();
     var stamp = Date.now();
     rows.forEach(function (r, i) {
@@ -531,6 +560,93 @@
     state.txns = state.txns.filter(function (t) { return t.group !== group; });
     save();
     renderAll();
+  }
+
+  /* ========================== Backups ============================= */
+
+  function daysSince(iso) {
+    if (!iso) { return Infinity; }
+    var a = iso.split("-"), b = todayISO().split("-");
+    var then = Date.UTC(+a[0], +a[1] - 1, +a[2]);
+    var now = Date.UTC(+b[0], +b[1] - 1, +b[2]);
+    return Math.floor((now - then) / 86400000);
+  }
+
+  function nextBackupDate() {
+    var last = meta().lastBackup;
+    if (!last) { return ""; }
+    var a = last.split("-");
+    var d = new Date(Date.UTC(+a[0], +a[1] - 1, +a[2] + BACKUP_DAYS));
+    return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate());
+  }
+
+  function backupDue() {
+    if (!meta().auto) { return false; }
+    if (!state.txns.length) { return false; }          // nothing worth saving yet
+    if (meta().snooze === todayISO()) { return false; }
+    return daysSince(meta().lastBackup) >= BACKUP_DAYS;
+  }
+
+  function writeBackup(automatic) {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cj-finances-" + todayISO() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    meta().lastBackup = todayISO();
+    meta().snooze = "";
+    save();
+    renderAll();
+    toast(automatic ? "Weekly backup saved to your downloads" : "Exported");
+  }
+
+  // A page cannot start a download before the person has touched it, and a tab
+  // opened from the portal has no such touch yet. So when a backup is due, the
+  // first tap anywhere other than the banner is what actually writes the file.
+  function firstTouch(e) {
+    if (e.target && e.target.closest && e.target.closest("#backupBanner")) { return; }
+    disarmBackup();
+    if (backupDue()) { writeBackup(true); }
+  }
+  function armBackup() {
+    document.addEventListener("pointerdown", firstTouch, true);
+    document.addEventListener("keydown", firstTouch, true);
+  }
+  function disarmBackup() {
+    document.removeEventListener("pointerdown", firstTouch, true);
+    document.removeEventListener("keydown", firstTouch, true);
+  }
+
+  function renderBackup() {
+    var banner = el("backupBanner");
+    var due = backupDue();
+    banner.style.display = due ? "" : "none";
+    if (due) {
+      var n = daysSince(meta().lastBackup);
+      txt("backupBannerText", isFinite(n)
+        ? "It has been " + n + " days since the last copy was saved. Touch anywhere and one will be written to your downloads."
+        : "No copy has been saved yet. Touch anywhere and one will be written to your downloads.");
+      disarmBackup();
+      armBackup();
+    } else {
+      disarmBackup();
+    }
+
+    el("autoBackup").value = meta().auto ? "on" : "off";
+    var status;
+    if (!meta().auto) {
+      status = "Automatic backups are off.";
+    } else if (!state.txns.length) {
+      status = "The weekly clock starts with your first entry.";
+    } else if (!meta().lastBackup) {
+      status = "A copy is due now.";
+    } else {
+      status = "Last copy saved on " + prettyDate(meta().lastBackup) +
+               ". The next one is due on " + prettyDate(nextBackupDate()) + ".";
+    }
+    txt("backupStatus", status);
   }
 
   /* ========================= Calculations ========================= */
@@ -785,6 +901,7 @@
   }
 
   function renderAll() {
+    renderBackup();
     renderDash();
     renderTxns();
     renderCharity();
@@ -1005,15 +1122,23 @@
   el("rangeTo").addEventListener("change", function () { renderDash(); renderCharity(); });
 
   // Export and import
-  el("exportBtn").addEventListener("click", function () {
-    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "cj-finances-" + todayISO() + ".json";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    toast("Exported");
+  el("exportBtn").addEventListener("click", function () { writeBackup(false); });
+  el("backupNow").addEventListener("click", function () { writeBackup(true); });
+  el("backupLater").addEventListener("click", function () {
+    meta().snooze = todayISO();
+    save();
+    renderBackup();
+    toast("It will ask again tomorrow");
+  });
+  el("autoBackup").addEventListener("change", function () {
+    meta().auto = el("autoBackup").value === "on";
+    save();
+    renderBackup();
+  });
+
+  // Left open for days, a tab should still notice when the week is up.
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") { renderBackup(); }
   });
   el("importBtn").addEventListener("click", function () { el("importFile").click(); });
   el("importFile").addEventListener("change", function () {
@@ -1025,7 +1150,9 @@
         var parsed = JSON.parse(reader.result);
         if (!parsed || !Array.isArray(parsed.txns)) { throw new Error("not a finances file"); }
         if (!window.confirm("Replace what is on this device with " + parsed.txns.length + " rows from the file?")) { return; }
-        state = { version: 1, txns: parsed.txns };
+        state = { version: 1, txns: parsed.txns, meta: parsed.meta || meta() };
+        meta().lastBackup = todayISO();
+        meta().snooze = "";
         save();
         renderAll();
         toast("Imported " + parsed.txns.length + " rows");
@@ -1038,7 +1165,7 @@
   el("wipeBtn").addEventListener("click", function () {
     if (!window.confirm("Delete every transaction on this device?")) { return; }
     if (!window.confirm("Really delete everything? There is no undo.")) { return; }
-    state = { version: 1, txns: [] };
+    state = { version: 1, txns: [], meta: { auto: meta().auto, lastBackup: "", snooze: "" } };
     save();
     renderAll();
     toast("Everything deleted");

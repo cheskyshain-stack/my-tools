@@ -1,6 +1,6 @@
 {
-  "name": "Finances",
-  "short_name": "Finances",
+  "name": "Money Flow",
+  "short_name": "Money Flow",
   "description": "Income splits, business tax savings, and the 10% charity goal in one place.",
   "start_url": "/finances/",
   "scope": "/finances/",
@@ -8,6 +8,11 @@
   "background_color": "#080b12",
   "theme_color": "#080b12",
   "icons": [
-    { "src": "/finances/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "/finances/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
