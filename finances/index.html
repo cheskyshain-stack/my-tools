@@ -233,7 +233,7 @@
 
   <h3>Charity</h3>
   <div class="tiles">
-    <div class="tile"><span class="label">10% obligation</span><span class="value" id="cObligation">$0.00</span><div class="sub">10% of total income</div></div>
+    <div class="tile"><span class="label">10% obligation</span><span class="value" id="cObligation">$0.00</span><div class="sub" id="cObligationSub">10% of income after tax</div></div>
     <div class="tile"><span class="label">Set aside</span><span class="value" id="cSetAside">$0.00</span><div class="sub">Into the charity account</div></div>
     <div class="tile"><span class="label">Donations paid</span><span class="value" id="cDonated">$0.00</span><div class="sub">Out of the charity account</div></div>
     <div class="tile" id="cOwedTile"><span class="label" id="cOwedLabel">Still owed</span><span class="value" id="cOwed">$0.00</span><div class="sub" id="cOwedSub"></div></div>
@@ -370,7 +370,7 @@
     <h2>Where the 10% stands</h2>
     <p class="hint" id="charityPeriodNote" style="margin-bottom:14px"></p>
     <div class="tiles">
-      <div class="tile"><span class="label">10% obligation</span><span class="value" id="chObligation">$0.00</span></div>
+      <div class="tile"><span class="label">10% obligation</span><span class="value" id="chObligation">$0.00</span><div class="sub" id="chObligationSub"></div></div>
       <div class="tile"><span class="label">Set aside</span><span class="value" id="chSetAside">$0.00</span></div>
       <div class="tile"><span class="label">Donations paid</span><span class="value" id="chDonated">$0.00</span></div>
       <div class="tile"><span class="label">Account balance</span><span class="value" id="chBalance">$0.00</span></div>
@@ -445,7 +445,10 @@
       <div class="ln"><span>Charity account</span><span>7.5%</span></div>
       <div class="ln"><span>Stays in business checking</span><span>7.5%</span></div>
     </div>
-    <p class="hint">The charity goal is 10% of all income. Business income only sends 7.5% across on its own, so the difference shows up as still owed until you top it up.</p>
+    <p class="hint">The charity goal is 10% of income <strong>after tax</strong>. A business payment is taxed at 25%, so
+      the 10% is reckoned on the remaining 75%, and a tenth of three quarters is 7.5%: exactly what the split already
+      sends across. Personal income has no tax withheld here, so the full 10% applies to it. Anything still owed comes
+      from an adjustment rather than from the splits.</p>
   </div>
 </section>
 
@@ -476,7 +479,7 @@
 
   // Percentages are held as basis points so the arithmetic stays in integers.
   var PERSONAL_CHARITY_BP = 1000;                 // 10% of a personal payment
-  var BIZ = { personal: 6000, tax: 2500, charity: 750 };   // the rest stays put
+  var BIZ = { personal: 6000, tax: 2500 };   // charity takes a tenth of what is left, the rest stays put
   var GOAL_BP = 1000;                             // the charity goal, 10% of income
 
   // Money is stored in whole cents. Dollars as floats drift once you start
@@ -691,16 +694,29 @@
     return { from: "", to: "", label: "all time" };
   }
 
+  // The 10% is reckoned on income after the tax set aside. For a business
+  // payment that is 75% of it, which is why the 7.5% split satisfies the goal
+  // exactly: a tenth of three quarters is 7.5%. Personal income has no tax
+  // withheld here, so its whole amount counts. Rows written before this rule
+  // existed have their base worked out the same way.
+  function goalBaseOf(t) {
+    if (!t.gross) { return 0; }
+    if (t.goalBase !== undefined) { return t.goalBase; }
+    return t.source === "personal" ? t.gross : t.gross - share(t.gross, BIZ.tax);
+  }
+
   function totals(p) {
     var rows = state.txns.filter(function (t) { return inRange(t, p.from, p.to); });
     var income = sum(rows, function (t) { return t.gross; });
-    var obligation = share(income, GOAL_BP);
+    var goalBase = sum(rows, goalBaseOf);
+    var obligation = sum(rows, function (t) { return t.gross ? share(goalBaseOf(t), GOAL_BP) : 0; });
     var setAside = sum(rows, function (t) {
       return (t.to === "charity" && !t.noGoal) ? t.cents : 0;
     });
     return {
       rows: rows,
       income: income,
+      goalBase: goalBase,
       toPersonal: sum(rows, function (t) { return t.to === "personal" ? t.cents : 0; }),
       taxIn: sum(rows, function (t) { return t.to === "tax" ? t.cents : 0; }),
       retained: sum(rows, function (t) { return t.retained; }),
@@ -718,13 +734,13 @@
     var rows = [];
     if (personalCents !== 0) {
       rows.push({ date: date, type: "Income", source: "personal", desc: "Personal income, 90% share",
-                  cents: personalCents, to: "personal", notes: notes, gross: gross });
+                  cents: personalCents, to: "personal", notes: notes, gross: gross, goalBase: gross });
     }
     if (charityCents !== 0) {
       var row = { date: date, type: "Charity transfer", source: "personal", desc: "Personal income, 10% to charity",
                   cents: charityCents, to: "charity", notes: notes };
       // The gross rides on whichever row exists, so income is counted once.
-      if (personalCents === 0) { row.gross = gross; }
+      if (personalCents === 0) { row.gross = gross; row.goalBase = gross; }
       rows.push(row);
     }
     return rows;
@@ -733,12 +749,13 @@
   function businessRows(date, sourceKey, amount, notes) {
     var toPersonal = share(amount, BIZ.personal);
     var toTax = share(amount, BIZ.tax);
-    var toCharity = share(amount, BIZ.charity);
+    var toCharity = share(amount - toTax, GOAL_BP);
     var retained = amount - toPersonal - toTax - toCharity;   // absorbs the rounding
     var label = SOURCES[sourceKey];
     return [
       { date: date, type: "Income", source: sourceKey, desc: label + ", payment received",
-        cents: amount, to: "business", notes: notes, gross: amount, retained: retained },
+        cents: amount, to: "business", notes: notes, gross: amount, retained: retained,
+        goalBase: amount - toTax },
       { date: date, type: "Transfer", source: sourceKey, desc: "60% to personal",
         cents: toPersonal, from: "business", to: "personal", notes: notes },
       { date: date, type: "Tax savings", source: sourceKey, desc: "25% to tax savings",
@@ -780,6 +797,7 @@
     txt("asOf", "as of " + prettyDate(asOf));
 
     txt("cObligation", money(t.obligation));
+    txt("cObligationSub", "10% of " + money(t.goalBase) + ", income after tax");
     txt("cSetAside", money(t.setAside));
     txt("cDonated", money(t.donated));
     paintOwed(t, "cOwedTile", "cOwedLabel", "cOwed", "cOwedSub");
@@ -808,6 +826,7 @@
     var t = totals(p);
     var asOf = p.to || todayISO();
     txt("chObligation", money(t.obligation));
+    txt("chObligationSub", "10% of " + money(t.goalBase) + ", which is income after the tax set aside");
     txt("chSetAside", money(t.setAside));
     txt("chDonated", money(t.donated));
     txt("chBalance", money(balance("charity", asOf)));
@@ -934,7 +953,7 @@
 
     // Business
     var b = parseMoney(el("bAmount").value) || 0;
-    var bp = share(b, BIZ.personal), bt = share(b, BIZ.tax), bch = share(b, BIZ.charity);
+    var bp = share(b, BIZ.personal), bt = share(b, BIZ.tax), bch = share(b - bt, GOAL_BP);
     el("bPreview").innerHTML =
       line("Into business checking", b) +
       line("60% to personal", bp) +
