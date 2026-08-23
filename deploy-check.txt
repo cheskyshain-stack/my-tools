@@ -1,4 +1,0 @@
-deploy marker
-commit: pending
-pushed: 2026-08-23T10:59:01Z
-If you can read this on tools.cjaffa.com, publishing from main is working.
