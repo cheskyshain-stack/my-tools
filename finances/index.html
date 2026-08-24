@@ -135,6 +135,17 @@
   .pill.charity{background:rgba(0,200,255,.14);color:#7fe0ff}
   .pill.donation{background:rgba(245,184,65,.16);color:#f7d08a}
   .pill.adjust{background:rgba(148,163,184,.16);color:#cbd5e1}
+  .pill.todo{background:rgba(245,184,65,.18);color:#f7d08a}
+  tbody tr.is-pending td.num{color:#93A3C7}
+
+  .todo-group{border:1px solid var(--cj-line,rgba(255,255,255,.08));border-radius:16px;padding:12px 13px;margin-bottom:11px;
+    background:rgba(255,255,255,.02)}
+  .todo-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:9px}
+  .todo-row{display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--cj-line-soft,rgba(255,255,255,.05))}
+  .todo-what{flex:1 1 auto;min-width:0;font-size:13.5px}
+  .todo-amt{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:14px;white-space:nowrap}
+  .todo-foot{margin-top:9px;font-size:11.5px;color:var(--cj-dim,#67779C)}
+  .btn.tiny{height:34px;padding:0 14px;font-size:12.5px;flex:none;box-shadow:none}
   .del{
     border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.12);color:#fca5a5;
     font:700 11.5px/1 inherit;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;
@@ -202,6 +213,12 @@
 
 <!-- ============================ Dashboard ============================ -->
 <section class="panel on" id="panel-dash">
+  <div class="card" id="todoCard" style="display:none;border-color:rgba(37,131,247,.4)">
+    <h2>Still to move</h2>
+    <p class="hint" style="margin-bottom:14px">The splits your payments call for. Tick each one off once you have
+      actually moved the money at the bank. Nothing here counts toward a balance until you do.</p>
+    <div id="todoList"></div>
+  </div>
   <div class="card">
     <div class="row2">
       <label class="field"><span class="cap">Period</span>
@@ -364,6 +381,13 @@
       <label class="field"><span class="cap">Type</span><select id="fType"></select></label>
       <label class="field"><span class="cap">Account</span><select id="fAccount"></select></label>
       <label class="field"><span class="cap">Income source</span><select id="fSource"></select></label>
+      <label class="field"><span class="cap">Status</span>
+        <select id="fStatus">
+          <option value="">Every status</option>
+          <option value="todo">Still to move</option>
+          <option value="done">Already moved</option>
+        </select>
+      </label>
       <label class="field"><span class="cap">From date</span><input type="date" id="fFrom"></label>
       <label class="field"><span class="cap">To date</span><input type="date" id="fTo"></label>
     </div>
@@ -686,6 +710,7 @@
   // period rather than only what happened inside it.
   function balance(account, upTo) {
     return sum(state.txns, function (t) {
+      if (t.pending) { return 0; }        // instructed, not yet carried out
       if (upTo && t.date > upTo) { return 0; }
       var n = 0;
       if (t.to === account) { n += t.cents; }
@@ -730,15 +755,15 @@
     var goalBase = sum(rows, goalBaseOf);
     var obligation = sum(rows, function (t) { return t.gross ? share(goalBaseOf(t), GOAL_BP) : 0; });
     var setAside = sum(rows, function (t) {
-      return (t.to === "charity" && !t.noGoal) ? t.cents : 0;
+      return (t.to === "charity" && !t.noGoal && !t.pending) ? t.cents : 0;
     });
     var donated = sum(rows, function (t) { return t.type === "Donation" ? t.cents : 0; });
     return {
       rows: rows,
       income: income,
       goalBase: goalBase,
-      toPersonal: sum(rows, function (t) { return t.to === "personal" ? t.cents : 0; }),
-      taxIn: sum(rows, function (t) { return t.to === "tax" ? t.cents : 0; }),
+      toPersonal: sum(rows, function (t) { return (t.to === "personal" && !t.pending) ? t.cents : 0; }),
+      taxIn: sum(rows, function (t) { return (t.to === "tax" && !t.pending) ? t.cents : 0; }),
       retained: sum(rows, function (t) { return t.retained; }),
       obligation: obligation,
       setAside: setAside,
@@ -779,12 +804,14 @@
       { date: date, type: "Income", source: sourceKey, desc: label + ", payment received",
         cents: amount, to: "business", notes: notes, gross: amount, retained: retained,
         goalBase: amount - toTax },
+      // The payment landed, but nobody has moved anything yet. These three wait
+      // to be ticked off, and stay out of the balances until they are.
       { date: date, type: "Transfer", source: sourceKey, desc: "60% to personal",
-        cents: toPersonal, from: "business", to: "personal", notes: notes },
+        cents: toPersonal, from: "business", to: "personal", notes: notes, pending: true },
       { date: date, type: "Tax savings", source: sourceKey, desc: "25% to tax savings",
-        cents: toTax, from: "business", to: "tax", notes: notes },
+        cents: toTax, from: "business", to: "tax", notes: notes, pending: true },
       { date: date, type: "Charity transfer", source: sourceKey, desc: "7.5% to charity",
-        cents: toCharity, from: "business", to: "charity", notes: notes }
+        cents: toCharity, from: "business", to: "charity", notes: notes, pending: true }
     ];
   }
 
@@ -852,7 +879,66 @@
     txt("cDonated", money(t.donated));
     paintOwed(t, "cOwedTile", "cOwedLabel", "cOwed", "cOwedSub");
 
-    txt("rangeNote", "Totals cover " + p.label + ". Balances are as they stand on " + prettyDate(asOf) + ".");
+    var waiting = state.txns.filter(function (x) { return x.pending; });
+    var waitingCents = waiting.reduce(function (n, x) { return n + x.cents; }, 0);
+    txt("rangeNote", "Totals cover " + p.label + ". Balances are as they stand on " + prettyDate(asOf) +
+      (waiting.length ? ", and leave out " + money(waitingCents) + " across " + waiting.length +
+        " transfers you have not made yet." : "."));
+  }
+
+  function renderTodo() {
+    var pending = state.txns.filter(function (t) { return t.pending; });
+    el("todoCard").style.display = pending.length ? "" : "none";
+    if (!pending.length) { el("todoList").innerHTML = ""; return; }
+
+    var order = [], byGroup = {};
+    pending.forEach(function (t) {
+      if (!byGroup[t.group]) {
+        byGroup[t.group] = { group: t.group, date: t.date, source: t.source, rows: [] };
+        order.push(byGroup[t.group]);
+      }
+      byGroup[t.group].rows.push(t);
+    });
+    order.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+
+    el("todoList").innerHTML = order.map(function (g) {
+      var total = g.rows.reduce(function (n, t) { return n + t.cents; }, 0);
+      var head = '<div class="todo-head"><div><strong>' + prettyDate(g.date) + "</strong>" +
+        (g.source ? '<div class="hint">' + esc(SOURCES[g.source] || g.source) + "</div>" : "") + "</div>" +
+        '<button class="btn ghost tiny" data-done-group="' + g.group + '">All ' + g.rows.length + " done</button></div>";
+      var lines = g.rows.map(function (t) {
+        return '<div class="todo-row">' +
+          '<div class="todo-what"><div>' + esc(t.desc) + '</div><div class="hint">' + esc(accountCell(t)) + "</div></div>" +
+          '<div class="todo-amt">' + money(t.cents) + "</div>" +
+          '<button class="btn tiny" data-done="' + t.id + '">Done</button>' +
+          "</div>";
+      }).join("");
+      return '<div class="todo-group">' + head + lines +
+        '<div class="todo-foot">' + money(total) + " still to move from this payment</div></div>";
+    }).join("");
+  }
+
+  function markDone(ids) {
+    var stamp = todayISO();
+    var touched = [];
+    state.txns.forEach(function (t) {
+      if (ids.indexOf(t.id) !== -1 && t.pending) {
+        delete t.pending;
+        t.doneOn = stamp;
+        touched.push(t.id);
+      }
+    });
+    if (!touched.length) { return; }
+    save();
+    renderAll();
+    toast(touched.length > 1 ? touched.length + " marked as moved" : "Marked as moved", "Undo", function () {
+      state.txns.forEach(function (t) {
+        if (touched.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; }
+      });
+      save();
+      renderAll();
+      toast("Put back on the list");
+    });
   }
 
   function paintOwed(t, tileId, labelId, valueId, subId) {
@@ -927,12 +1013,13 @@
       var signed = (t.from && !t.to) ? -t.cents : t.cents;
       var cls = signed < 0 ? "neg" : "pos";
       var src = t.source ? '<div class="hint" style="margin-top:2px">' + esc(SOURCES[t.source] || t.source) + "</div>" : "";
-      return '<tr>' +
+      return '<tr class="' + (t.pending ? "is-pending" : "") + '">' +
         '<td data-label="Date">' + prettyDate(t.date) + "</td>" +
         '<td data-label="Description"><div>' + esc(t.desc) + src + "</div></td>" +
         '<td class="num ' + cls + '" data-label="Amount">' + money(signed) + "</td>" +
         '<td data-label="Account">' + esc(accountCell(t)) + "</td>" +
-        '<td data-label="Type"><span class="pill ' + pillClass(t.type) + '">' + esc(t.type) + "</span></td>" +
+        '<td data-label="Type"><span class="pill ' + pillClass(t.type) + '">' + esc(t.type) + "</span>" +
+          (t.pending ? ' <span class="pill todo">To do</span>' : "") + "</td>" +
         '<td data-label="Notes">' + esc(t.notes || "") + "</td>" +
         (editMode ? '<td data-label=""><button class="del" data-del="' + t.group + '">Delete</button></td>' : "") +
         "</tr>";
@@ -945,12 +1032,15 @@
   function renderTxns() {
     var text = el("fText").value.trim().toLowerCase();
     var type = el("fType").value, account = el("fAccount").value, source = el("fSource").value;
+    var status = el("fStatus").value;
     var from = el("fFrom").value, to = el("fTo").value;
 
     var rows = state.txns.filter(function (t) {
       if (type && t.type !== type) { return false; }
       if (account && t.from !== account && t.to !== account) { return false; }
       if (source && t.source !== source) { return false; }
+      if (status === "todo" && !t.pending) { return false; }
+      if (status === "done" && t.pending) { return false; }
       if (!inRange(t, from, to)) { return false; }
       if (text) {
         var hay = (t.desc + " " + (t.notes || "") + " " + (SOURCES[t.source] || "")).toLowerCase();
@@ -973,6 +1063,7 @@
 
   function renderAll() {
     renderBackup();
+    renderTodo();
     renderDash();
     renderTxns();
     renderCharity();
@@ -1194,16 +1285,27 @@
     });
   });
 
+  document.addEventListener("click", function (e) {
+    var one = e.target.closest("[data-done]");
+    if (one) { markDone([one.getAttribute("data-done")]); return; }
+    var all = e.target.closest("[data-done-group]");
+    if (all) {
+      var g = all.getAttribute("data-done-group");
+      markDone(state.txns.filter(function (t) { return t.group === g && t.pending; })
+                         .map(function (t) { return t.id; }));
+    }
+  });
+
   el("editToggle").addEventListener("click", function () { setEditMode(!editMode); });
   el("editToggle2").addEventListener("click", function () { setEditMode(!editMode); });
 
   // Filters
-  ["fText", "fType", "fAccount", "fSource", "fFrom", "fTo"].forEach(function (id) {
+  ["fText", "fType", "fAccount", "fSource", "fStatus", "fFrom", "fTo"].forEach(function (id) {
     el(id).addEventListener("input", renderTxns);
     el(id).addEventListener("change", renderTxns);
   });
   el("fClear").addEventListener("click", function () {
-    ["fText", "fType", "fAccount", "fSource", "fFrom", "fTo"].forEach(function (id) { el(id).value = ""; });
+    ["fText", "fType", "fAccount", "fSource", "fStatus", "fFrom", "fTo"].forEach(function (id) { el(id).value = ""; });
     renderTxns();
   });
 

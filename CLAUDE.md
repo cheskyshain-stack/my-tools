@@ -103,7 +103,11 @@ the longer labels lose their ends.
 
 Every tool keeps its own state in `localStorage` and there is no backend. That means data
 lives on one device in one browser, and clearing site data takes it with it. Any tool
-holding something the user would miss needs an export and import of its own. Money Flow
+holding something the user would miss needs an export and import of its own. Money Flow treats a business payment's splits as a checklist rather than as
+something that already happened: those three transfer rows are written with
+`pending: true`, stay out of every balance and out of the charity set aside
+total until they are ticked off on the dashboard, and rows saved before that
+idea existed carry no flag and count as done. Money Flow
 also writes a copy to the downloads folder once a week: a browser will not let a page
 start a download before the person has touched it, so a due backup arms itself and the
 first tap anywhere writes the file.
