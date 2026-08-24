@@ -136,6 +136,8 @@
   .pill.donation{background:rgba(245,184,65,.16);color:#f7d08a}
   .pill.adjust{background:rgba(148,163,184,.16);color:#cbd5e1}
   .pill.todo{background:rgba(245,184,65,.18);color:#f7d08a}
+  .pill.biz{background:rgba(20,184,166,.16);color:#7fe3d6}
+  .pill.owed{background:rgba(236,72,153,.16);color:#f9a8d4}
   tbody tr.is-pending td.num{color:#93A3C7}
 
   .todo-group{border:1px solid var(--cj-line,rgba(255,255,255,.08));border-radius:16px;padding:12px 13px;margin-bottom:11px;
@@ -258,6 +260,7 @@
   <button data-tab="dash" class="on">Dashboard</button>
   <button data-tab="add">Add</button>
   <button data-tab="txns">Transactions</button>
+  <button data-tab="business">Business</button>
   <button data-tab="charity">Charity</button>
   <button data-tab="data">Data</button>
 </nav>
@@ -460,6 +463,45 @@
   <div class="card" id="txnWrap"></div>
 </section>
 
+<!-- ============================ Business ============================ -->
+<section class="panel" id="panel-business">
+  <div class="card">
+    <h2>Business checking</h2>
+    <p class="hint" style="margin-bottom:14px">Everything the business account does that is not one of the income splits:
+      expenses, fees, refunds, anything else that moves.</p>
+    <div class="tiles">
+      <div class="tile"><span class="label">Balance</span><span class="value" id="bizBalance">$0.00</span></div>
+      <div class="tile"><span class="label">Money in</span><span class="value" id="bizIn">$0.00</span><div class="sub">This period, income included</div></div>
+      <div class="tile"><span class="label">Money out</span><span class="value" id="bizOut">$0.00</span><div class="sub">Splits and spending</div></div>
+      <div class="tile"><span class="label">Spending</span><span class="value" id="bizSpend">$0.00</span><div class="sub">Entries made here</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Add a business transaction</h2>
+    <label class="field"><span class="cap">Date</span><input type="date" id="zDate"></label>
+    <div class="chips" data-datechips="zDate"><button data-chip="today">Today</button></div>
+    <div class="row2">
+      <label class="field"><span class="cap">Which way</span>
+        <select id="zDir">
+          <option value="out">Money out, an expense</option>
+          <option value="in">Money in, not income</option>
+        </select>
+      </label>
+      <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="zAmount" placeholder="0.00"></label>
+    </div>
+    <label class="field"><span class="cap">Description</span><input type="text" id="zDesc" placeholder="Who it went to, or what it was"></label>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="zNotes"></label>
+    <button class="btn wide" id="zSave">Save business transaction</button>
+    <p class="hint" style="margin-top:12px">Money the business earned goes under Add, as business income, so it splits properly.</p>
+  </div>
+
+  <div class="card">
+    <h2>Business account activity</h2>
+    <div id="bizList"></div>
+  </div>
+</section>
+
 <!-- ============================= Charity ============================= -->
 <section class="panel" id="panel-charity">
   <div class="card">
@@ -473,6 +515,26 @@
       <div class="tile wide" id="chOwedTile"><span class="label" id="chOwedLabel">Still to give</span>
         <span class="value" id="chOwed">$0.00</span><div class="sub" id="chOwedSub"></div></div>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>Adjust what you owe</h2>
+    <p class="hint" style="margin-bottom:14px">For an amount carried in from before you started here, or any correction to
+      the obligation itself. It changes what you owe without pretending to be income, and without moving money.</p>
+    <label class="field"><span class="cap">Date</span><input type="date" id="obDate"></label>
+    <div class="row2">
+      <label class="field"><span class="cap">Amount</span><input type="text" inputmode="decimal" id="obAmount" placeholder="0.00 or -0.00"></label>
+      <label class="field"><span class="cap">Which way</span>
+        <select id="obDir">
+          <option value="add">Adds to what I owe</option>
+          <option value="less">Reduces what I owe</option>
+        </select>
+      </label>
+    </div>
+    <label class="field"><span class="cap">Description</span><input type="text" id="obDesc" placeholder="Carried in from 2025, correction, and so on"></label>
+    <label class="field"><span class="cap">Notes (optional)</span><input type="text" id="obNotes"></label>
+    <button class="btn wide" id="obSave">Save adjustment</button>
+    <p class="hint" id="obStanding" style="margin-top:12px"></p>
   </div>
 
   <div class="card">
@@ -642,7 +704,8 @@
     bizFri: "Business, weekly Friday"
   };
 
-  var TYPES = ["Income", "Transfer", "Tax savings", "Charity transfer", "Donation", "Adjustment"];
+  var TYPES = ["Income", "Transfer", "Tax savings", "Charity transfer", "Donation",
+               "Business", "Charity owed", "Adjustment"];
 
   // Percentages are held as basis points so the arithmetic stays in integers.
   var PERSONAL_CHARITY_BP = 1000;                 // 10% of a personal payment
@@ -882,7 +945,8 @@
     var rows = state.txns.filter(function (t) { return inRange(t, p.from, p.to); });
     var income = sum(rows, function (t) { return t.gross; });
     var goalBase = sum(rows, goalBaseOf);
-    var obligation = sum(rows, function (t) { return t.gross ? share(goalBaseOf(t), GOAL_BP) : 0; });
+    var obligation = sum(rows, function (t) { return t.gross ? share(goalBaseOf(t), GOAL_BP) : 0; })
+                   + sum(rows, function (t) { return t.obligationAdj || 0; });
     var setAside = sum(rows, function (t) {
       return (t.to === "charity" && !t.noGoal && !t.pending) ? t.cents : 0;
     });
@@ -1088,6 +1152,23 @@
     }
   }
 
+  function renderBusiness() {
+    var p = period();
+    var rows = state.txns.filter(function (t) { return inRange(t, p.from, p.to); });
+    var asOf = p.to || todayISO();
+    txt("bizBalance", money(balance("business", asOf)));
+    txt("bizIn", money(sum(rows, function (t) { return (t.to === "business" && !t.pending) ? t.cents : 0; })));
+    txt("bizOut", money(sum(rows, function (t) { return (t.from === "business" && !t.pending) ? t.cents : 0; })));
+    txt("bizSpend", money(sum(rows, function (t) {
+      return (t.type === "Business" && t.from === "business") ? t.cents : 0;
+    })));
+
+    var activity = state.txns.filter(function (t) { return t.from === "business" || t.to === "business"; })
+                             .sort(byDateDesc);
+    el("bizList").innerHTML = activity.length ? tableHTML(activity)
+      : '<div class="empty">Nothing on the business account yet.</div>';
+  }
+
   function renderCharity() {
     var p = period();
     var t = totals(p);
@@ -1099,6 +1180,10 @@
     txt("chBalance", money(balance("charity", asOf)));
     paintOwed(t, "chOwedTile", "chOwedLabel", "chOwed", "chOwedSub");
     txt("charityPeriodNote", "Figures cover " + p.label + ", set on the Dashboard tab.");
+    var adj = sum(state.txns, function (x) { return x.obligationAdj || 0; });
+    txt("obStanding", adj
+      ? "Adjustments currently add " + money(adj) + " to what you owe."
+      : "No adjustments are in force.");
 
     var donations = state.txns.filter(function (x) { return x.type === "Donation"; });
     el("donationList").innerHTML = donations.length
@@ -1122,10 +1207,12 @@
 
   function pillClass(type) {
     return ({ "Income": "income", "Transfer": "transfer", "Tax savings": "tax",
-              "Charity transfer": "charity", "Donation": "donation", "Adjustment": "adjust" })[type] || "";
+              "Charity transfer": "charity", "Donation": "donation", "Business": "biz",
+              "Charity owed": "owed", "Adjustment": "adjust" })[type] || "";
   }
 
   function accountCell(t) {
+    if (t.obligationAdj) { return "Charity obligation"; }   // no money moves
     if (t.from && t.to) { return ACCOUNTS[t.from] + " to " + ACCOUNTS[t.to]; }
     if (t.to) { return "Into " + ACCOUNTS[t.to]; }
     if (t.from) { return "Out of " + ACCOUNTS[t.from]; }
@@ -1139,7 +1226,7 @@
 
   function tableHTML(rows) {
     var body = rows.map(function (t) {
-      var signed = (t.from && !t.to) ? -t.cents : t.cents;
+      var signed = t.obligationAdj ? t.obligationAdj : ((t.from && !t.to) ? -t.cents : t.cents);
       var cls = signed < 0 ? "neg" : "pos";
       var src = t.source ? '<div class="hint" style="margin-top:2px">' + esc(SOURCES[t.source] || t.source) + "</div>" : "";
       return '<tr class="' + (t.pending ? "is-pending" : "") + '">' +
@@ -1194,6 +1281,7 @@
     renderBackup();
     renderTodo();
     renderDash();
+    renderBusiness();
     renderTxns();
     renderCharity();
     renderData();
@@ -1261,7 +1349,7 @@
   }
 
   function setupDates() {
-    ["pDate", "bDate", "dDate", "tDate", "aDate", "cdDate"].forEach(function (id) {
+    ["pDate", "bDate", "dDate", "tDate", "aDate", "cdDate", "zDate", "obDate"].forEach(function (id) {
       el(id).value = todayISO();
     });
     document.querySelectorAll("[data-datechips]").forEach(function (wrap) {
@@ -1281,7 +1369,7 @@
     if (!b) { return; }
     el("tabs").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     var want = b.getAttribute("data-tab");
-    ["dash", "add", "txns", "charity", "data"].forEach(function (name) {
+    ["dash", "add", "txns", "business", "charity", "data"].forEach(function (name) {
       el("panel-" + name).classList.toggle("on", name === want);
     });
     window.scrollTo(0, 0);
@@ -1369,6 +1457,32 @@
                cents: amount, from: from, to: to, notes: el("tNotes").value.trim() }]);
     el("tAmount").value = ""; el("tDesc").value = ""; el("tNotes").value = "";
     toast("Transfer saved, " + money(amount));
+  });
+
+  el("zSave").addEventListener("click", function () {
+    var amount = parseMoney(el("zAmount").value);
+    if (!amount || amount <= 0) { return toast("Enter the amount"); }
+    var out = el("zDir").value === "out";
+    var row = { date: el("zDate").value, type: "Business",
+                desc: el("zDesc").value.trim() || (out ? "Business expense" : "Into the business account"),
+                cents: amount, notes: el("zNotes").value.trim() };
+    if (out) { row.from = "business"; } else { row.to = "business"; }
+    addTxns([row]);
+    el("zAmount").value = ""; el("zDesc").value = ""; el("zNotes").value = "";
+    toast("Saved, " + money(amount));
+  });
+
+  el("obSave").addEventListener("click", function () {
+    var amount = parseMoney(el("obAmount").value);
+    if (!amount || amount === 0) { return toast("Enter an amount"); }
+    amount = Math.abs(amount);
+    var adds = el("obDir").value === "add";
+    addTxns([{ date: el("obDate").value, type: "Charity owed",
+               desc: el("obDesc").value.trim() || (adds ? "Added to what is owed" : "Reduced what is owed"),
+               cents: amount, obligationAdj: adds ? amount : -amount,
+               notes: el("obNotes").value.trim() }]);
+    el("obAmount").value = ""; el("obDesc").value = ""; el("obNotes").value = "";
+    toast(adds ? "Added to what you owe" : "Reduced what you owe");
   });
 
   el("aAccount").addEventListener("change", function () {
