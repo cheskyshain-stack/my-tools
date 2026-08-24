@@ -170,6 +170,23 @@
     td.num{text-align:right}
   }
 
+  /* ===== The Tiller inbox ===== */
+  .inbox-item{border:1px solid var(--cj-line,rgba(255,255,255,.08));border-radius:16px;padding:12px 13px;margin-bottom:11px;
+    background:rgba(255,255,255,.02)}
+  .inbox-item.suggested{border-color:rgba(37,131,247,.38);background:rgba(37,131,247,.05)}
+  .inbox-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .inbox-desc{flex:1 1 auto;min-width:0;font-size:13.5px;word-break:break-word}
+  .inbox-amt{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:15px;font-weight:600;white-space:nowrap}
+  .inbox-meta{font-size:11.5px;color:var(--cj-dim,#67779C);margin-top:3px}
+  .inbox-form{margin-top:11px}
+  .inbox-form label.field{margin-bottom:9px}
+  .inbox-why{font-size:11.5px;color:#9dc6ff;margin:-2px 0 9px}
+  .tabs button .count{
+    display:inline-block;min-width:20px;height:19px;line-height:19px;border-radius:999px;padding:0 6px;margin-left:7px;
+    background:rgba(245,184,65,.92);color:#241b06;font-size:11px;font-weight:800;
+  }
+  .tabs button.on .count{background:rgba(255,255,255,.9);color:#12305c}
+
   .filters{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:6px}
   @media(min-width:720px){.filters{grid-template-columns:repeat(4,1fr)}}
   .filters label.field{margin:0}
@@ -259,6 +276,7 @@
 <nav class="tabs" id="tabs">
   <button data-tab="dash" class="on">Dashboard</button>
   <button data-tab="add">Add</button>
+  <button data-tab="inbox">Inbox<span class="count" id="inboxCount" style="display:none">0</span></button>
   <button data-tab="txns">Transactions</button>
   <button data-tab="business">Business</button>
   <button data-tab="charity">Charity</button>
@@ -437,6 +455,42 @@
 </section>
 
 <!-- ========================== Transactions =========================== -->
+<!-- ============================== Inbox ============================== -->
+<section class="panel" id="panel-inbox">
+  <div class="card">
+    <h2>Bring in from Tiller</h2>
+    <p class="hint">In your Tiller sheet open the <strong>Transactions</strong> tab, then File, Download, Comma separated
+      values. Pick that file here. Every row Tiller gives has its own id, so anything already brought in is skipped and
+      importing the same file twice changes nothing.</p>
+    <label class="field" style="margin-top:14px"><span class="cap">Only rows dated on or after</span>
+      <input type="date" id="tillerFrom"></label>
+    <p class="hint" id="tillerFromHint"></p>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn" id="tillerBtn">Choose the CSV</button>
+      <input type="file" id="tillerFile" accept="text/csv,text/plain,.csv" style="display:none">
+    </div>
+    <p class="hint" id="tillerStat" style="margin-top:13px"></p>
+  </div>
+
+  <div class="card" id="inboxCard" style="display:none">
+    <div class="inbox-head" style="margin-bottom:6px">
+      <h2 style="margin:0">Waiting to be labelled</h2>
+      <button class="btn ghost tiny" id="inboxSuggested" style="display:none">Save the suggested</button>
+    </div>
+    <p class="hint" style="margin-bottom:14px">Say what each one is and Money Flow writes the rows for it, splits and
+      all. Anything you label here is remembered, so next time the same payment arrives already answered.</p>
+    <label class="field"><span class="cap">Search</span><input id="inboxSearch" placeholder="Description or account"></label>
+    <div id="inboxList"></div>
+    <div class="btnrow" style="margin-top:8px">
+      <button class="btn danger" id="inboxClear">Ignore everything left</button>
+    </div>
+  </div>
+
+  <div class="card" id="inboxEmpty">
+    <div class="empty">Nothing waiting. Bring in a Tiller file and the rows will land here.</div>
+  </div>
+</section>
+
 <section class="panel" id="panel-txns">
   <div class="card">
     <div class="filters">
@@ -750,7 +804,8 @@
 
   /* ============================ State ============================= */
 
-  var state = { version: 1, txns: [], meta: { auto: true, lastBackup: "", snooze: "" } };
+  var state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {},
+                meta: { auto: true, lastBackup: "", snooze: "" } };
   // Rows carry no delete control until this is switched on, and it resets on
   // every load, so a stray tap on the ledger cannot remove anything.
   var editMode = false;
@@ -762,12 +817,23 @@
     return state.meta;
   }
 
+  // A file written before the inbox existed has none of its fields. Fill them
+  // in rather than let every reader guard for undefined.
+  function normalizeState() {
+    if (!Array.isArray(state.txns)) { state.txns = []; }
+    if (!Array.isArray(state.inbox)) { state.inbox = []; }
+    if (!state.seen || typeof state.seen !== "object") { state.seen = {}; }
+    if (!state.hints || typeof state.hints !== "object") { state.hints = {}; }
+    if (!state.accountMap || typeof state.accountMap !== "object") { state.accountMap = {}; }
+    meta();
+  }
+
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
       if (!raw) { return; }
       var parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.txns)) { state = parsed; meta(); }
+      if (parsed && Array.isArray(parsed.txns)) { state = parsed; normalizeState(); }
     } catch (e) { /* a corrupt store should not stop the page loading */ }
   }
   function save() {
@@ -1006,6 +1072,462 @@
       { date: date, type: "Charity transfer", source: sourceKey, desc: "7.5% to charity",
         cents: toCharity, from: "business", to: "charity", notes: notes, pending: true }
     ];
+  }
+
+  /* ======================== The Tiller inbox ======================
+     Tiller keeps a Google sheet of everything the banks report. It has no
+     way to hand that to another app, so the exchange is a CSV: the sheet
+     downloads one, this reads it. Every Tiller row carries its own id, and
+     every id that has ever been through here is remembered, so the same
+     file can be imported ten times without a single duplicate. */
+
+  // A CSV is not split on commas. Quoted fields hold commas and newlines of
+  // their own, and a doubled quote is a literal one.
+  function parseCSV(text) {
+    var rows = [], row = [], cur = "", quoted = false, i = 0;
+    text = String(text).replace(/^\uFEFF/, "");
+    while (i < text.length) {
+      var c = text.charAt(i);
+      if (quoted) {
+        if (c === '"') {
+          if (text.charAt(i + 1) === '"') { cur += '"'; i += 2; continue; }
+          quoted = false; i++; continue;
+        }
+        cur += c; i++; continue;
+      }
+      if (c === '"') { quoted = true; i++; continue; }
+      if (c === ",") { row.push(cur); cur = ""; i++; continue; }
+      if (c === "\r") { i++; continue; }
+      if (c === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; i++; continue; }
+      cur += c; i++;
+    }
+    if (cur.length || row.length) { row.push(cur); rows.push(row); }
+    return rows;
+  }
+
+  function normHead(s) {
+    return String(s === undefined || s === null ? "" : s)
+      .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+
+  // Tiller writes 8/24/2026, a sheet exported another way writes 2026-08-24.
+  function toISO(raw) {
+    var s = String(raw === undefined || raw === null ? "" : raw).trim();
+    var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) { return m[1] + "-" + pad(Number(m[2])) + "-" + pad(Number(m[3])); }
+    m = s.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})$/);
+    if (m) {
+      var y = Number(m[3]);
+      if (y < 100) { y += 2000; }
+      return y + "-" + pad(Number(m[1])) + "-" + pad(Number(m[2]));
+    }
+    var d = new Date(s);
+    if (!isNaN(d.getTime())) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+    return "";
+  }
+
+  // Accountants write a negative as (12.34), banks write -12.34.
+  function parseSigned(raw) {
+    var s = String(raw === undefined || raw === null ? "" : raw).trim();
+    var neg = /^\(.*\)$/.test(s);
+    if (neg) { s = s.slice(1, -1); }
+    var n = parseMoney(s);
+    if (n === null) { return null; }
+    return neg ? -Math.abs(n) : n;
+  }
+
+  // Bank descriptions carry a different reference number every time, so the
+  // memory of what you called a payment has to look past the digits.
+  function hintKey(desc, account) {
+    return String(account || "") + "|" + String(desc || "").toLowerCase()
+      .replace(/[0-9]+/g, " ").replace(/[^a-z ]+/g, " ")
+      .replace(/\s+/g, " ").trim().slice(0, 44);
+  }
+
+  function guessAccount(name) {
+    if (state.accountMap[name]) { return state.accountMap[name]; }
+    var n = String(name || "").toLowerCase();
+    if (/charity|tzedak|maaser|7459/.test(n)) { return "charity"; }
+    if (/tax|saving|6397/.test(n)) { return "tax"; }
+    if (/business|cole|health|consult|llc|7212/.test(n)) { return "business"; }
+    return "personal";
+  }
+
+  var BANK_NOISE = new RegExp("\\b(recurring debit purchase|debit purchase -visa|debit purchase|" +
+    "web authorized pmt|zelle instant pmt to|zelle instant pmt from|zelle payment to|zelle payment from|" +
+    "electronic deposit|electronic withdrawal|external transfer withdrawal|external transfer|" +
+    "mobile banking transfer withdrawal|mobile banking transfer deposit|mobile check deposit|" +
+    "real time payment to|real time payment from|assisted telephone transfer|telephone transfer|" +
+    "online payment|online transfer|bill ?pay|ach debit|ach credit|pos purchase|purchase|withdrawal|deposit)\\b", "ig");
+
+  function payeeGuess(desc) {
+    var s = String(desc || "").replace(BANK_NOISE, " ");
+    // MENACHE732 is a name welded to a phone number. Split every letter and
+    // digit boundary, twice, so alternating runs come fully apart.
+    for (var n = 0; n < 2; n++) {
+      s = s.replace(/([A-Za-z])(\d)/g, "$1 $2").replace(/(\d)([A-Za-z])/g, "$1 $2");
+    }
+    var kept = s.replace(/[^A-Za-z0-9 ]+/g, " ").split(/\s+/).filter(function (w) {
+      return w.length > 1 && !/\d/.test(w);      // a payee is words, not reference numbers
+    });
+    return kept.join(" ").slice(0, 44) || String(desc || "").slice(0, 44);
+  }
+
+  // The splits a business payment calls for turn up in the bank a few days
+  // later. When one does, the honest move is to tick the entry off the list,
+  // not to write a second row saying the same thing.
+  function pendingMatch(item) {
+    var want = Math.abs(item.cents);
+    var hit = null;
+    state.txns.forEach(function (t) {
+      if (!t.pending || t.cents !== want || hit) { return; }
+      hit = t;
+    });
+    return hit;
+  }
+
+  // A payroll run that splits at source arrives as two deposits, the part kept
+  // and the part sent to charity. Find the other half so the payment is
+  // entered once, with both its pieces.
+  function partnerFor(item, list) {
+    if (item.cents <= 0) { return null; }
+    var found = null;
+    list.forEach(function (o) {
+      if (found || o === item || o.cents <= 0) { return; }
+      if (guessAccount(o.account) !== "charity") { return; }
+      if (Math.abs(daysApart(o.date, item.date)) > 4) { return; }
+      var frac = o.cents / (o.cents + item.cents);
+      if (frac >= 0.085 && frac <= 0.255) { found = o; }
+    });
+    return found;
+  }
+  function weekdayOf(iso) {
+    var p = iso.split("-");
+    return new Date(Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2]))).getUTCDay();
+  }
+  function daysApart(a, b) {
+    var x = a.split("-"), y = b.split("-");
+    return Math.round((Date.UTC(+x[0], +x[1] - 1, +x[2]) - Date.UTC(+y[0], +y[1] - 1, +y[2])) / 86400000);
+  }
+
+  function suggestFor(item, list) {
+    var hint = state.hints[hintKey(item.desc, item.account)];
+    if (hint) {
+      return { kind: hint.kind, source: hint.source, from: hint.from, to: hint.to, account: hint.account,
+               // A payment that splits at the bank goes on splitting, so look
+               // for the other half even when the label is already known.
+               partner: hint.kind === "personal" ? partnerFor(item, list) : null,
+               why: "You called this one " + KIND_LABEL[hint.kind] + " last time." };
+    }
+    var mine = guessAccount(item.account);
+    if (pendingMatch(item)) {
+      return { kind: "done", why: "The amount matches a transfer on your to do list." };
+    }
+    if (item.cents > 0) {
+      if (mine === "business") {
+        // The two business sources land on different days, so let the date say
+        // which one it is. Correct it once and the answer is remembered anyway.
+        return { kind: "business", source: weekdayOf(item.date) === 5 ? "bizFri" : "bizThu",
+                 why: "Money into the business account." };
+      }
+      if (mine === "charity") { return { kind: "part", why: "Money into the charity account, most likely the other half of a payment." }; }
+      return { kind: "personal", why: "Money into personal checking.", partner: partnerFor(item, list) };
+    }
+    if (mine === "charity") { return { kind: "donation", why: "Paid out of the charity account." }; }
+    if (mine === "business") { return { kind: "expense", why: "Paid out of the business account." }; }
+    return { kind: "ignore", why: "Everyday spending out of personal checking." };
+  }
+
+  var KIND_LABEL = {
+    personal: "Personal income", business: "Business income", donation: "a donation",
+    done: "a transfer already owed", transfer: "a move between accounts",
+    expense: "a business expense", other: "something else", part: "part of another payment",
+    ignore: "not money to track"
+  };
+
+  function readTiller(text, from) {
+    var grid = parseCSV(text);
+    var head = -1, cols = null;
+    for (var r = 0; r < Math.min(grid.length, 25); r++) {
+      var names = grid[r].map(normHead);
+      if (names.indexOf("date") !== -1 && names.indexOf("amount") !== -1) { head = r; cols = names; break; }
+    }
+    if (head === -1) { return { error: "That file has no Date and Amount columns. Download the Transactions tab from Tiller." }; }
+
+    function at(row, name) {
+      var i = cols.indexOf(name);
+      return i === -1 ? "" : String(row[i] === undefined ? "" : row[i]).trim();
+    }
+    var fresh = [], old = 0, dupe = 0, bad = 0, here = {};
+    for (var i = head + 1; i < grid.length; i++) {
+      var row = grid[i];
+      if (!row.length || row.join("").trim() === "") { continue; }
+      var date = toISO(at(row, "date"));
+      var cents = parseSigned(at(row, "amount"));
+      if (!date || cents === null || cents === 0) { bad++; continue; }
+      if (from && date < from) { old++; continue; }
+      var desc = at(row, "description") || at(row, "full description") || "(no description)";
+      var account = at(row, "account") || at(row, "institution") || "";
+      var tid = at(row, "transaction id") || (date + "|" + desc + "|" + cents + "|" + account);
+      if (state.seen[tid] || here[tid]) { dupe++; continue; }
+      here[tid] = 1;
+      fresh.push({ tid: tid, date: date, desc: desc, cents: cents, account: account,
+                   category: at(row, "category"), institution: at(row, "institution") });
+    }
+    return { fresh: fresh, old: old, dupe: dupe, bad: bad };
+  }
+
+  function inboxOrder(a, b) { return a.date > b.date ? 1 : (a.date < b.date ? -1 : 0); }
+
+  function latestTxnDate() {
+    var d = "";
+    state.txns.forEach(function (t) { if (t.date > d) { d = t.date; } });
+    return d;
+  }
+
+  function inboxFiltered() {
+    var q = el("inboxSearch").value.trim().toLowerCase();
+    if (!q) { return state.inbox.slice(); }
+    return state.inbox.filter(function (o) {
+      return (o.desc + " " + o.account + " " + (o.category || "")).toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function accountOptions(sel) {
+    return Object.keys(ACCOUNTS).map(function (k) {
+      return '<option value="' + k + '"' + (k === sel ? " selected" : "") + ">" + esc(ACCOUNTS[k]) + "</option>";
+    }).join("");
+  }
+
+  function renderInbox() {
+    var n = state.inbox.length;
+    var badge = el("inboxCount");
+    badge.style.display = n ? "" : "none";
+    badge.textContent = n;
+    el("inboxCard").style.display = n ? "" : "none";
+    el("inboxEmpty").style.display = n ? "none" : "";
+    txt("tillerFromHint", state.txns.length
+      ? "The newest row you already have is dated " + prettyDate(latestTxnDate()) +
+        ", so the cut off starts there. That day itself is included, so a payment you already entered by hand may " +
+        "come through as well. Nothing is written until you say what it is, so give that day a second look."
+      : "Nothing is stored yet, so leave this blank to bring in everything.");
+    if (!n) { el("inboxList").innerHTML = ""; return; }
+
+    var list = inboxFiltered();
+    var suggestedCount = 0;
+    var html = list.map(function (item, i) {
+      var idx = state.inbox.indexOf(item);
+      var g = suggestFor(item, state.inbox);
+      if (knownAlready(item)) { suggestedCount++; }
+      var mine = guessAccount(item.account);
+      var pend = pendingMatch(item);
+      var opts = [
+        ["personal", "Personal income"],
+        ["business", "Business income"],
+        ["donation", "A donation I gave"],
+        ["transfer", "A move between my own accounts"],
+        ["expense", "A business expense"],
+        ["other", "Something else, in or out"],
+        ["part", "Part of a payment already entered"],
+        ["ignore", "Not money I track here"]
+      ];
+      if (pend) { opts.unshift(["done", "Ticks off: " + pend.desc + ", " + prettyDate(pend.date)]); }
+
+      var charityGuess = g.partner ? g.partner.cents : share(Math.abs(item.cents), PERSONAL_CHARITY_BP);
+      var fields =
+        '<div data-fields="personal" style="display:none"' + (g.partner ? ' data-partner="' + esc(g.partner.tid) + '"' : "") + ">" +
+          '<label class="field"><span class="cap">' +
+          (g.partner ? "The charity part, which arrived on its own" : "Of this, how much went to charity") + "</span>" +
+          '<input id="ibC' + idx + '" value="' + (charityGuess / 100).toFixed(2) + '"></label>' +
+          (g.partner ? '<p class="inbox-why">The ' + money(g.partner.cents) + " into your charity account on " +
+            prettyDate(g.partner.date) + " looks like the other half of this. Saving takes both off the list.</p>" : "") +
+        "</div>" +
+        '<div data-fields="business" style="display:none">' +
+          '<label class="field"><span class="cap">Which one</span><select id="ibS' + idx + '">' +
+          '<option value="bizThu"' + (g.source === "bizThu" ? " selected" : "") + ">" + esc(SOURCES.bizThu) + "</option>" +
+          '<option value="bizFri"' + (g.source === "bizFri" ? " selected" : "") + ">" + esc(SOURCES.bizFri) + "</option>" +
+          "</select></label></div>" +
+        '<div data-fields="donation" style="display:none"><div class="row2">' +
+          '<label class="field"><span class="cap">Paid to</span><input id="ibP' + idx + '" value="' + esc(payeeGuess(item.desc)) + '"></label>' +
+          '<label class="field"><span class="cap">Paid from</span><select id="ibF' + idx + '">' +
+            accountOptions(g.from || (item.cents < 0 ? mine : "charity")) + "</select></label>" +
+          "</div></div>" +
+        '<div data-fields="transfer" style="display:none"><div class="row2">' +
+          '<label class="field"><span class="cap">Out of</span><select id="ibTF' + idx + '">' +
+            accountOptions(g.from || (item.cents < 0 ? mine : "business")) + "</select></label>" +
+          '<label class="field"><span class="cap">Into</span><select id="ibTT' + idx + '">' +
+            accountOptions(g.to || (item.cents > 0 ? mine : "personal")) + "</select></label>" +
+          "</div></div>" +
+        '<div data-fields="other" style="display:none">' +
+          '<label class="field"><span class="cap">' + (item.cents > 0 ? "Into which account" : "Out of which account") +
+          '</span><select id="ibA' + idx + '">' + accountOptions(g.account || mine) + "</select></label></div>";
+
+      return '<div class="inbox-item' + (g.kind !== "ignore" ? " suggested" : "") + '" data-ib="' + idx + '">' +
+        '<div class="inbox-head">' +
+          '<div class="inbox-desc"><div>' + esc(item.desc) + "</div>" +
+          '<div class="inbox-meta">' + prettyDate(item.date) + (item.account ? " &middot; " + esc(item.account) : "") +
+            (item.category ? " &middot; " + esc(item.category) : "") + "</div></div>" +
+          '<div class="inbox-amt ' + (item.cents < 0 ? "neg" : "pos") + '">' + money(item.cents) + "</div>" +
+        "</div>" +
+        '<div class="inbox-form">' +
+          (g.why ? '<p class="inbox-why">' + esc(g.why) + "</p>" : "") +
+          '<label class="field"><span class="cap">What is this</span><select id="ibK' + idx + '" data-kind="' + idx + '">' +
+            opts.map(function (o) {
+              return '<option value="' + o[0] + '"' + (o[0] === g.kind ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+            }).join("") + "</select></label>" +
+          fields +
+          '<div class="btnrow"><button class="btn tiny" data-ib-save="' + idx + '">Save it</button>' +
+          '<button class="btn ghost tiny" data-ib-skip="' + idx + '">Ignore</button></div>' +
+        "</div></div>";
+    }).join("");
+
+    el("inboxList").innerHTML = html || '<div class="empty">Nothing matches that search.</div>';
+    el("inboxSuggested").style.display = suggestedCount ? "" : "none";
+    el("inboxSuggested").textContent = "Save the " + suggestedCount + " it already knows";
+    list.forEach(function (item) { showKindFields(state.inbox.indexOf(item)); });
+  }
+
+  // Worth saving without being read: either you have labelled this payment
+  // before, or the amount lines up exactly with a transfer already owed.
+  function knownAlready(item) {
+    if (state.hints[hintKey(item.desc, item.account)]) { return true; }
+    return Boolean(pendingMatch(item));
+  }
+
+  function showKindFields(idx) {
+    var sel = el("ibK" + idx);
+    if (!sel) { return; }
+    var wrap = sel.closest(".inbox-form");
+    wrap.querySelectorAll("[data-fields]").forEach(function (d) {
+      d.style.display = d.getAttribute("data-fields") === sel.value ? "" : "none";
+    });
+  }
+
+  // Turn one labelled row into the entry it stands for. Returns the rows it
+  // wrote, or null if the label writes nothing of its own.
+  function rowsForChoice(item, choice) {
+    var amt = Math.abs(item.cents);
+    var note = item.desc;
+    if (choice.kind === "personal") {
+      var giv = choice.charity || 0;
+      // With a partner row the bank already split the payment, so this row is
+      // the part kept and the charity part arrived separately. Without one,
+      // the whole payment landed here and the charity part comes out of it.
+      if (choice.separate) { return personalRows(item.date, amt, giv, note); }
+      if (giv > amt) { giv = amt; }
+      return personalRows(item.date, amt - giv, giv, note);
+    }
+    if (choice.kind === "business") { return businessRows(item.date, choice.source, amt, note); }
+    if (choice.kind === "donation") {
+      return [{ date: item.date, type: "Donation", cents: amt, from: choice.from,
+                desc: choice.payee ? "Donation to " + choice.payee : "Donation", notes: note }];
+    }
+    if (choice.kind === "transfer") {
+      if (choice.from === choice.to) { return null; }
+      return [{ date: item.date, cents: amt, from: choice.from, to: choice.to, notes: note,
+                type: choice.to === "charity" ? "Charity transfer" : (choice.to === "tax" ? "Tax savings" : "Transfer"),
+                desc: ACCOUNTS[choice.from] + " to " + ACCOUNTS[choice.to] }];
+    }
+    if (choice.kind === "expense") {
+      return [{ date: item.date, type: "Business", cents: amt, desc: payeeGuess(item.desc) || "Business expense",
+                from: item.cents < 0 ? "business" : undefined, to: item.cents > 0 ? "business" : undefined, notes: note }];
+    }
+    if (choice.kind === "other") {
+      var row = { date: item.date, type: "Adjustment", cents: amt,
+                  desc: payeeGuess(item.desc) || "From Tiller", notes: note };
+      if (item.cents > 0) { row.to = choice.account; } else { row.from = choice.account; }
+      if (choice.account === "charity" && item.cents > 0) { row.noGoal = true; }
+      return [row];
+    }
+    return null;              // done, part and ignore write nothing
+  }
+
+  function readChoice(idx) {
+    var item = state.inbox[idx];
+    var kind = el("ibK" + idx).value;
+    var c = { kind: kind };
+    if (kind === "personal") {
+      c.charity = parseMoney(el("ibC" + idx).value) || 0;
+      var box = el("ibK" + idx).closest(".inbox-form").querySelector('[data-fields="personal"]');
+      var tid = box && box.getAttribute("data-partner");
+      if (tid) { c.separate = true; c.partnerTid = tid; }
+    }
+    if (kind === "business") { c.source = el("ibS" + idx).value; }
+    if (kind === "donation") { c.payee = el("ibP" + idx).value.trim(); c.from = el("ibF" + idx).value; }
+    if (kind === "transfer") { c.from = el("ibTF" + idx).value; c.to = el("ibTT" + idx).value; }
+    if (kind === "other") { c.account = el("ibA" + idx).value; }
+    if (kind === "done") { c.doneId = (pendingMatch(item) || {}).id; }
+    return c;
+  }
+
+  function commitInbox(items, choices) {
+    var consumed = [], created = [], ticked = [];
+    items.forEach(function (item, n) {
+      var choice = choices[n];
+      if (choice.kind === "done") {
+        var hit = state.txns.filter(function (t) { return t.id === choice.doneId && t.pending; })[0];
+        if (hit) { delete hit.pending; hit.doneOn = todayISO(); hit.tid = item.tid; ticked.push(hit.id); }
+      } else {
+        var rows = rowsForChoice(item, choice);
+        if (rows && rows.length) {
+          rows.forEach(function (r) { r.tid = item.tid; });
+          var group = addRowsQuiet(rows);
+          created.push(group);
+        }
+      }
+      consumed.push(item);
+      // The other half of a split payment is now accounted for, so take it off
+      // the list too rather than leave it looking like income of its own.
+      if (choice.partnerTid) {
+        state.inbox.forEach(function (o) {
+          if (o.tid === choice.partnerTid && consumed.indexOf(o) === -1) { consumed.push(o); }
+        });
+      }
+      // Remember the answer so the same payment arrives already answered.
+      if (choice.kind !== "part") {
+        state.hints[hintKey(item.desc, item.account)] = {
+          kind: choice.kind, source: choice.source, from: choice.from, to: choice.to, account: choice.account
+        };
+      }
+      var side = null;
+      if (choice.kind === "donation") { side = choice.from; }
+      else if (choice.kind === "transfer") { side = item.cents < 0 ? choice.from : choice.to; }
+      else if (choice.kind === "other") { side = choice.account; }
+      else if (choice.kind === "business" || choice.kind === "expense") { side = "business"; }
+      else if (choice.kind === "personal") { side = "personal"; }
+      if (item.account && side) { state.accountMap[item.account] = side; }
+    });
+    state.inbox = state.inbox.filter(function (o) { return consumed.indexOf(o) === -1; });
+    save();
+    renderAll();
+
+    var msg = created.length + ticked.length
+      ? (created.length ? created.length + (created.length === 1 ? " entry written" : " entries written") : "") +
+        (created.length && ticked.length ? ", " : "") +
+        (ticked.length ? ticked.length + " ticked off" : "")
+      : consumed.length + " set aside";
+    toast(msg, "Undo", function () {
+      created.forEach(function (g) {
+        state.txns = state.txns.filter(function (t) { return t.group !== g; });
+      });
+      state.txns.forEach(function (t) {
+        if (ticked.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; delete t.tid; }
+      });
+      consumed.forEach(function (o) { delete state.seen[o.tid]; state.inbox.push(o); });
+      state.inbox.sort(inboxOrder);
+      save();
+      renderAll();
+      toast("Put back in the inbox");
+    });
+  }
+
+  // Same as addTxns, without the render, so a batch paints once.
+  function addRowsQuiet(rows) {
+    if (!state.txns.length && !meta().lastBackup) { meta().lastBackup = todayISO(); }
+    var group = uid();
+    var stamp = Date.now();
+    rows.forEach(function (r, i) { r.id = uid(); r.group = group; r.ts = stamp; r.seq = i; state.txns.push(r); });
+    return group;
   }
 
   /* ========================== Rendering =========================== */
@@ -1279,6 +1801,7 @@
 
   function renderAll() {
     renderBackup();
+    renderInbox();
     renderTodo();
     renderDash();
     renderBusiness();
@@ -1369,7 +1892,7 @@
     if (!b) { return; }
     el("tabs").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     var want = b.getAttribute("data-tab");
-    ["dash", "add", "txns", "business", "charity", "data"].forEach(function (name) {
+    ["dash", "add", "inbox", "txns", "business", "charity", "data"].forEach(function (name) {
       el("panel-" + name).classList.toggle("on", name === want);
     });
     window.scrollTo(0, 0);
@@ -1579,6 +2102,80 @@
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "visible") { renderBackup(); }
   });
+  /* ------------------------- the Tiller inbox ------------------------ */
+
+  el("tillerBtn").addEventListener("click", function () { el("tillerFile").click(); });
+
+  el("tillerFile").addEventListener("change", function () {
+    var f = el("tillerFile").files[0];
+    if (!f) { return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var res = readTiller(reader.result, el("tillerFrom").value);
+      el("tillerFile").value = "";
+      if (res.error) { txt("tillerStat", res.error); return toast("That file did not look right"); }
+      if (res.fresh.length) {
+        res.fresh.forEach(function (o) { state.seen[o.tid] = 1; });
+        state.inbox = state.inbox.concat(res.fresh);
+        // Oldest first. A payment sets up the transfers that follow it, so
+        // working down the list means the cause is answered before the effect.
+        state.inbox.sort(inboxOrder);
+        save();
+      }
+      var parts = [res.fresh.length + (res.fresh.length === 1 ? " new row" : " new rows")];
+      if (res.dupe) { parts.push(res.dupe + " already brought in"); }
+      if (res.old) { parts.push(res.old + " before your cut off date"); }
+      if (res.bad) { parts.push(res.bad + " with no usable date or amount"); }
+      txt("tillerStat", parts.join(", ") + ".");
+      renderAll();
+      toast(res.fresh.length ? "Added " + res.fresh.length + " to the inbox" : "Nothing new in that file");
+    };
+    reader.onerror = function () { toast("Could not read that file"); };
+    reader.readAsText(f);
+  });
+
+  el("inboxSearch").addEventListener("input", renderInbox);
+
+  el("inboxList").addEventListener("change", function (e) {
+    var sel = e.target.closest("[data-kind]");
+    if (sel) { showKindFields(sel.getAttribute("data-kind")); }
+  });
+
+  el("inboxList").addEventListener("click", function (e) {
+    var save1 = e.target.closest("[data-ib-save]");
+    if (save1) {
+      var i = Number(save1.getAttribute("data-ib-save"));
+      var item = state.inbox[i];
+      if (!item) { return; }
+      var choice = readChoice(i);
+      if (choice.kind === "transfer" && choice.from === choice.to) { return toast("Pick two different accounts"); }
+      return commitInbox([item], [choice]);
+    }
+    var skip = e.target.closest("[data-ib-skip]");
+    if (skip) {
+      var j = Number(skip.getAttribute("data-ib-skip"));
+      var row = state.inbox[j];
+      if (row) { commitInbox([row], [{ kind: "ignore" }]); }
+    }
+  });
+
+  el("inboxSuggested").addEventListener("click", function () {
+    var items = state.inbox.filter(knownAlready);
+    if (!items.length) { return; }
+    var choices = items.map(function (item) {
+      var i = state.inbox.indexOf(item);
+      return el("ibK" + i) ? readChoice(i) : { kind: "ignore" };
+    });
+    commitInbox(items, choices);
+  });
+
+  el("inboxClear").addEventListener("click", function () {
+    var left = inboxFiltered();
+    if (!left.length) { return; }
+    if (!window.confirm("Set aside " + left.length + " rows without entering anything for them?")) { return; }
+    commitInbox(left, left.map(function () { return { kind: "ignore" }; }));
+  });
+
   el("importBtn").addEventListener("click", function () { el("importFile").click(); });
   el("importFile").addEventListener("change", function () {
     var f = el("importFile").files[0];
@@ -1589,10 +2186,13 @@
         var parsed = JSON.parse(reader.result);
         if (!parsed || !Array.isArray(parsed.txns)) { throw new Error("not a finances file"); }
         if (!window.confirm("Replace what is on this device with " + parsed.txns.length + " rows from the file?")) { return; }
-        state = { version: 1, txns: parsed.txns, meta: parsed.meta || meta() };
+        state = { version: 1, txns: parsed.txns, meta: parsed.meta || meta(),
+                  inbox: parsed.inbox, seen: parsed.seen, hints: parsed.hints, accountMap: parsed.accountMap };
+        normalizeState();
         meta().lastBackup = todayISO();
         meta().snooze = "";
         save();
+        el("tillerFrom").value = latestTxnDate();
         renderAll();
         toast("Imported " + parsed.txns.length + " rows");
       } catch (err) { toast("That file did not look right"); }
@@ -1604,15 +2204,18 @@
   el("wipeBtn").addEventListener("click", function () {
     if (!window.confirm("Delete every transaction on this device?")) { return; }
     if (!window.confirm("Really delete everything? There is no undo.")) { return; }
-    state = { version: 1, txns: [], meta: { auto: meta().auto, lastBackup: "", snooze: "" } };
+    state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {},
+              meta: { auto: meta().auto, lastBackup: "", snooze: "" } };
     save();
     renderAll();
     toast("Everything deleted");
   });
 
   load();
+  normalizeState();
   setupSelects();
   setupDates();
+  el("tillerFrom").value = latestTxnDate();
   renderAll();
 })();
 </script>

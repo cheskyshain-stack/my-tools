@@ -121,6 +121,40 @@ also writes a copy to the downloads folder once a week: a browser will not let a
 start a download before the person has touched it, so a due backup arms itself and the
 first tap anywhere writes the file.
 
+### The Tiller inbox
+
+Tiller keeps a Google sheet of what the banks report, and it has no API another app can
+call. So the exchange is a CSV: the sheet downloads one, the Inbox tab reads it. Rows
+land as unlabelled items in `state.inbox` and write nothing to the ledger until the user
+says what each one is.
+
+Four fields on `state` carry it, and `normalizeState` fills them in for any file written
+before the inbox existed:
+
+- `inbox`, the rows still waiting, sorted oldest first so a payment is answered before
+  the transfers it sets up.
+- `seen`, every Tiller id that has ever been through, marked **at import time, not when
+  the row is labelled**. Marking it late meant a second import duplicated everything
+  still sitting in the inbox. Undo removes the ids again.
+- `hints`, what a payment was called last time, keyed on the description with the digits
+  stripped out, because a bank writes a different reference number every time. This is
+  what makes the second month faster than the first.
+- `accountMap`, the Tiller account name mapped to one of the four accounts here.
+
+Two behaviours are the point of the whole thing and must not regress:
+
+- A payment that splits at the bank arrives as **two** deposits, the part kept and the
+  part sent to charity. `partnerFor` finds the second one within four days at between
+  8.5% and 25.5%, and saving the first takes both off the list, recording one payment
+  with both its pieces. Enter each payment once.
+- A business payment's splits turn up in the bank days later. `pendingMatch` spots an
+  amount that equals a transfer already on the to do list and offers to **tick it off**
+  rather than write a second row saying the same thing.
+
+The cut off date is inclusive and starts at the newest row already stored, so the day
+itself can come through twice. That is deliberate: missing a payment is worse than
+seeing it in an inbox that writes nothing on its own.
+
 ## Verify before you call it done
 
 Generate the change, then check: the tool loads standalone and inside the shell iframe,
