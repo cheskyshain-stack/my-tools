@@ -6,7 +6,7 @@ compatibility_date = "2026-08-01"
 # then paste the id it prints here.
 [[kv_namespaces]]
 binding = "VAULT"
-id = "PASTE_THE_KV_NAMESPACE_ID_HERE"
+id = "5fc1a0d8ad29472f8d10e822d4a470d0"
 
 # Deploy to its own hostname. NOT tools.cjaffa.com, and not a route that
 # overlaps it. sync.cjaffa.com, or leave this out and use the workers.dev URL.
