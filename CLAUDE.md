@@ -158,9 +158,14 @@ seeing it in an inbox that writes nothing on its own.
 ### Sync
 
 Off by default and untouched until someone turns it on. `sync/worker.js` is a
-Cloudflare Worker over a KV namespace; `sync/README.md` has the deploy steps. It must
-live on its own hostname. **Never put it in front of tools.cjaffa.com**, which is the
-August incident all over again.
+Cloudflare Worker over a KV namespace, live at
+`https://moneyflow-sync.cheskyshain.workers.dev`, which the app offers as the default
+server. `sync/README.md` has the deploy steps.
+
+It is on `workers.dev` on purpose. A custom hostname is the one step that creates a
+domain binding, and it buys nothing here. **Never put this, or any Worker, in front of
+tools.cjaffa.com**, which is the August incident all over again. The `[[routes]]` block
+in `wrangler.toml` stays commented out.
 
 The ledger is sealed in the browser with AES-GCM and only then sent. The server holds the
 data key sealed twice over, once by the passphrase and once by the recovery code, so it

@@ -653,7 +653,7 @@
 
     <div id="syncOff">
       <label class="field" style="margin-top:14px"><span class="cap">Sync server</span>
-        <input id="syncUrl" placeholder="https://sync.cjaffa.com"></label>
+        <input id="syncUrl" placeholder="https://moneyflow-sync.cheskyshain.workers.dev"></label>
 
       <h3>Start here</h3>
       <p class="hint">Do this on the device you use most. It seals what you already have and sends it up.</p>
@@ -1195,6 +1195,9 @@
      first the server says so and hands back its copy, and the two are merged
      rather than one flattening the other. */
 
+  // Where the sync Worker lives. Not a secret: it identifies the server, not
+  // the vault, and opens nothing without the passphrase.
+  var SYNC_HOME = "https://moneyflow-sync.cheskyshain.workers.dev";
   var SYNC_ITER = 600000;                 // PBKDF2 rounds, slow on purpose
   var syncTimer = null, syncing = false, syncNote = "";
   var dataKey = null;                     // the AES key, held only in memory
@@ -2308,7 +2311,7 @@
       txt("syncBlurb", "Off. Everything stays in this browser. Turn this on and the ledger is sealed here, before it " +
         "leaves, and kept on a server that cannot read it. Your passphrase and your recovery code never leave this " +
         "device, so nobody holding the server can open any of it, and neither can we.");
-      if (!el("syncUrl").value) { el("syncUrl").value = sync.url || ""; }
+      if (!el("syncUrl").value) { el("syncUrl").value = sync.url || SYNC_HOME; }
       return;
     }
     txt("syncBlurb", "On. The ledger is sealed on this device before it goes anywhere, so the server holds nothing it " +

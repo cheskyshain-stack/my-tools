@@ -1,0 +1,5 @@
+# Local wrangler cache from running or deploying the sync Worker.
+.wrangler/
+
+# Editor and OS litter
+.DS_Store

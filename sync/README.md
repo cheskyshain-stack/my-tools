@@ -17,6 +17,15 @@ version it was based on, or `*` to create. A stale write is refused with 409
 and the current record, and the browser merges and retries rather than
 flattening whatever the other device did.
 
+## Deployed
+
+    https://moneyflow-sync.cheskyshain.workers.dev
+
+`workers.dev`, deliberately: a custom hostname is the one step that would
+create a domain binding, and it buys nothing here. KV namespace `VAULT`,
+id `5fc1a0d8ad29472f8d10e822d4a470d0`. The Money Flow page offers this URL
+by default, so there is nothing to type unless it moves.
+
 ## Deploying it
 
 Needs the Cloudflare account that already holds cjaffa.com, and wrangler.
@@ -54,7 +63,7 @@ is already there and is the only one that matters in production.
 
 ```
 ID=$(openssl rand -hex 16)
-BASE=https://sync.cjaffa.com/v1/vault/$ID
+BASE=https://moneyflow-sync.cheskyshain.workers.dev/v1/vault/$ID
 curl -s -o /dev/null -w '%{http_code}\n' $BASE                       # 404
 curl -s -X PUT $BASE -H 'Content-Type: application/json' -H 'If-Match: *' \
   -d '{"salt":"c2FsdA==","wrapped":{"pass":"a.b","recovery":"c.d"},"blob":"e.f"}'
@@ -64,8 +73,10 @@ curl -s -X PUT $BASE -H 'Content-Type: application/json' -H 'If-Match: *' \
                                                                      # 409
 ```
 
-Then in Money Flow, Data tab, put the Worker's URL in **Sync server** and turn
-it on.
+Then in Money Flow, Data tab, check the URL in **Sync server** and turn it on.
+
+Running `wrangler dev` leaves a `sync/.wrangler/` cache behind, held open by a
+`workerd` process until you stop it. It is in `.gitignore` and can be deleted.
 
 ## Cost
 
