@@ -84,6 +84,15 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
 4. Add a card to the Tools or Games grid in `home/index.html`, matching the markup of the
    cards around it.
 
+### The PIN on Money Flow
+
+Money Flow opens on a PIN screen. The body ships with `class="locked"`, CSS hides
+everything but the lock, and the class comes off only when the four digits hash to the
+constant in the script, so nothing is painted before it is unlocked. It relocks on every
+load, and the weekly backup does not arm while it is up. Be honest with the user about
+what this is: a screen lock for a phone in someone else's hand. The page is public and
+the ledger is in `localStorage` either way, so it is not privacy.
+
 ### Hidden tools
 
 Budget Planner, QwikPen and Money Flow carry `class="tool hidden-tool"` and do not show

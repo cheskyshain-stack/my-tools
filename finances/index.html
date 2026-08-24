@@ -172,6 +172,43 @@
   @media(min-width:720px){.filters{grid-template-columns:repeat(4,1fr)}}
   .filters label.field{margin:0}
 
+  /* The page ships with this class on the body, so the app is never painted
+     before the PIN is accepted. */
+  body.locked > *:not(#lock){display:none}
+  body:not(.locked) #lock{display:none}
+
+  .lock{
+    position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+    background:var(--cj-bg,#050A18);
+  }
+  .lock-box{width:100%;max-width:330px;text-align:center}
+  .lock-logo{width:74px;height:74px;border-radius:18px;display:block;margin:0 auto 14px;
+    box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .lock-title{font-family:var(--cj-display,Georgia,serif);font-size:1.3rem;font-weight:600;letter-spacing:-.3px}
+  .lock-sub{color:var(--cj-muted,#93A3C7);font-size:13px;margin-top:5px;min-height:19px}
+  .lock-sub.bad{color:#f7b0a8}
+
+  .dots{display:flex;gap:14px;justify-content:center;margin:22px 0 26px}
+  .dots span{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);transition:background .12s,border-color .12s}
+  .dots span.on{background:#2583F7;border-color:#2583F7}
+  .lock.shake .dots{animation:nope .4s}
+  @keyframes nope{
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)}
+    40%{transform:translateX(9px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+  }
+
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .keypad button,.keypad a{
+    height:62px;border-radius:16px;border:1px solid var(--cj-line,rgba(255,255,255,.10));
+    background:rgba(255,255,255,.05);color:var(--cj-text,#EDF2FF);
+    font:600 22px/62px var(--cj-mono,ui-monospace,Menlo,monospace);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;text-decoration:none;display:block;padding:0;
+  }
+  .keypad .ghostkey{font:700 13px/62px var(--cj-body,inherit);color:var(--cj-muted,#93A3C7);background:transparent;border-color:transparent}
+  .keypad button:active{background:rgba(37,131,247,.22)}
+  @media(max-height:640px){ .keypad button,.keypad a{height:54px;line-height:54px} .lock-logo{width:58px;height:58px} }
+
   .toast{
     position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));
     background:#0d1730;border:1px solid rgba(37,131,247,.5);color:#dce9ff;
@@ -187,7 +224,30 @@
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
 </head>
-<body>
+<body class="locked">
+
+<div id="lock" class="lock">
+  <div class="lock-box">
+    <img class="lock-logo" src="/finances/icon.png" alt="">
+    <div class="lock-title">Money Flow</div>
+    <div class="lock-sub" id="lockSub">Enter your PIN</div>
+    <div class="dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
+    <div class="keypad" id="keypad">
+      <button type="button" data-key="1">1</button>
+      <button type="button" data-key="2">2</button>
+      <button type="button" data-key="3">3</button>
+      <button type="button" data-key="4">4</button>
+      <button type="button" data-key="5">5</button>
+      <button type="button" data-key="6">6</button>
+      <button type="button" data-key="7">7</button>
+      <button type="button" data-key="8">8</button>
+      <button type="button" data-key="9">9</button>
+      <button type="button" class="ghostkey" data-key="back">Back</button>
+      <button type="button" data-key="0">0</button>
+      <a class="ghostkey" href="/" aria-label="Back to CJ Portal">Exit</a>
+    </div>
+  </div>
+</div>
 
 <header class="cj-page-header">
   <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/finances/icon.png" alt="Money Flow"></a>
@@ -497,6 +557,74 @@
 (function () {
   "use strict";
 
+  /* ============================ The lock ==========================
+     A PIN typed into a page is a screen lock, not a safe: the page is
+     public and the ledger sits in this browser's storage either way. It
+     keeps the numbers off the screen when the phone is in someone else's
+     hand, which is what it is for. The digits are held as a hash so they
+     are not sitting in the source in plain sight. */
+
+  var PIN_HASH = 2271604646;
+  var entry = "";
+  var locked = document.body.classList.contains("locked");
+
+  function hashPin(str) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function paintDots() {
+    var dots = document.querySelectorAll("#pinDots span");
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle("on", i < entry.length);
+    }
+  }
+
+  function wrongPin() {
+    var lock = document.getElementById("lock");
+    var sub = document.getElementById("lockSub");
+    sub.textContent = "Not that one. Try again.";
+    sub.classList.add("bad");
+    lock.classList.add("shake");
+    setTimeout(function () { lock.classList.remove("shake"); }, 420);
+    entry = "";
+    paintDots();
+  }
+
+  function unlock() {
+    locked = false;
+    document.body.classList.remove("locked");
+    renderAll();
+  }
+
+  function pinKey(k) {
+    if (!locked) { return; }
+    if (k === "back") { entry = entry.slice(0, -1); paintDots(); return; }
+    if (!/^[0-9]$/.test(k) || entry.length >= 4) { return; }
+    entry += k;
+    paintDots();
+    if (entry.length === 4) {
+      var typed = entry;
+      setTimeout(function () {
+        if (hashPin(typed) === PIN_HASH) { unlock(); } else { wrongPin(); }
+      }, 90);
+    }
+  }
+
+  document.getElementById("keypad").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-key]");
+    if (b) { pinKey(b.getAttribute("data-key")); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (!locked) { return; }
+    if (e.key === "Backspace") { e.preventDefault(); pinKey("back"); }
+    else if (/^[0-9]$/.test(e.key)) { pinKey(e.key); }
+  });
+
   /* ===================== The shape of things ====================== */
 
   var KEY = "cjFinancesV1";
@@ -666,6 +794,7 @@
   }
 
   function renderBackup() {
+    if (locked) { disarmBackup(); return; }   // nothing arms behind the lock
     var banner = el("backupBanner");
     var due = backupDue();
     banner.style.display = due ? "" : "none";
