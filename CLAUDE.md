@@ -155,6 +155,37 @@ The cut off date is inclusive and starts at the newest row already stored, so th
 itself can come through twice. That is deliberate: missing a payment is worse than
 seeing it in an inbox that writes nothing on its own.
 
+### Sync
+
+Off by default and untouched until someone turns it on. `sync/worker.js` is a
+Cloudflare Worker over a KV namespace; `sync/README.md` has the deploy steps. It must
+live on its own hostname. **Never put it in front of tools.cjaffa.com**, which is the
+August incident all over again.
+
+The ledger is sealed in the browser with AES-GCM and only then sent. The server holds the
+data key sealed twice over, once by the passphrase and once by the recovery code, so it
+can open nothing. Two ways in rather than one is the point: forgetting the passphrase is
+recoverable, and so is losing the code, and any device already connected holds the key
+and can simply be given a new passphrase.
+
+Four things must not regress:
+
+- **The sealed key belongs to the vault, not to a device.** A device pushes back whatever
+  `wrapped` it just read unless `sync.pushKeys` says it is the one changing the key.
+  Without that, a stale copy on the phone silently undid a passphrase change made on the
+  desktop, and neither secret opened the vault afterwards.
+- **A sync must never save through `save()`.** `save` schedules a sync, so a sync that
+  saves schedules another, for ever. `quietSave` exists for exactly this.
+- **A write names the version it was based on.** A 409 hands back the server's copy, and
+  `mergeIn` folds the two together: rows by id with the later `rev` winning, deletions
+  recorded as tombstones so a row the other device still holds is not handed back.
+- **An idle sync costs a read and no write.** `fingerprint` compares what would be sent
+  against what was last sent, which is what keeps this inside Cloudflare's free tier.
+
+Deleting a row now writes `state.tombs[group]`, and every row carries `rev`, set by
+`touch()`. Any new code path that changes a row must call `touch` or the change will lose
+a merge.
+
 ## Verify before you call it done
 
 Generate the change, then check: the tool loads standalone and inside the shell iframe,

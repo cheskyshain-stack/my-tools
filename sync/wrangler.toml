@@ -1,0 +1,15 @@
+name = "moneyflow-sync"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# Create with:  wrangler kv namespace create VAULT
+# then paste the id it prints here.
+[[kv_namespaces]]
+binding = "VAULT"
+id = "PASTE_THE_KV_NAMESPACE_ID_HERE"
+
+# Deploy to its own hostname. NOT tools.cjaffa.com, and not a route that
+# overlaps it. sync.cjaffa.com, or leave this out and use the workers.dev URL.
+# [[routes]]
+# pattern = "sync.cjaffa.com"
+# custom_domain = true

@@ -170,6 +170,19 @@
     td.num{text-align:right}
   }
 
+  /* ===== Sync ===== */
+  .secret{
+    font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:15px;letter-spacing:.06em;
+    word-break:break-all;background:rgba(255,255,255,.05);border:1px solid var(--cj-line,rgba(255,255,255,.10));
+    border-radius:12px;padding:11px 12px;margin:0 0 10px;
+  }
+  .keep{border:1px solid rgba(245,184,65,.45);background:rgba(245,184,65,.07);border-radius:14px;padding:12px 13px;margin:0 0 14px}
+  .keep h3{margin:0 0 8px;color:#f7d08a}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:#67779C}
+  .dot.live{background:#34d399}
+  .dot.busy{background:#f7d08a}
+  .dot.bad{background:#f4a4a4}
+
   /* ===== The Tiller inbox ===== */
   .inbox-item{border:1px solid var(--cj-line,rgba(255,255,255,.08));border-radius:16px;padding:12px 13px;margin-bottom:11px;
     background:rgba(255,255,255,.02)}
@@ -621,7 +634,7 @@
 <section class="panel" id="panel-data">
   <div class="card">
     <h2>Your data</h2>
-    <p class="hint">Everything lives in this browser, on this device. Nothing is sent anywhere. Clearing your browser data would take it with it, so export a copy now and then, and import it on your other device to move it across.</p>
+    <p class="hint" id="dataWhere"></p>
     <div class="btnrow" style="margin-top:14px">
       <button class="btn" id="exportBtn">Export a copy</button>
       <button class="btn ghost" id="importBtn">Import a file</button>
@@ -629,6 +642,88 @@
     </div>
     <p class="hint" id="dataStat" style="margin-top:14px"></p>
   </div>
+  <div class="card">
+    <h2>The same numbers on every device</h2>
+    <p class="hint" id="syncBlurb">Off. Everything stays in this browser. Turn this on and the ledger is sealed here,
+      before it leaves, and kept on a server that cannot read it. Your passphrase and your recovery code never leave
+      this device, so nobody holding the server can open any of it, and neither can we.</p>
+
+    <p class="hint" id="syncNoCrypto" style="display:none;color:#f7b0a8">This browser has no Web Crypto, which sync
+      needs. That usually means the page is not on https.</p>
+
+    <div id="syncOff">
+      <label class="field" style="margin-top:14px"><span class="cap">Sync server</span>
+        <input id="syncUrl" placeholder="https://sync.cjaffa.com"></label>
+
+      <h3>Start here</h3>
+      <p class="hint">Do this on the device you use most. It seals what you already have and sends it up.</p>
+      <div class="row2" style="margin-top:11px">
+        <label class="field"><span class="cap">Passphrase</span>
+          <input id="syncPass1" type="password" autocomplete="new-password" placeholder="A phrase you will remember"></label>
+        <label class="field"><span class="cap">Again</span>
+          <input id="syncPass2" type="password" autocomplete="new-password"></label>
+      </div>
+      <p class="hint">Make it long rather than clever. Four or five ordinary words beat a short scramble, and this is
+        not the 6832 PIN: that stays as the lock on the screen.</p>
+      <div class="btnrow" style="margin-top:12px"><button class="btn" id="syncStart">Turn on sync</button></div>
+
+      <h3>Or join one you already made</h3>
+      <p class="hint">On your other device, paste the link code and type the same passphrase.</p>
+      <label class="field" style="margin-top:11px"><span class="cap">Link code</span>
+        <input id="syncLink" placeholder="Paste it here"></label>
+      <label class="field"><span class="cap">Passphrase, or a recovery code</span>
+        <input id="syncSecret" type="password" autocomplete="current-password"></label>
+      <div class="btnrow"><button class="btn ghost" id="syncJoin">Connect this device</button></div>
+    </div>
+
+    <div id="syncOn" style="display:none">
+      <p class="hint" id="syncState" style="margin-top:12px"></p>
+      <div class="btnrow" style="margin-top:12px">
+        <button class="btn" id="syncNowBtn">Sync now</button>
+        <button class="btn ghost" id="syncShowLink">Show the link code</button>
+      </div>
+
+      <h3>Keys</h3>
+      <div class="row2">
+        <label class="field"><span class="cap">New passphrase</span>
+          <input id="syncNewPass" type="password" autocomplete="new-password"></label>
+        <label class="field"><span class="cap">Again</span>
+          <input id="syncNewPass2" type="password" autocomplete="new-password"></label>
+      </div>
+      <div class="btnrow">
+        <button class="btn ghost" id="syncChangePass">Change the passphrase</button>
+        <button class="btn ghost" id="syncNewCode">Print a new recovery code</button>
+      </div>
+      <p class="hint" style="margin-top:10px">A new recovery code retires the old one. Changing the passphrase reseals
+        the key rather than the ledger, so it is instant and nothing can be lost halfway.</p>
+
+      <h3>Stop</h3>
+      <div class="btnrow">
+        <button class="btn ghost" id="syncPause">Turn off on this device</button>
+        <button class="btn danger" id="syncForget">Disconnect and forget the keys</button>
+      </div>
+      <p class="hint" style="margin-top:10px">Either one leaves your ledger here untouched and leaves the copy on the
+        server alone. Forgetting the keys means this device needs the link code and the passphrase again.</p>
+    </div>
+
+    <div id="syncSecrets" style="display:none;margin-top:16px">
+      <div class="keep">
+        <h3>Write this down now</h3>
+        <p class="hint" style="margin-bottom:10px">The recovery code is shown once and is not stored anywhere you can
+          read it back. On paper is the right place. Put the passphrase in your password manager, and keep the two
+          apart, or one break-in gets both.</p>
+        <div class="secret" id="syncCodeOut"></div>
+        <p class="hint" style="margin-bottom:10px">Link code, for your other devices. This is not a secret and opens
+          nothing on its own, so it is safe to email to yourself.</p>
+        <div class="secret" id="syncLinkOut"></div>
+        <div class="btnrow">
+          <button class="btn ghost" id="syncCopyLink">Copy the link code</button>
+          <button class="btn ghost" id="syncHideSecrets">I have written it down</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <h2>Automatic weekly backup</h2>
     <p class="hint">Once a week the page saves a copy to your downloads by itself. A browser will not let a page start a
@@ -714,6 +809,7 @@
   function unlock() {
     locked = false;
     document.body.classList.remove("locked");
+    wakeKey().then(function (ok) { if (ok) { syncNow(true); } });
     renderAll();
   }
 
@@ -804,7 +900,7 @@
 
   /* ============================ State ============================= */
 
-  var state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {},
+  var state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {}, tombs: {},
                 meta: { auto: true, lastBackup: "", snooze: "" } };
   // Rows carry no delete control until this is switched on, and it resets on
   // every load, so a stray tap on the ledger cannot remove anything.
@@ -825,6 +921,8 @@
     if (!state.seen || typeof state.seen !== "object") { state.seen = {}; }
     if (!state.hints || typeof state.hints !== "object") { state.hints = {}; }
     if (!state.accountMap || typeof state.accountMap !== "object") { state.accountMap = {}; }
+    if (!state.tombs || typeof state.tombs !== "object") { state.tombs = {}; }
+    if (!state.sync || typeof state.sync !== "object") { state.sync = { on: false }; }
     meta();
   }
 
@@ -836,13 +934,18 @@
       if (parsed && Array.isArray(parsed.txns)) { state = parsed; normalizeState(); }
     } catch (e) { /* a corrupt store should not stop the page loading */ }
   }
-  function save() {
+  function quietSave() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
     catch (e) { toast("Could not save. Is storage full?"); }
+  }
+  function save() {
+    quietSave();
+    nudgeSync();
   }
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
+  function touch(t) { t.rev = Date.now(); return t; }
 
   function addTxns(rows) {
     if (!state.txns.length && !meta().lastBackup) { meta().lastBackup = todayISO(); }
@@ -853,6 +956,7 @@
       r.group = group;
       r.ts = stamp;      // when the entry was made
       r.seq = i;         // and the order its rows were built in
+      touch(r);
       state.txns.push(r);
     });
     save();
@@ -861,6 +965,7 @@
 
   function removeGroup(group) {
     state.txns = state.txns.filter(function (t) { return t.group !== group; });
+    state.tombs[group] = Date.now();
     save();
     renderAll();
   }
@@ -1072,6 +1177,402 @@
       { date: date, type: "Charity transfer", source: sourceKey, desc: "7.5% to charity",
         cents: toCharity, from: "business", to: "charity", notes: notes, pending: true }
     ];
+  }
+
+  /* ============================= Sync =============================
+     The ledger is sealed in this browser and only then sent up. The server
+     holds ciphertext, a salt, and the data key sealed twice over: once by the
+     passphrase, once by the recovery code. Neither of those is ever sent, so
+     the server cannot open any of it, and neither can anyone who takes a copy
+     of its storage.
+
+     Two secrets open the same lock rather than one, so forgetting the
+     passphrase is a nuisance and not a funeral. A third way in is any device
+     already set up, which holds the data key and can simply be given a new
+     passphrase.
+
+     Writes name the version they were based on. If the other device wrote
+     first the server says so and hands back its copy, and the two are merged
+     rather than one flattening the other. */
+
+  var SYNC_ITER = 600000;                 // PBKDF2 rounds, slow on purpose
+  var syncTimer = null, syncing = false, syncNote = "";
+  var dataKey = null;                     // the AES key, held only in memory
+
+  function sy() {
+    if (!state.sync) { state.sync = { on: false }; }
+    return state.sync;
+  }
+
+  function bytes(n) { return crypto.getRandomValues(new Uint8Array(n)); }
+  function hex(buf) {
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+      return (b < 16 ? "0" : "") + b.toString(16);
+    }).join("");
+  }
+  function b64(buf) {
+    var a = new Uint8Array(buf), s = "";
+    for (var i = 0; i < a.length; i++) { s += String.fromCharCode(a[i]); }
+    return btoa(s);
+  }
+  function unb64(str) {
+    var s = atob(str), a = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) { a[i] = s.charCodeAt(i); }
+    return a;
+  }
+  function utf8(str) { return new TextEncoder().encode(str); }
+
+  function haveCrypto() {
+    return Boolean(window.crypto && crypto.subtle && crypto.subtle.deriveKey);
+  }
+
+  // Turning a phrase into a key deliberately takes a moment. That cost is
+  // what stands between a stolen copy of the storage and a guessing run.
+  function wrapKeyFrom(phrase, salt) {
+    return crypto.subtle.importKey("raw", utf8(phrase), "PBKDF2", false, ["deriveKey"])
+      .then(function (base) {
+        return crypto.subtle.deriveKey(
+          { name: "PBKDF2", salt: salt, iterations: SYNC_ITER, hash: "SHA-256" },
+          base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      });
+  }
+
+  function seal(key, plainBytes) {
+    var iv = bytes(12);
+    return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, plainBytes)
+      .then(function (ct) { return b64(iv) + "." + b64(ct); });
+  }
+  function unseal(key, packed) {
+    var bits = String(packed || "").split(".");
+    if (bits.length !== 2) { return Promise.reject(new Error("not sealed")); }
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(bits[0]) }, key, unb64(bits[1]));
+  }
+
+  function importDataKey(raw) {
+    return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  }
+
+  // No letters that get misread off a piece of paper: no O, I, L or U.
+  var CODE_ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
+  function recoveryCode() {
+    var raw = bytes(20), out = "";
+    for (var i = 0; i < 20; i++) {
+      if (i && i % 5 === 0) { out += "-"; }
+      out += CODE_ALPHABET.charAt(raw[i] % CODE_ALPHABET.length);
+    }
+    return out;
+  }
+  function tidyCode(s) { return String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); }
+
+  // The link code names the vault and carries the salt. Neither is a secret,
+  // so this is safe to email to yourself. Without the passphrase it opens
+  // nothing.
+  function makeLink(sync) {
+    return btoa(JSON.stringify({ u: sync.url, v: sync.vault, s: sync.salt }))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function readLink(code) {
+    var t = String(code || "").trim().replace(/-/g, "+").replace(/_/g, "/");
+    while (t.length % 4) { t += "="; }
+    var o = JSON.parse(atob(t));
+    if (!o.u || !/^[0-9a-f]{32}$/.test(o.v || "") || !o.s) { throw new Error("bad link"); }
+    return o;
+  }
+
+  /* ------------------------- what travels ------------------------- */
+
+  // Cheap fingerprint of what we are about to send, so a sync that has
+  // nothing to say costs a read and no write at all.
+  function fingerprint(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) >>> 0;
+    }
+    return h.toString(36) + ":" + str.length;
+  }
+
+  function syncPayload() {
+    return {
+      txns: state.txns, inbox: state.inbox, seen: state.seen,
+      hints: state.hints, accountMap: state.accountMap, tombs: state.tombs,
+      meta: { auto: meta().auto, lastBackup: meta().lastBackup }
+    };
+  }
+
+  // Two devices, both right. Rows are keyed on their id and the later edit
+  // wins; a deletion is a record of its own, so a row the other device still
+  // holds is not handed back. The small lookup tables merge key by key, with
+  // this device breaking any tie, since it is the one being used.
+  function mergeIn(remote) {
+    var tombs = Object.assign({}, remote.tombs || {}, state.tombs || {});
+    Object.keys(remote.tombs || {}).forEach(function (g) {
+      tombs[g] = Math.max(tombs[g] || 0, remote.tombs[g]);
+    });
+
+    var byId = {};
+    (remote.txns || []).forEach(function (t) { if (t && t.id) { byId[t.id] = t; } });
+    (state.txns || []).forEach(function (t) {
+      if (!t || !t.id) { return; }
+      var other = byId[t.id];
+      if (!other || (t.rev || 0) >= (other.rev || 0)) { byId[t.id] = t; }
+    });
+    var merged = Object.keys(byId).map(function (k) { return byId[k]; })
+      .filter(function (t) { return !tombs[t.group]; });
+
+    var seen = Object.assign({}, remote.seen || {}, state.seen || {});
+    var inboxById = {};
+    (remote.inbox || []).concat(state.inbox || []).forEach(function (o) {
+      if (o && o.tid) { inboxById[o.tid] = o; }
+    });
+    var inbox = Object.keys(inboxById).map(function (k) { return inboxById[k]; })
+      .filter(function (o) {
+        // Anything already answered on either device is not still waiting.
+        return !merged.some(function (t) { return t.tid === o.tid; });
+      })
+      .sort(inboxOrder);
+
+    var before = state.txns.length + state.inbox.length;
+    state.txns = merged;
+    state.inbox = inbox;
+    state.seen = seen;
+    state.hints = Object.assign({}, remote.hints || {}, state.hints || {});
+    state.accountMap = Object.assign({}, remote.accountMap || {}, state.accountMap || {});
+    state.tombs = tombs;
+    if (remote.meta && remote.meta.lastBackup > meta().lastBackup) {
+      meta().lastBackup = remote.meta.lastBackup;
+    }
+    return { was: before, now: state.txns.length + state.inbox.length };
+  }
+
+  /* --------------------------- the wire --------------------------- */
+
+  function vaultURL() { return sy().url.replace(/\/+$/, "") + "/v1/vault/" + sy().vault; }
+
+  function pullVault() {
+    return fetch(vaultURL(), { method: "GET", cache: "no-store" }).then(function (r) {
+      if (r.status === 404) { return null; }
+      if (!r.ok) { throw new Error("The server said " + r.status + "."); }
+      return r.json();
+    });
+  }
+
+  function pushVault(record, ifMatch) {
+    return fetch(vaultURL(), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "If-Match": ifMatch },
+      body: JSON.stringify(record)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (body) {
+        return { ok: r.ok, status: r.status, body: body };
+      });
+    });
+  }
+
+  function deviceName() {
+    var ua = navigator.userAgent || "";
+    if (/iPhone|iPad/.test(ua)) { return "iPhone"; }
+    if (/Android/.test(ua)) { return "Android phone"; }
+    if (/Mac OS X/.test(ua)) { return "Mac"; }
+    if (/Windows/.test(ua)) { return "Windows"; }
+    return "A browser";
+  }
+
+  // One round: read what is up there, fold it in, seal ours, write it back.
+  // A refusal means the other device wrote in between, so read again and
+  // repeat. Twice is plenty for one person with two devices.
+  function syncNow(quiet) {
+    var sync = sy();
+    if (!sync.on || !dataKey) { return Promise.resolve(false); }
+    if (syncing) { return Promise.resolve(false); }
+    syncing = true;
+    setNote("Syncing");
+
+    function round(tries) {
+      return pullVault().then(function (up) {
+        if (up && !sync.pushKeys) { sync.salt = up.salt; sync.wrapped = up.wrapped; }
+        var chain = Promise.resolve(null);
+        if (up && up.blob && up.version !== sync.version) {
+          chain = unseal(dataKey, up.blob).then(function (plain) {
+            mergeIn(JSON.parse(new TextDecoder().decode(plain)));
+          });
+        }
+        return chain.then(function () {
+          var body = JSON.stringify(syncPayload());
+          var mark = fingerprint(body);
+          // Same content, same copy up there, and no key change waiting: there
+          // is nothing to write, so do not spend a write saying so.
+          if (mark === sync.lastMark && up && up.version === sync.version && !sync.pushKeys) {
+            return null;
+          }
+          sync.pending = mark;
+          return seal(dataKey, utf8(body));
+        }).then(function (blob) {
+          if (blob === null) {
+            sync.lastAt = new Date().toISOString();
+            quietSave();
+            setNote("");
+            if (!quiet) { toast("Already up to date"); }
+            return { ok: true, body: { version: sync.version }, nothing: true };
+          }
+          return pushVault({ salt: sync.salt, wrapped: sync.wrapped, blob: blob, by: deviceName() },
+                           up ? String(up.version) : "*");
+        }).then(function (res) {
+          if (res.nothing) { return true; }
+          if (res.ok) {
+            sync.version = res.body.version;
+            sync.lastAt = new Date().toISOString();
+            sync.lastMark = sync.pending;
+            delete sync.pushKeys;
+            quietSave();
+            renderAll();
+            setNote("");
+            if (!quiet) { toast("Synced"); }
+            return true;
+          }
+          if (res.status === 409 && tries > 0) { return round(tries - 1); }
+          throw new Error(res.body && res.body.error ? res.body.error : "The server said " + res.status + ".");
+        });
+      });
+    }
+
+    return round(2).catch(function (err) {
+      setNote("Could not sync. " + err.message);
+      if (!quiet) { toast("Could not sync"); }
+      return false;
+    }).then(function (v) { syncing = false; renderSync(); return v; });
+  }
+
+  function setNote(s) { syncNote = s; renderSync(); }
+
+  function syncSoon(tries) {
+    if (!syncing) { return syncNow(true); }
+    if (tries <= 0) { return Promise.resolve(false); }
+    return new Promise(function (done) {
+      setTimeout(function () { done(syncSoon(tries - 1)); }, 400);
+    });
+  }
+
+  // Saving is frequent and a write is not, so let the typing settle first.
+  function nudgeSync() {
+    if (!sy().on || !dataKey) { return; }
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { syncNow(true); }, 2500);
+  }
+
+  /* ------------------------ setting it up ------------------------- */
+
+  function startVault(passphrase) {
+    var sync = sy();
+    var salt = bytes(16);
+    var rawKey = bytes(32);
+    var code = recoveryCode();
+    return Promise.all([wrapKeyFrom(passphrase, salt), wrapKeyFrom(tidyCode(code), salt)])
+      .then(function (keys) {
+        return Promise.all([seal(keys[0], rawKey), seal(keys[1], rawKey), importDataKey(rawKey)]);
+      })
+      .then(function (out) {
+        dataKey = out[2];
+        sync.on = true;
+        sync.url = el("syncUrl").value.trim().replace(/\/+$/, "");
+        sync.vault = hex(bytes(16));
+        sync.salt = b64(salt);
+        sync.wrapped = { pass: out[0], recovery: out[1] };
+        sync.keyRaw = b64(rawKey);
+        sync.version = 0;
+        sync.pushKeys = true;
+        save();
+        return syncNow(true).then(function (ok) {
+          if (!ok) { throw new Error("could not reach the server"); }
+          return code;
+        });
+      });
+  }
+
+  function joinVault(link, secret, which) {
+    var o = readLink(link);
+    var sync = sy();
+    sync.url = o.u;
+    sync.vault = o.v;
+    return pullVault().then(function (up) {
+      if (!up) { throw new Error("There is no vault at that link."); }
+      var salt = unb64(up.salt);
+      return wrapKeyFrom(secret, salt).then(function (wk) {
+        return unseal(wk, up.wrapped[which]).catch(function () {
+          throw new Error(which === "pass" ? "That passphrase does not open it."
+                                           : "That recovery code does not open it.");
+        });
+      }).then(function (rawKey) {
+        return importDataKey(rawKey).then(function (k) {
+          dataKey = k;
+          sync.on = true;
+          sync.salt = up.salt;
+          sync.wrapped = up.wrapped;
+          sync.keyRaw = b64(rawKey);
+          sync.version = 0;                 // force a merge on the first round
+          return unseal(dataKey, up.blob);
+        });
+      });
+    }).then(function (plain) {
+      mergeIn(JSON.parse(new TextDecoder().decode(plain)));
+      save();
+      return syncNow(true);
+    });
+  }
+
+  // Changing the passphrase re-seals the key, it does not re-encrypt the
+  // ledger, so there is no long operation to interrupt and nothing to lose.
+  function changePassphrase(next) {
+    var sync = sy();
+    if (!dataKey || !sync.keyRaw) { return Promise.reject(new Error("This device is not connected.")); }
+    var salt = unb64(sync.salt);
+    return wrapKeyFrom(next, salt).then(function (wk) {
+      return seal(wk, unb64(sync.keyRaw));
+    }).then(function (wrapped) {
+      sync.wrapped = Object.assign({}, sync.wrapped, { pass: wrapped });
+      sync.pushKeys = true;
+      save();
+      return syncSoon(20).then(function (ok) {
+        if (!ok) { throw new Error("Changed here, but the server did not take it. Press Sync now."); }
+      });
+    });
+  }
+
+  function newRecoveryCode() {
+    var sync = sy();
+    if (!dataKey || !sync.keyRaw) { return Promise.reject(new Error("This device is not connected.")); }
+    var code = recoveryCode();
+    return wrapKeyFrom(tidyCode(code), unb64(sync.salt))
+      .then(function (wk) { return seal(wk, unb64(sync.keyRaw)); })
+      .then(function (wrapped) {
+        sync.wrapped = Object.assign({}, sync.wrapped, { recovery: wrapped });
+        sync.pushKeys = true;
+        save();
+        return syncSoon(20).then(function (ok) {
+          if (!ok) { throw new Error("Made here, but the server did not take it. Press Sync now."); }
+          return code;
+        });
+      });
+  }
+
+  function stopSync(forget) {
+    var sync = sy();
+    sync.on = false;
+    if (forget) { state.sync = { on: false }; }
+    dataKey = null;
+    save();
+    renderAll();
+  }
+
+  // The key sits beside the ledger it opens, which is no worse than the
+  // ledger already being here in the clear.
+  function wakeKey() {
+    var sync = sy();
+    if (!sync.on || !sync.keyRaw || !haveCrypto()) { return Promise.resolve(false); }
+    return importDataKey(unb64(sync.keyRaw)).then(function (k) {
+      dataKey = k;
+      return true;
+    }).catch(function () { return false; });
   }
 
   /* ======================== The Tiller inbox ======================
@@ -1466,7 +1967,7 @@
       var choice = choices[n];
       if (choice.kind === "done") {
         var hit = state.txns.filter(function (t) { return t.id === choice.doneId && t.pending; })[0];
-        if (hit) { delete hit.pending; hit.doneOn = todayISO(); hit.tid = item.tid; ticked.push(hit.id); }
+        if (hit) { delete hit.pending; hit.doneOn = todayISO(); hit.tid = item.tid; touch(hit); ticked.push(hit.id); }
       } else {
         var rows = rowsForChoice(item, choice);
         if (rows && rows.length) {
@@ -1511,7 +2012,7 @@
         state.txns = state.txns.filter(function (t) { return t.group !== g; });
       });
       state.txns.forEach(function (t) {
-        if (ticked.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; delete t.tid; }
+        if (ticked.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; delete t.tid; touch(t); }
       });
       consumed.forEach(function (o) { delete state.seen[o.tid]; state.inbox.push(o); });
       state.inbox.sort(inboxOrder);
@@ -1526,7 +2027,11 @@
     if (!state.txns.length && !meta().lastBackup) { meta().lastBackup = todayISO(); }
     var group = uid();
     var stamp = Date.now();
-    rows.forEach(function (r, i) { r.id = uid(); r.group = group; r.ts = stamp; r.seq = i; state.txns.push(r); });
+    rows.forEach(function (r, i) {
+      r.id = uid(); r.group = group; r.ts = stamp; r.seq = i;
+      touch(r);
+      state.txns.push(r);
+    });
     return group;
   }
 
@@ -1640,6 +2145,7 @@
       if (ids.indexOf(t.id) !== -1 && t.pending) {
         delete t.pending;
         t.doneOn = stamp;
+        touch(t);
         touched.push(t.id);
       }
     });
@@ -1648,7 +2154,7 @@
     renderAll();
     toast(touched.length > 1 ? touched.length + " marked as moved" : "Marked as moved", "Undo", function () {
       state.txns.forEach(function (t) {
-        if (touched.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; }
+        if (touched.indexOf(t.id) !== -1) { t.pending = true; delete t.doneOn; touch(t); }
       });
       save();
       renderAll();
@@ -1792,7 +2298,36 @@
       : '<div class="empty">Nothing matches. Try clearing the filters.</div>';
   }
 
+  function renderSync() {
+    var sync = sy();
+    var ok = haveCrypto();
+    el("syncNoCrypto").style.display = ok ? "none" : "";
+    el("syncOff").style.display = (!sync.on && ok) ? "" : "none";
+    el("syncOn").style.display = (sync.on && ok) ? "" : "none";
+    if (!sync.on) {
+      txt("syncBlurb", "Off. Everything stays in this browser. Turn this on and the ledger is sealed here, before it " +
+        "leaves, and kept on a server that cannot read it. Your passphrase and your recovery code never leave this " +
+        "device, so nobody holding the server can open any of it, and neither can we.");
+      if (!el("syncUrl").value) { el("syncUrl").value = sync.url || ""; }
+      return;
+    }
+    txt("syncBlurb", "On. The ledger is sealed on this device before it goes anywhere, so the server holds nothing it " +
+      "can read.");
+    var cls = syncing ? "busy" : (/^Could not/.test(syncNote) ? "bad" : "live");
+    var line = syncNote ? syncNote
+      : (sync.lastAt ? "Last synced " + new Date(sync.lastAt).toLocaleString() +
+                       ", copy number " + sync.version + "."
+                     : "Connected, nothing sent yet.");
+    el("syncState").innerHTML = '<span class="dot ' + cls + '"></span>' + esc(line);
+  }
+
   function renderData() {
+    txt("dataWhere", sy().on
+      ? "This browser holds it, and a sealed copy sits on the sync server for your other devices. Clearing your " +
+        "browser data would take the copy here with it, so keep exporting now and then: an export is plain and " +
+        "needs no passphrase, which makes it the one thing you can always read back."
+      : "Everything lives in this browser, on this device. Nothing is sent anywhere. Clearing your browser data " +
+        "would take it with it, so export a copy now and then, and import it on your other device to move it across.");
     var n = state.txns.length;
     var groups = {};
     state.txns.forEach(function (t) { groups[t.group] = 1; });
@@ -1808,6 +2343,7 @@
     renderTxns();
     renderCharity();
     renderData();
+    renderSync();
     updatePreviews();
   }
 
@@ -2044,6 +2580,7 @@
     toast("Deleted " + rows.length + (rows.length > 1 ? " rows" : " row"), "Undo", function () {
       if (!lastDeleted) { return; }
       state.txns = state.txns.concat(lastDeleted);
+      lastDeleted.forEach(function (r) { delete state.tombs[r.group]; touch(r); });
       lastDeleted = null;
       save();
       renderAll();
@@ -2100,9 +2637,125 @@
 
   // Left open for days, a tab should still notice when the week is up.
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") { renderBackup(); }
+    if (document.visibilityState === "visible") { renderBackup(); syncNow(true); }
+    else { clearTimeout(syncTimer); syncNow(true); }
   });
   /* ------------------------- the Tiller inbox ------------------------ */
+
+  /* ----------------------------- sync ------------------------------ */
+
+  function showSecrets(code) {
+    el("syncSecrets").style.display = "";
+    txt("syncCodeOut", code);
+    txt("syncLinkOut", makeLink(sy()));
+  }
+
+  el("syncStart").addEventListener("click", function () {
+    var a = el("syncPass1").value, b = el("syncPass2").value;
+    if (a.length < 10) { return toast("Make the passphrase at least ten characters"); }
+    if (a !== b) { return toast("The two do not match"); }
+    if (!el("syncUrl").value.trim()) { return toast("Fill in the sync server first"); }
+    el("syncStart").disabled = true;
+    setNote("Setting up, this takes a moment");
+    startVault(a).then(function (code) {
+      el("syncPass1").value = ""; el("syncPass2").value = "";
+      setNote("");
+      showSecrets(code);
+      renderAll();
+      toast("Sync is on");
+    }).catch(function (err) {
+      stopSync(true);
+      setNote("");
+      renderAll();
+      toast("Could not turn it on. " + err.message);
+    }).then(function () { el("syncStart").disabled = false; });
+  });
+
+  el("syncJoin").addEventListener("click", function () {
+    var link = el("syncLink").value.trim(), secret = el("syncSecret").value;
+    if (!link || !secret) { return toast("Paste the link code and the passphrase"); }
+    // A recovery code is the same length and shape every time, so it can tell
+    // itself apart from a passphrase without asking which one this is.
+    var looksLikeCode = tidyCode(secret).length === 20 && /^[A-Z0-9-]+$/i.test(secret.trim());
+    el("syncJoin").disabled = true;
+    setNote("Opening, this takes a moment");
+    joinVault(link, looksLikeCode ? tidyCode(secret) : secret, looksLikeCode ? "recovery" : "pass")
+      .catch(function (err) {
+        if (!looksLikeCode) { throw err; }
+        // It looked like a code but was not one. Try it as a passphrase.
+        return joinVault(link, secret, "pass");
+      })
+      .then(function () {
+        el("syncLink").value = ""; el("syncSecret").value = "";
+        setNote("");
+        renderAll();
+        toast("This device is connected");
+      })
+      .catch(function (err) {
+        stopSync(true);
+        setNote("");
+        renderAll();
+        toast(err.message || "Could not connect");
+      })
+      .then(function () { el("syncJoin").disabled = false; });
+  });
+
+  el("syncNowBtn").addEventListener("click", function () { syncNow(false); });
+  el("syncShowLink").addEventListener("click", function () {
+    el("syncSecrets").style.display = "";
+    txt("syncCodeOut", "Shown once only, when it was made. Print a new one below if you no longer have it.");
+    txt("syncLinkOut", makeLink(sy()));
+  });
+  el("syncHideSecrets").addEventListener("click", function () { el("syncSecrets").style.display = "none"; });
+  el("syncCopyLink").addEventListener("click", function () {
+    var text = makeLink(sy());
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast("Link code copied"); },
+                                              function () { toast("Select it and copy by hand"); });
+    } else { toast("Select it and copy by hand"); }
+  });
+
+  el("syncChangePass").addEventListener("click", function () {
+    var a = el("syncNewPass").value, b = el("syncNewPass2").value;
+    if (a.length < 10) { return toast("Make the passphrase at least ten characters"); }
+    if (a !== b) { return toast("The two do not match"); }
+    el("syncChangePass").disabled = true;
+    setNote("Resealing");
+    changePassphrase(a).then(function () {
+      el("syncNewPass").value = ""; el("syncNewPass2").value = "";
+      setNote("");
+      toast("Passphrase changed. Your other devices keep working, they hold the key already.");
+    }).catch(function (err) {
+      setNote("");
+      toast(err.message || "Could not change it");
+    }).then(function () { el("syncChangePass").disabled = false; });
+  });
+
+  el("syncNewCode").addEventListener("click", function () {
+    if (!window.confirm("Print a new recovery code? The one you have now stops working.")) { return; }
+    el("syncNewCode").disabled = true;
+    setNote("Resealing");
+    newRecoveryCode().then(function (code) {
+      setNote("");
+      showSecrets(code);
+      toast("New recovery code. Write it down before you leave this screen.");
+    }).catch(function (err) {
+      setNote("");
+      toast(err.message || "Could not do that");
+    }).then(function () { el("syncNewCode").disabled = false; });
+  });
+
+  el("syncPause").addEventListener("click", function () {
+    stopSync(false);
+    toast("Sync paused on this device");
+  });
+
+  el("syncForget").addEventListener("click", function () {
+    if (!window.confirm("Forget the keys on this device? Your ledger here is untouched, and the copy on the server " +
+                        "stays where it is. You will need the link code and the passphrase to connect again.")) { return; }
+    stopSync(true);
+    toast("Keys forgotten on this device");
+  });
 
   el("tillerBtn").addEventListener("click", function () { el("tillerFile").click(); });
 
@@ -2187,7 +2840,8 @@
         if (!parsed || !Array.isArray(parsed.txns)) { throw new Error("not a finances file"); }
         if (!window.confirm("Replace what is on this device with " + parsed.txns.length + " rows from the file?")) { return; }
         state = { version: 1, txns: parsed.txns, meta: parsed.meta || meta(),
-                  inbox: parsed.inbox, seen: parsed.seen, hints: parsed.hints, accountMap: parsed.accountMap };
+                  inbox: parsed.inbox, seen: parsed.seen, hints: parsed.hints,
+                  accountMap: parsed.accountMap, tombs: parsed.tombs, sync: state.sync };
         normalizeState();
         meta().lastBackup = todayISO();
         meta().snooze = "";
@@ -2204,7 +2858,8 @@
   el("wipeBtn").addEventListener("click", function () {
     if (!window.confirm("Delete every transaction on this device?")) { return; }
     if (!window.confirm("Really delete everything? There is no undo.")) { return; }
-    state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {},
+    state = { version: 1, txns: [], inbox: [], seen: {}, hints: {}, accountMap: {}, tombs: {},
+              sync: state.sync,
               meta: { auto: meta().auto, lastBackup: "", snooze: "" } };
     save();
     renderAll();
@@ -2217,6 +2872,9 @@
   setupDates();
   el("tillerFrom").value = latestTxnDate();
   renderAll();
+  // Pick the key back up and see what the other device has been doing. Behind
+  // the lock nothing happens: no key is loaded until the PIN is accepted.
+  if (!locked) { wakeKey().then(function (ok) { if (ok) { syncNow(true); } }); }
 })();
 </script>
 </body>
