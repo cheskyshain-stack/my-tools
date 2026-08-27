@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Stopwatch | CJ Portal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="A ten second mechanical stopwatch that sweeps round and round, for getting a feel for how long a second takes. Part of CJ Portal.">
+<meta name="description" content="A mechanical stopwatch that sweeps round and round, ten seconds to a turn or any length you choose, for getting a feel for how long a second takes. Part of CJ Portal.">
 <meta name="theme-color" content="#080b12">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -155,6 +155,103 @@
   button.pusher.go.running { color: #7d2018; }
   #btnReset { color: #3a3f47; }
 
+  /* The pusher that opens the chooser is narrow: it is a setting, not an
+     action, and it should not compete with Start. */
+  button.pusher#btnSeconds {
+    flex: 0 0 86px;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: #3a3f47;
+  }
+
+  /* The chooser. Over the dial rather than beside it, because the screen is
+     full by design and nothing here is allowed to scroll. */
+  #picker {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+    background: rgba(6, 7, 9, 0.74);
+  }
+  #picker.open { display: flex; }
+
+  .sheet {
+    width: 100%;
+    max-width: 370px;
+    max-height: 100%;
+    overflow: auto;
+    border: 1px solid #0a0b0d;
+    border-radius: 16px;
+    padding: 16px;
+    background: linear-gradient(180deg, #23262c 0%, #171a1e 100%);
+    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.66);
+  }
+  .sheet h2 {
+    margin: 0 0 4px;
+    font: 600 15px/1.2 "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #d3cec1;
+  }
+  .sheet p {
+    margin: 0 0 14px;
+    font: 400 12.5px/1.45 "Helvetica Neue", Arial, sans-serif;
+    color: #8b8f97;
+  }
+  .chips {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .chip {
+    height: 48px;
+    border: 1px solid #0a0b0d;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 0;
+    color: #22262c;
+    font: 600 14px/1 "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(180deg, #efede8 0%, #bcbab4 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 2px 0 #4a4d53;
+  }
+  .chip:active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,.45); }
+  .chip.on {
+    background: linear-gradient(180deg, #e6bda9 0%, #b46a54 100%);
+    color: #2b120c;
+  }
+  .row { display: flex; gap: 8px; }
+  .row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 48px;
+    border: 1px solid #0a0b0d;
+    border-radius: 10px;
+    background: #0e1013;
+    color: #e8e4da;
+    text-align: center;
+    padding: 0 10px;
+    font: 600 17px/1 "Helvetica Neue", Arial, sans-serif;
+  }
+  .row input:focus { outline: 2px solid #b46a54; outline-offset: 1px; }
+  .row button {
+    flex: 0 0 108px;
+    height: 48px;
+    border: 1px solid #0a0b0d;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #22262c;
+    font: 600 14px/1 "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #f2f1ee 0%, #b9b7b1 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 2px 0 #4a4d53;
+  }
+  .row button:active { transform: translateY(2px); }
+
   /* Landscape phones: dial on the left, pushers stacked on the right. */
   @media (orientation: landscape) and (max-height: 560px) {
     #app { flex-direction: row; align-items: stretch; }
@@ -180,6 +277,7 @@
       height: 100%;
     }
     button.pusher { min-height: 0; height: 62px; }
+    button.pusher#btnSeconds { flex: 0 0 auto; height: 52px; }
   }
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
@@ -189,7 +287,7 @@
 
 <div id="app">
   <div id="dialWrap">
-    <svg id="watch" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet" aria-label="Ten second mechanical stopwatch">
+    <svg id="watch" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet" aria-label="Mechanical stopwatch">
       <defs>
         <linearGradient id="bezel" x1="0" y1="0" x2="0.35" y2="1">
           <stop offset="0"    stop-color="#f6f6f4"/>
@@ -279,7 +377,7 @@
               fill="#6d6350" letter-spacing="3">ROUNDS</text>
       </g>
 
-      <text x="200" y="128" text-anchor="middle"
+      <text x="200" y="128" id="faceLabel" text-anchor="middle"
             font-family="Georgia, 'Times New Roman', serif" font-size="14"
             fill="#6d6350" letter-spacing="4">10 SECONDS</text>
       <text x="200" y="146" text-anchor="middle"
@@ -307,9 +405,24 @@
   <div id="controls">
     <button class="pusher" id="btnReset" type="button">Reset</button>
     <button class="pusher go" id="btnToggle" type="button" aria-pressed="false">Start</button>
+    <button class="pusher" id="btnSeconds" type="button" aria-haspopup="dialog">10s</button>
   </div>
 
   <div id="note" role="status" aria-live="polite"></div>
+</div>
+
+<div id="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div class="sheet">
+    <h2 id="pickerTitle">Once round the dial</h2>
+    <p>How long the hand takes to come back to the top. The face redraws itself to
+      match, so a whole second is always one numeral.</p>
+    <div class="chips" id="chips"></div>
+    <div class="row">
+      <input id="secInput" type="number" inputmode="numeric" min="2" max="300" step="1" aria-label="Seconds per turn">
+      <button id="secApply" type="button">Set</button>
+    </div>
+    <p id="pickerNote" style="margin:12px 0 0"></p>
+  </div>
 </div>
 
 <script>
@@ -318,8 +431,23 @@
 
   var SVGNS = "http://www.w3.org/2000/svg";
   var CX = 200, CY = 200;
-  var PERIOD = 10000;          // one full turn of the dial, in ms
-  var TICKS_PER_SECOND = 5;    // fifth of a second minor ticks
+  var STORE = "cjStopwatchSeconds";
+  var MIN_SECONDS = 2, MAX_SECONDS = 300;
+  var PRESETS = [3, 5, 10, 15, 20, 30, 60, 90];
+
+  var seconds = loadSeconds();     // how long one turn of the dial takes
+  var period = seconds * 1000;
+
+  function loadSeconds() {
+    try {
+      var n = Math.round(Number(localStorage.getItem(STORE)));
+      if (n >= MIN_SECONDS && n <= MAX_SECONDS) { return n; }
+    } catch (e) { /* private mode, or storage turned off */ }
+    return 10;
+  }
+  function saveSeconds(n) {
+    try { localStorage.setItem(STORE, String(n)); } catch (e) {}
+  }
 
   function el(name, attrs) {
     var node = document.createElementNS(SVGNS, name);
@@ -347,38 +475,80 @@
     }));
   }
 
-  // Ticks: a heavy one on every whole second, four light ones between.
   var ticks = document.getElementById("ticks");
-  var totalTicks = 10 * TICKS_PER_SECOND;
-  for (var i = 0; i < totalTicks; i++) {
-    var ang = i * (360 / totalTicks);
-    var major = (i % TICKS_PER_SECOND) === 0;
-    var outer = point(ang, 168);
-    var inner = point(ang, major ? 150 : 160);
-    ticks.appendChild(el("line", {
-      x1: outer.x.toFixed(2), y1: outer.y.toFixed(2),
-      x2: inner.x.toFixed(2), y2: inner.y.toFixed(2),
-      stroke: major ? "#2a2823" : "#6b6353",
-      "stroke-width": major ? 3.2 : 1.1,
-      "stroke-linecap": "butt"
-    }));
+  var numerals = document.getElementById("numerals");
+  var faceLabel = document.getElementById("faceLabel");
+
+  // Which seconds get a printed numeral. Too many and the face is unreadable,
+  // so step up until there are twelve or fewer. A step that divides the turn
+  // exactly is worth having, because then the gap before the 0 at the top is
+  // the same as every other gap.
+  function labelStep(total) {
+    if (total <= 12) { return 1; }
+    for (var d = 2; d <= total; d++) {
+      if (total % d === 0 && total / d <= 12) { return d; }
+    }
+    return Math.ceil(total / 12);
   }
 
-  // Numerals 0 through 9, one every 36 degrees, 0 at the top.
-  var numerals = document.getElementById("numerals");
-  for (var n = 0; n < 10; n++) {
-    var pt = point(n * 36, 128);
-    var t = el("text", {
-      x: pt.x.toFixed(2),
-      y: (pt.y + 12).toFixed(2),
-      "text-anchor": "middle",
-      "font-family": "Georgia, 'Times New Roman', serif",
-      "font-size": n === 0 ? 40 : 34,
-      "font-weight": n === 0 ? "bold" : "normal",
-      fill: n === 0 ? "#8e1c14" : "#2a2823"
+  // Minor ticks between the seconds, as many as fit without turning the rim
+  // into a grey band. Ten seconds keeps its fifths, which is the face this
+  // watch has always had.
+  function minorsPerSecond(total) {
+    var choices = [5, 4, 2, 1];
+    for (var i = 0; i < choices.length; i++) {
+      if (total * choices[i] <= 120) { return choices[i]; }
+    }
+    return 1;
+  }
+
+  function buildFace() {
+    while (ticks.firstChild) { ticks.removeChild(ticks.firstChild); }
+    while (numerals.firstChild) { numerals.removeChild(numerals.firstChild); }
+
+    var step = labelStep(seconds);
+    var per = minorsPerSecond(seconds);
+    var total = seconds * per;
+    var degPerTick = 360 / total;
+
+    for (var i = 0; i < total; i++) {
+      var whole = (i % per) === 0;
+      var atLabel = whole && ((i / per) % step === 0);
+      var outer = point(i * degPerTick, 168);
+      var inner = point(i * degPerTick, atLabel ? 150 : (whole ? 156 : 160));
+      ticks.appendChild(el("line", {
+        x1: outer.x.toFixed(2), y1: outer.y.toFixed(2),
+        x2: inner.x.toFixed(2), y2: inner.y.toFixed(2),
+        stroke: atLabel ? "#2a2823" : (whole ? "#4c4638" : "#6b6353"),
+        "stroke-width": atLabel ? 3.2 : (whole ? 1.8 : 1.1),
+        "stroke-linecap": "butt"
+      }));
+    }
+
+    var labels = [];
+    for (var v = 0; v < seconds; v += step) { labels.push(v); }
+    var wide = labels.some(function (v) { return v >= 100; });
+    var twoDigit = labels.some(function (v) { return v >= 10; });
+    var size = wide ? 25 : (twoDigit ? 30 : 34);
+
+    labels.forEach(function (v) {
+      var pt = point(v / seconds * 360, 128);
+      var t = el("text", {
+        x: pt.x.toFixed(2),
+        y: (pt.y + (v === 0 ? 13 : 11)).toFixed(2),
+        "text-anchor": "middle",
+        "font-family": "Georgia, 'Times New Roman', serif",
+        "font-size": v === 0 ? size + 6 : size,
+        "font-weight": v === 0 ? "bold" : "normal",
+        fill: v === 0 ? "#8e1c14" : "#2a2823"
+      });
+      t.textContent = String(v);
+      numerals.appendChild(t);
     });
-    t.textContent = String(n);
-    numerals.appendChild(t);
+
+    faceLabel.textContent = seconds + (seconds === 1 ? " SECOND" : " SECONDS");
+    document.getElementById("watch").setAttribute("aria-label",
+      "Mechanical stopwatch, " + seconds + " seconds to a turn");
   }
 
   var hand = document.getElementById("hand");
@@ -418,10 +588,10 @@
 
   function paint() {
     var ms = elapsed();
-    var angle = (ms % PERIOD) / PERIOD * 360;
+    var angle = (ms % period) / period * 360;
     hand.setAttribute("transform", "rotate(" + angle.toFixed(3) + " " + CX + " " + CY + ")");
 
-    var lap = Math.floor(ms / PERIOD);
+    var lap = Math.floor(ms / period);
     if (lap !== lastLap) {
       lastLap = lap;
       lapText.textContent = String(lap);
@@ -579,16 +749,106 @@
     paint();
   }
 
+  /* ------------------------ Choosing the turn ------------------------ */
+
+  var picker = document.getElementById("picker");
+  var chips = document.getElementById("chips");
+  var secInput = document.getElementById("secInput");
+  var btnSeconds = document.getElementById("btnSeconds");
+  var pickerNote = document.getElementById("pickerNote");
+
+  PRESETS.forEach(function (v) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = v + "s";
+    b.setAttribute("data-secs", v);
+    chips.appendChild(b);
+  });
+
+  function syncChips() {
+    Array.prototype.forEach.call(chips.children, function (b) {
+      b.classList.toggle("on", Number(b.getAttribute("data-secs")) === seconds);
+    });
+    btnSeconds.textContent = seconds + "s";
+    secInput.value = seconds;
+    var step = labelStep(seconds);
+    pickerNote.textContent = step === 1
+      ? "Every second gets its own numeral."
+      : "Numerals every " + step + " seconds, with a tick on each second between them.";
+  }
+
+  // Changing the length changes what a round means, so the count goes back to
+  // zero rather than carrying a mix of the two. Whether it was sweeping is
+  // kept: if it was running it carries on, from the top.
+  function setSeconds(n) {
+    n = Math.round(Number(n));
+    if (!isFinite(n)) { return false; }
+    if (n < MIN_SECONDS || n > MAX_SECONDS) { return false; }
+    var wasRunning = running;
+    seconds = n;
+    period = seconds * 1000;
+    saveSeconds(seconds);
+    buildFace();
+    syncChips();
+    carried = 0;
+    lastLap = -1;
+    if (wasRunning) { startedAt = performance.now(); }
+    paint();
+    return true;
+  }
+
+  function openPicker() {
+    syncChips();
+    picker.classList.add("open");
+  }
+  function closePicker() { picker.classList.remove("open"); }
+
+  btnSeconds.addEventListener("click", openPicker);
+
+  chips.addEventListener("click", function (e) {
+    var b = e.target.closest(".chip");
+    if (!b) { return; }
+    setSeconds(b.getAttribute("data-secs"));
+    closePicker();
+  });
+
+  document.getElementById("secApply").addEventListener("click", function () {
+    if (setSeconds(secInput.value)) {
+      closePicker();
+    } else {
+      secInput.value = seconds;
+      pickerNote.textContent = "Pick something between " + MIN_SECONDS + " and " + MAX_SECONDS + " seconds.";
+    }
+  });
+
+  secInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); document.getElementById("secApply").click(); }
+  });
+
+  // Tapping the dark surround closes it. Tapping the sheet itself must not.
+  picker.addEventListener("click", function (e) {
+    if (e.target === picker) { closePicker(); }
+  });
+
   btnToggle.addEventListener("click", function () { running ? stop() : start(); });
   btnReset.addEventListener("click", reset);
 
   // Keyboard, for testing on a desktop.
   document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closePicker();
+      return;
+    }
+    // With the chooser open the keys belong to it, not to the watch.
+    if (picker.classList.contains("open")) { return; }
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
       running ? stop() : start();
     } else if (e.key.toLowerCase() === "r") {
       reset();
+    } else if (e.key.toLowerCase() === "s") {
+      openPicker();
     }
   });
 
@@ -611,6 +871,8 @@
     if (e.touches.length > 1) { e.preventDefault(); }
   }, { passive: false });
 
+  buildFace();
+  syncChips();
   syncToggle();
   paint();
 })();

@@ -108,6 +108,24 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
+## The stopwatch
+
+The dial is drawn, not drawn on. `buildFace()` lays out the ticks, the numerals and
+the label from one number, the seconds in a turn, which is chosen in the app and kept
+in `localStorage` under `cjStopwatchSeconds`.
+
+Two rules keep a face readable at any length. `labelStep` prints a numeral every
+*n* seconds, stepping up until twelve or fewer fit, and prefers a step that divides the
+turn exactly so the gap before the 0 at the top matches every other gap. `minorsPerSecond`
+picks the finest subdivision that keeps the rim under 120 ticks. At ten seconds those
+come out at every second and fifths, which is the face this watch has always had:
+**if a change alters the ten second dial, it is wrong.** The test asserts fifty ticks,
+ten heavy, numerals nought to nine.
+
+Changing the length zeroes the round counter and restarts the sweep from the top,
+because a round of ten and a round of thirty are not the same thing and adding them
+would be a lie. Whether it was running is preserved.
+
 ## Data
 
 Every tool keeps its own state in `localStorage` and there is no backend. That means data
