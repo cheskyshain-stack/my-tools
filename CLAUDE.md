@@ -108,6 +108,29 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
+## The shell frame and the address bar
+
+The root `index.html` is an iframe shell and the outer document is `overflow: hidden`,
+so **the frame must never be taller than what is on screen**. Anything past the bottom
+edge cannot be scrolled to, by the shell or by the tool inside it.
+
+`100vh` on Android is the height with the address bar *hidden*. With it showing, the
+frame hung 112px past the fold and the bottom of every tool was quietly unreachable:
+the tool's own scrollbar could reach its end, but that end was drawn in a strip nobody
+could see. It looked like a page that would not scroll.
+
+The frame is now driven from `visualViewport.height`, written to `--shell-h`, which is
+the only number that means "on screen". `100dvh` is left as the fallback for anything
+without a visual viewport.
+
+To test it, stub `visualViewport.height` shorter than the window and check that
+`frame.bottom - visibleHeight` is zero. There is no address bar in a headless browser,
+so this is the only way to see it.
+
+**Known and not caused by this:** qr-code, braille, sudoku and tic-tac-toe scroll
+sideways when loaded in the frame, though not when opened directly. Verified against the
+pre-change shell: identical. Separate job.
+
 ## An input the keyboard cannot reach
 
 Android does not shrink the layout viewport when the keyboard opens, so

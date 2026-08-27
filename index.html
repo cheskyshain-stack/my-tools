@@ -21,13 +21,42 @@
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#080b12;overflow:hidden;overscroll-behavior-y:none}
-  #shellFrame{border:0;width:100%;height:100vh;height:100dvh;display:block;background:#080b12}
+  #shellFrame{
+    border:0;width:100%;display:block;background:#080b12;
+    height:100vh;height:100dvh;height:var(--shell-h,100dvh);
+  }
 </style>
 </head>
 <body>
   <iframe id="shellFrame" src="/home/" title="CJ Portal"></iframe>
 
 <script>
+/* The frame must be exactly as tall as what the person can see.
+   Sized in vh it is the height WITHOUT the address bar, so on Android the
+   bottom of the tool hangs below the fold, and this page cannot scroll to it
+   because it is overflow:hidden. The bottom of every tool was quietly
+   unreachable. visualViewport.height is the only number that means "on
+   screen", so drive the frame from that. */
+(function () {
+  const root = document.documentElement;
+  const vv = window.visualViewport;
+  let frame = 0;
+  function size() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(function () {
+      const h = Math.round((vv && vv.height) || window.innerHeight || 0);
+      if (h > 0) { root.style.setProperty("--shell-h", h + "px"); }
+    });
+  }
+  if (vv) {
+    vv.addEventListener("resize", size);
+    vv.addEventListener("scroll", size);
+  }
+  window.addEventListener("resize", size);
+  window.addEventListener("orientationchange", size);
+  size();
+}());
+
 const $ = id => document.getElementById(id);
 const iframe = $("shellFrame");
 
