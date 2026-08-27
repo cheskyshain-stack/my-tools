@@ -49,7 +49,7 @@
   nav button { flex: 1; padding: 8px; border-radius: 10px; border: 1px solid #1f2937; background: var(--card); color: var(--text-dim); font-weight: 600; font-size: 12px; transition: 0.2s; }
   nav button.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
 
-  .list { flex: 1; overflow-y: auto; overscroll-behavior-y: none; padding: 4px 12px 160px; }
+  .list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: none; padding: 4px 12px 16px; }
 
   .item {
     background: var(--card);
@@ -90,22 +90,23 @@
   .btn-del { background: transparent; color: #4b5563; padding: 0 6px !important; }
   .btn-del svg { width: 16px; height: 16px; fill: currentColor; }
 
-  /* FOOTER WITH AUTO-EXPAND TEXTAREA */
-  .footer-container { position: fixed; bottom: calc(12px + var(--kb, 0px)); left: 12px; right: 12px; z-index: 1000; }
-  footer { 
-    background: var(--glass); 
-    backdrop-filter: blur(15px); 
-    -webkit-backdrop-filter: blur(15px); 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    padding: 8px; 
-    border-radius: 18px; 
-    display: flex; 
-    align-items: flex-end; /* Keeps button at the bottom as box grows */
-    gap: 8px; 
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.4); 
+  /* THE COMPOSER, UP TOP WHERE THE KEYBOARD CANNOT REACH IT.
+     Pinned to the bottom it spent half its life behind the keyboard. Sitting
+     under the tabs it is simply always there, and nothing has to move when
+     the keyboard opens. */
+  .composer { flex: 0 0 auto; padding: 0 12px 10px; }
+  .composer-inner {
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 18px;
+    display: flex;
+    align-items: flex-end; /* Keeps button at the bottom as the box grows */
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.34);
   }
-  
-  footer textarea { 
+
+  .composer textarea { 
     flex: 1; 
     background: rgba(255,255,255,0.05); 
     border: none; 
@@ -122,9 +123,10 @@
   }
 
   .foot-btn { height: 42px; border-radius: 12px; border: none; font-weight: 800; color: white; display: flex; align-items: center; justify-content: center; }
+  .composer textarea::placeholder { color: var(--text-dim); }
   
   #addBtn { width: 80px; background: var(--accent); font-size: 12px; flex-shrink: 0; }
-  #addBtn:disabled { opacity: 0.2; }
+  #addBtn:disabled { opacity: 0.38; }
 </style>
 
 <style id="cj-apps-design-system">
@@ -160,8 +162,8 @@ h1{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(1.25rem,
 nav{width:min(100%,650px);margin:0 auto;padding:8px 12px;gap:8px}
 nav button{background:#101622;border:1px solid var(--line);color:var(--text-dim);border-radius:999px;padding:10px;transition:transform .16s cubic-bezier(.22,.9,.28,1)}
 nav button.active{background:linear-gradient(140deg,#2583F7,#1763CF);border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(37,131,247,.3)}
-.list{width:min(100%,650px);margin:0 auto;padding:5px 12px 170px}
-#cj-share{margin-bottom:90px}
+.list{width:min(100%,650px);margin:0 auto;padding:5px 12px 14px}
+#cj-share{margin:0 auto 10px;width:min(100%,650px)}
 .item{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:7px;padding:10px 11px;box-shadow:0 7px 18px rgba(0,0,0,.22)}
 .empty-state{text-align:center;padding:56px 24px;color:var(--text-dim)}
 .empty-state .big{font-size:34px;margin-bottom:10px}
@@ -171,15 +173,36 @@ nav button.active{background:linear-gradient(140deg,#2583F7,#1763CF);border-colo
 .qty-val{color:#00C8FF}
 .btn-back{background:#475569}
 .btn-del{color:#64748b}
-.footer-container{left:50%;right:auto;width:min(calc(100% - 24px),626px);transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--kb, 0px))}
-footer{background:var(--glass);border:1px solid var(--line);box-shadow:0 -9px 28px rgba(0,0,0,.34);border-radius:22px}
-footer textarea{background:#0d1420;border:1px solid #334155;color:var(--text);border-radius:14px}
-footer textarea::placeholder{color:#64748b}
-#addBtn{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff;border-radius:14px}
+.composer{width:min(100%,650px);margin:0 auto;padding:2px 12px 12px}
+.composer-inner{
+  background:linear-gradient(180deg,rgba(24,38,70,.94),rgba(15,25,48,.94));
+  border:1px solid var(--line);border-radius:22px;
+  box-shadow:0 12px 30px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.05);
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+/* The whole bar lights up while you are typing in it, so it reads as one
+   control rather than a box with a button parked next to it. */
+.composer-inner:focus-within{
+  border-color:rgba(37,131,247,.55);
+  box-shadow:0 14px 34px rgba(37,131,247,.22),inset 0 1px 0 rgba(255,255,255,.07);
+}
+.composer textarea{background:#0d1420;border:1px solid #334155;color:var(--text);border-radius:14px;transition:border-color .18s ease}
+.composer-inner:focus-within textarea{border-color:#3d5878}
+.composer textarea::placeholder{color:#64748b}
+#addBtn{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff;border-radius:14px;
+  box-shadow:0 6px 16px rgba(37,131,247,.28);transition:opacity .18s ease,transform .12s ease}
+#addBtn:disabled{box-shadow:none}
+#addBtn:not(:disabled):active{transform:scale(.96)}
 @media(max-width:520px){
   .cj-page-header{grid-template-columns:48px 1fr auto;gap:9px;padding-top:6px}
   .cj-brand{width:48px;height:48px;border-radius:12px}
   .clear-btn{padding:6px 7px}
+}
+@media(max-height:700px){
+  .cj-page-header{padding-top:4px;padding-bottom:2px;grid-template-columns:44px 1fr auto}
+  .cj-brand{width:44px;height:44px}
+  nav{padding:6px 12px}
+  .composer{padding-bottom:8px}
 }
 </style>
 
@@ -200,6 +223,13 @@ footer textarea::placeholder{color:#64748b}
   <button onclick="switchTab('no')" id="btn-no">Missing</button>
 </nav>
 
+<div class="composer">
+  <div class="composer-inner">
+    <textarea id="itemInput" placeholder="Paste list or type items..." rows="1"></textarea>
+    <button id="addBtn" class="foot-btn" disabled onclick="addItem()">ADD</button>
+  </div>
+</div>
+
 <div id="list-main" class="list"></div>
 <div id="list-got" class="list" style="display:none"></div>
 <div id="list-no" class="list" style="display:none"></div>
@@ -207,40 +237,7 @@ footer textarea::placeholder{color:#64748b}
 <div id="cj-share"></div>
 <script src="/assets/share-widget.js" defer></script>
 
-<div class="footer-container">
-  <footer>
-    <textarea id="itemInput" placeholder="Paste list or type items..." rows="1"></textarea>
-    <button id="addBtn" class="foot-btn" disabled onclick="addItem()">ADD</button>
-  </footer>
-</div>
-
 <script>
-/* Keeping the Add bar above the keyboard.
-   Android leaves the layout viewport at full height when the keyboard opens,
-   so a bar pinned to the bottom ends up behind it. The viewport meta asks
-   Chrome to shrink the page instead, and this covers everything that ignores
-   that: measure what the keyboard is actually covering and lift the bar by
-   that much. Where the page did shrink, the two heights agree and this
-   measures zero, so the bar never gets lifted twice. */
-(function () {
-  var vv = window.visualViewport;
-  if (!vv) { return; }
-  var root = document.documentElement;
-  var frame = 0;
-  function place() {
-    cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(function () {
-      var covered = window.innerHeight - vv.height - vv.offsetTop;
-      if (!isFinite(covered) || covered < 40) { covered = 0; }   // ignore browser chrome
-      root.style.setProperty("--kb", Math.round(covered) + "px");
-    });
-  }
-  vv.addEventListener("resize", place);
-  vv.addEventListener("scroll", place);
-  window.addEventListener("orientationchange", place);
-  place();
-}());
-
 let store = { main: [], got: [], no: [] };
 let counter = Date.now();
 

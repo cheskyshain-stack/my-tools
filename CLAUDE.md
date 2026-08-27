@@ -108,25 +108,26 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
-## Anything pinned to the bottom of the screen
+## An input the keyboard cannot reach
 
 Android does not shrink the layout viewport when the keyboard opens, so
-`position: fixed; bottom: 0` puts a control **behind** the keyboard, not above it. The
-Shopping List's Add bar disappeared this way and it was invisible in testing, because a
-desktop browser has no keyboard to open.
+`position: fixed; bottom: 0` puts a control **behind** the keyboard rather than above
+it. The Shopping List's Add bar disappeared this way.
 
-The fix is in two halves and both are needed:
+Lifting it with a `visualViewport` listener works, and it was tried, and the user
+rejected it: raising the bar makes the page shift and the header scroll out of sight.
+**The answer was to stop pinning it to the bottom at all.** The composer now sits in
+normal flow under the tabs, where the keyboard cannot cover it and nothing has to move
+when it opens. Measured with a 480px keyboard: header still at y=0, composer still at
+y=110, page scroll 0.
 
-- `interactive-widget=resizes-content` on the viewport meta, which makes Chrome 108 and
-  up shrink the page instead. Pair it with `height: 100dvh` on the body.
-- A `visualViewport` listener that measures `innerHeight - vv.height - vv.offsetTop` and
-  writes it to a `--kb` custom property, which the pinned element adds to its `bottom`.
-  On a browser that honoured the meta the two heights agree and this measures zero, so
-  the element is never lifted twice.
+So: for a control that has to survive the keyboard, put it above the fold rather than
+teaching it to dodge. Keep `interactive-widget=resizes-content` and `height: 100dvh` so
+the list shortens instead of running under the keyboard.
 
-`groceries/index.html` has the working version. To test it, stub `window.visualViewport`
-before the page's own script runs and shrink its height: a real keyboard cannot be
-opened in a headless browser, so this is the only way to see the bug.
+To test any of this, stub `window.visualViewport` and `window.innerHeight` before the
+page's own script runs, then shrink them. A headless browser has no keyboard, which is
+exactly why this bug survived testing the first time.
 
 ## The stopwatch
 
