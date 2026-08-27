@@ -201,13 +201,17 @@
     font: 400 12.5px/1.45 "Helvetica Neue", Arial, sans-serif;
     color: #8b8f97;
   }
+  /* Four to a row, but wrapping rather than a grid, so a last row that does
+     not fill sits in the middle instead of hanging off to the left. */
   .chips {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
     margin-bottom: 12px;
   }
   .chip {
+    flex: 0 0 calc((100% - 24px) / 4);
     height: 48px;
     border: 1px solid #0a0b0d;
     border-radius: 10px;
@@ -433,7 +437,7 @@
   var CX = 200, CY = 200;
   var STORE = "cjStopwatchSeconds";
   var MIN_SECONDS = 1, MAX_SECONDS = 300;
-  var PRESETS = [1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120];
+  var PRESETS = [1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 45, 60, 90, 120];
 
   var seconds = loadSeconds();     // how long one turn of the dial takes
   var period = seconds * 1000;
