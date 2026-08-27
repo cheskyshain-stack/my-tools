@@ -403,9 +403,9 @@
   </div>
 
   <div id="controls">
+    <button class="pusher" id="btnSeconds" type="button" aria-haspopup="dialog">10s</button>
     <button class="pusher" id="btnReset" type="button">Reset</button>
     <button class="pusher go" id="btnToggle" type="button" aria-pressed="false">Start</button>
-    <button class="pusher" id="btnSeconds" type="button" aria-haspopup="dialog">10s</button>
   </div>
 
   <div id="note" role="status" aria-live="polite"></div>
@@ -415,7 +415,7 @@
   <div class="sheet">
     <h2 id="pickerTitle">Once round the dial</h2>
     <p>How long the hand takes to come back to the top. The face redraws itself to
-      match, so a whole second is always one numeral.</p>
+      match, so the numerals always mean seconds.</p>
     <div class="chips" id="chips"></div>
     <div class="row">
       <input id="secInput" type="number" inputmode="numeric" min="2" max="300" step="1" aria-label="Seconds per turn">
@@ -432,8 +432,8 @@
   var SVGNS = "http://www.w3.org/2000/svg";
   var CX = 200, CY = 200;
   var STORE = "cjStopwatchSeconds";
-  var MIN_SECONDS = 2, MAX_SECONDS = 300;
-  var PRESETS = [3, 5, 10, 15, 20, 30, 60, 90];
+  var MIN_SECONDS = 1, MAX_SECONDS = 300;
+  var PRESETS = [1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120];
 
   var seconds = loadSeconds();     // how long one turn of the dial takes
   var period = seconds * 1000;
@@ -495,6 +495,7 @@
   // into a grey band. Ten seconds keeps its fifths, which is the face this
   // watch has always had.
   function minorsPerSecond(total) {
+    if (total * 10 <= 60) { return 10; }
     var choices = [5, 4, 2, 1];
     for (var i = 0; i < choices.length; i++) {
       if (total * choices[i] <= 120) { return choices[i]; }
@@ -511,9 +512,10 @@
     var total = seconds * per;
     var degPerTick = 360 / total;
 
+    var everyNth = seconds <= 2 ? Math.max(1, Math.round(per / 5)) : per * step;
     for (var i = 0; i < total; i++) {
       var whole = (i % per) === 0;
-      var atLabel = whole && ((i / per) % step === 0);
+      var atLabel = (i % everyNth) === 0;
       var outer = point(i * degPerTick, 168);
       var inner = point(i * degPerTick, atLabel ? 150 : (whole ? 156 : 160));
       ticks.appendChild(el("line", {
@@ -525,11 +527,23 @@
       }));
     }
 
+    // A turn of a second or two has almost no whole seconds to print, so the
+    // fifths become the numerals. They are still seconds, written as .2 and .4,
+    // so nothing on the face means something other than time.
     var labels = [];
-    for (var v = 0; v < seconds; v += step) { labels.push(v); }
-    var wide = labels.some(function (v) { return v >= 100; });
-    var twoDigit = labels.some(function (v) { return v >= 10; });
-    var size = wide ? 25 : (twoDigit ? 30 : 34);
+    if (seconds <= 2) {
+      for (var f = 0; f < seconds * 5; f++) { labels.push(f / 5); }
+    } else {
+      for (var v = 0; v < seconds; v += step) { labels.push(v); }
+    }
+
+    var text = function (v) {
+      if (v === 0) { return "0"; }
+      if (v === Math.round(v)) { return String(v); }
+      return v.toFixed(1).replace(/^0/, "");        // .2 rather than 0.2
+    };
+    var longest = labels.reduce(function (n, v) { return Math.max(n, text(v).length); }, 1);
+    var size = longest >= 3 ? 25 : (longest === 2 ? 30 : 34);
 
     labels.forEach(function (v) {
       var pt = point(v / seconds * 360, 128);
@@ -542,7 +556,7 @@
         "font-weight": v === 0 ? "bold" : "normal",
         fill: v === 0 ? "#8e1c14" : "#2a2823"
       });
-      t.textContent = String(v);
+      t.textContent = text(v);
       numerals.appendChild(t);
     });
 
@@ -773,9 +787,12 @@
     btnSeconds.textContent = seconds + "s";
     secInput.value = seconds;
     var step = labelStep(seconds);
-    pickerNote.textContent = step === 1
-      ? "Every second gets its own numeral."
-      : "Numerals every " + step + " seconds, with a tick on each second between them.";
+    var per = minorsPerSecond(seconds);
+    pickerNote.textContent = seconds <= 2
+      ? "Too short for whole seconds to fill the face, so the numerals are fifths: 0, .2, .4 and so on."
+      : (step === 1
+          ? "Every second gets its own numeral, with " + per + " ticks to each one."
+          : "Numerals every " + step + " seconds, and a tick on each second between them.");
   }
 
   // Changing the length changes what a round means, so the count goes back to

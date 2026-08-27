@@ -122,9 +122,17 @@ come out at every second and fifths, which is the face this watch has always had
 **if a change alters the ten second dial, it is wrong.** The test asserts fifty ticks,
 ten heavy, numerals nought to nine.
 
+A turn of one or two seconds has almost no whole seconds to print, so the numerals
+become fifths, written `.2` and `.4`. They are still seconds, which is what keeps the
+promise that nothing on the face means anything but time.
+
 Changing the length zeroes the round counter and restarts the sweep from the top,
 because a round of ten and a round of thirty are not the same thing and adding them
 would be a lie. Whether it was running is preserved.
+
+The pushers read left to right as **setting, Reset, Start/Stop**. The user is right
+handed and the one pressed most often belongs under the thumb; the order was asked for
+and is not arbitrary.
 
 ## Data
 
