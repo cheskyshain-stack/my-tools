@@ -108,6 +108,26 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
+## Anything pinned to the bottom of the screen
+
+Android does not shrink the layout viewport when the keyboard opens, so
+`position: fixed; bottom: 0` puts a control **behind** the keyboard, not above it. The
+Shopping List's Add bar disappeared this way and it was invisible in testing, because a
+desktop browser has no keyboard to open.
+
+The fix is in two halves and both are needed:
+
+- `interactive-widget=resizes-content` on the viewport meta, which makes Chrome 108 and
+  up shrink the page instead. Pair it with `height: 100dvh` on the body.
+- A `visualViewport` listener that measures `innerHeight - vv.height - vv.offsetTop` and
+  writes it to a `--kb` custom property, which the pinned element adds to its `bottom`.
+  On a browser that honoured the meta the two heights agree and this measures zero, so
+  the element is never lifted twice.
+
+`groceries/index.html` has the working version. To test it, stub `window.visualViewport`
+before the page's own script runs and shrink its height: a real keyboard cannot be
+opened in a headless browser, so this is the only way to see the bug.
+
 ## The stopwatch
 
 The dial is drawn, not drawn on. `buildFace()` lays out the ticks, the numerals and

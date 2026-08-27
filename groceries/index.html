@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#030712">
 <title> MyGroceries</title>
 <link rel="manifest" href="/groceries/manifest.json">
@@ -36,6 +36,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh;          /* follows the keyboard where the browser tells it to */
     overflow: hidden;
     overscroll-behavior-y: none;
   }
@@ -90,7 +91,7 @@
   .btn-del svg { width: 16px; height: 16px; fill: currentColor; }
 
   /* FOOTER WITH AUTO-EXPAND TEXTAREA */
-  .footer-container { position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 1000; }
+  .footer-container { position: fixed; bottom: calc(12px + var(--kb, 0px)); left: 12px; right: 12px; z-index: 1000; }
   footer { 
     background: var(--glass); 
     backdrop-filter: blur(15px); 
@@ -170,7 +171,7 @@ nav button.active{background:linear-gradient(140deg,#2583F7,#1763CF);border-colo
 .qty-val{color:#00C8FF}
 .btn-back{background:#475569}
 .btn-del{color:#64748b}
-.footer-container{left:50%;right:auto;width:min(calc(100% - 24px),626px);transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom))}
+.footer-container{left:50%;right:auto;width:min(calc(100% - 24px),626px);transform:translateX(-50%);bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--kb, 0px))}
 footer{background:var(--glass);border:1px solid var(--line);box-shadow:0 -9px 28px rgba(0,0,0,.34);border-radius:22px}
 footer textarea{background:#0d1420;border:1px solid #334155;color:var(--text);border-radius:14px}
 footer textarea::placeholder{color:#64748b}
@@ -214,6 +215,32 @@ footer textarea::placeholder{color:#64748b}
 </div>
 
 <script>
+/* Keeping the Add bar above the keyboard.
+   Android leaves the layout viewport at full height when the keyboard opens,
+   so a bar pinned to the bottom ends up behind it. The viewport meta asks
+   Chrome to shrink the page instead, and this covers everything that ignores
+   that: measure what the keyboard is actually covering and lift the bar by
+   that much. Where the page did shrink, the two heights agree and this
+   measures zero, so the bar never gets lifted twice. */
+(function () {
+  var vv = window.visualViewport;
+  if (!vv) { return; }
+  var root = document.documentElement;
+  var frame = 0;
+  function place() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(function () {
+      var covered = window.innerHeight - vv.height - vv.offsetTop;
+      if (!isFinite(covered) || covered < 40) { covered = 0; }   // ignore browser chrome
+      root.style.setProperty("--kb", Math.round(covered) + "px");
+    });
+  }
+  vv.addEventListener("resize", place);
+  vv.addEventListener("scroll", place);
+  window.addEventListener("orientationchange", place);
+  place();
+}());
+
 let store = { main: [], got: [], no: [] };
 let counter = Date.now();
 
