@@ -148,7 +148,14 @@ Three things this got wrong once each, so do not undo them:
   which of the two ways is holding the screen, because a message that has faded cannot
   tell you anything the next day when the screen went dark.
 
-A watchdog re-checks every eight seconds while running and asks again if either method
+**Only the system lock actually holds a screen.** The video is a hope, not a promise,
+so the line must not say "kept awake" when that is all there is: it says a fallback is
+being tried and may not hold. A reassuring message over a dark screen is worse than no
+message. A `NotAllowedError` on Android is nearly always battery saver, so the line says
+that rather than the name of the exception, and the count of re-takes is shown when it
+climbs, because that is the phone fighting the lock.
+
+A watchdog re-checks every three seconds while running and asks again if either method
 has quietly stopped. `pageshow` and `focus` also re-arm it, since not every Android
 build fires `visibilitychange` coming back from the app switcher.
 

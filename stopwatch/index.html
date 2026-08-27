@@ -635,14 +635,20 @@
 
   function reportAwake() {
     if (!running) { setNote(""); return; }
-    if (awakeBy === "lock") { setNote("Screen kept awake"); return; }
-    if (awakeBy === "video") { setNote("Screen kept awake, without the system lock"); return; }
+    if (awakeBy === "lock") {
+      setNote("Screen kept awake" + (retakes ? ", re-taken " + retakes + "x" : ""));
+      return;
+    }
+    if (awakeBy === "video") {
+      setNote((lockError || "No screen lock here") + ". Trying a fallback, it may not hold.", false, true);
+      return;
+    }
     setNote(lockError || "This browser will not hold the screen on", false, true);
   }
 
   function requestWakeLock() {
     if (!navigator.wakeLock || !navigator.wakeLock.request) {
-      lockError = "No screen lock here, open the page over https";
+      lockError = "This browser has no screen lock";
       startVideoFallback();
       return;
     }
@@ -664,7 +670,10 @@
       });
       reportAwake();
     }).catch(function (err) {
-      lockError = "Screen lock refused (" + (err && err.name ? err.name : "error") + ")";
+      var name = err && err.name ? err.name : "error";
+      lockError = name === "NotAllowedError"
+        ? "Screen lock refused, which battery saver does"
+        : "Screen lock refused (" + name + ")";
       startVideoFallback();
     });
   }
@@ -727,6 +736,7 @@
   }
 
   var watchdog = 0;
+  var retakes = 0;
 
   function stayAwake() {
     lockError = "";
@@ -738,10 +748,12 @@
       if (document.visibilityState !== "visible") { return; }
       if (awakeBy === "lock" && wakeLock && !wakeLock.released) { return; }
       if (awakeBy === "video" && keeperVideo && !keeperVideo.paused) { return; }
-      // Something let go of it. Take it again.
+      // Something let go of it. Take it again, and keep the count: a number
+      // that climbs is the phone fighting the lock, which is worth seeing.
+      if (awakeBy) { retakes++; }
       awakeBy = "";
       requestWakeLock();
-    }, 8000);
+    }, 3000);
   }
 
   function letSleep() {
@@ -755,6 +767,7 @@
 
   function start() {
     if (running) { return; }
+    retakes = 0;
     running = true;
     startedAt = performance.now();
     syncToggle();
