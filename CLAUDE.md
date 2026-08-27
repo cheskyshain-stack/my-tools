@@ -130,6 +130,28 @@ Changing the length zeroes the round counter and restarts the sweep from the top
 because a round of ten and a round of thirty are not the same thing and adding them
 would be a lie. Whether it was running is preserved.
 
+### Keeping the screen on
+
+Two ways, because the first is not always there. `navigator.wakeLock` needs a secure
+context; where it is missing or refused, a 2px video playing a canvas stream does the
+same job, which is the trick a video call uses.
+
+Three things this got wrong once each, so do not undo them:
+
+- The guard tested `"wakeLock" in navigator`, the key rather than the value, so
+  `.request` threw on browsers that do not have it.
+- `requestWakeLock` returned early on `if (wakeLock)`. A sentinel the system has
+  already let go of is not a lock, and the release event does not reliably arrive, so
+  once a phone quietly took it back the page could never ask again for the rest of the
+  session. It now tests `wakeLock && !wakeLock.released`.
+- The status line faded after two seconds. It stays up while the watch runs and names
+  which of the two ways is holding the screen, because a message that has faded cannot
+  tell you anything the next day when the screen went dark.
+
+A watchdog re-checks every eight seconds while running and asks again if either method
+has quietly stopped. `pageshow` and `focus` also re-arm it, since not every Android
+build fires `visibilitychange` coming back from the app switcher.
+
 The pushers read left to right as **setting, Reset, Start/Stop**. The user is right
 handed and the one pressed most often belongs under the thumb; the order was asked for
 and is not arbitrary.

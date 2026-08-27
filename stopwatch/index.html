@@ -586,10 +586,10 @@
   var note = document.getElementById("note");
   var noteTimer = 0;
 
-  function setNote(text, transient) {
+  function setNote(text, transient, warn) {
     clearTimeout(noteTimer);
     note.textContent = text;
-    note.classList.toggle("warn", Boolean(text) && !transient);
+    note.classList.toggle("warn", Boolean(text) && Boolean(warn));
     note.classList.toggle("show", Boolean(text));
     if (text && transient) {
       noteTimer = setTimeout(function () { note.classList.remove("show"); }, 2400);
@@ -631,8 +631,9 @@
 
   function reportAwake() {
     if (!running) { setNote(""); return; }
-    if (awakeBy) { setNote("Screen kept awake", true); return; }
-    setNote(lockError || "This browser will not hold the screen on");
+    if (awakeBy === "lock") { setNote("Screen kept awake"); return; }
+    if (awakeBy === "video") { setNote("Screen kept awake, without the system lock"); return; }
+    setNote(lockError || "This browser will not hold the screen on", false, true);
   }
 
   function requestWakeLock() {
@@ -641,7 +642,11 @@
       startVideoFallback();
       return;
     }
-    if (wakeLock) { return; }
+    // A sentinel the system has already let go of is not a lock. Holding on to
+    // it here is what stopped the page ever asking again: the release event
+    // does not always arrive, so the flag on the sentinel is the truth.
+    if (wakeLock && !wakeLock.released) { return; }
+    wakeLock = null;
     navigator.wakeLock.request("screen").then(function (lock) {
       wakeLock = lock;
       awakeBy = "lock";
@@ -717,13 +722,27 @@
     if (awakeBy === "video") { awakeBy = ""; }
   }
 
+  var watchdog = 0;
+
   function stayAwake() {
     lockError = "";
     requestWakeLock();
     reportAwake();
+    clearInterval(watchdog);
+    watchdog = setInterval(function () {
+      if (!running) { clearInterval(watchdog); watchdog = 0; return; }
+      if (document.visibilityState !== "visible") { return; }
+      if (awakeBy === "lock" && wakeLock && !wakeLock.released) { return; }
+      if (awakeBy === "video" && keeperVideo && !keeperVideo.paused) { return; }
+      // Something let go of it. Take it again.
+      awakeBy = "";
+      requestWakeLock();
+    }, 8000);
   }
 
   function letSleep() {
+    clearInterval(watchdog);
+    watchdog = 0;
     if (wakeLock) { wakeLock.release().catch(function () {}); wakeLock = null; }
     stopVideoFallback();
     awakeBy = "";
@@ -880,6 +899,13 @@
       }
       paint();
     }
+  });
+
+  window.addEventListener("pageshow", function () {
+    if (running) { stayAwake(); }
+  });
+  window.addEventListener("focus", function () {
+    if (running && !awakeBy) { stayAwake(); }
   });
 
   // No pinch zoom, no rubber banding, nothing that shifts the dial.
