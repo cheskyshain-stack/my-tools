@@ -986,8 +986,24 @@ function chip(text){ const c = document.createElement("span"); c.className = "ch
    Derived collections
    ============================================================================ */
 function latest(){
+  // This sorted on a `year` field that no song has ever carried, so it fell
+  // through to the file's own order and the section was frozen on the first
+  // ten songs ever added. A newly added song could not appear here at all,
+  // and no amount of reordering would have fixed it.
+  //
+  // Newest first, then. A song added through the admin page carries `added`,
+  // and its id is minted from the clock, so either one dates it. Anything
+  // older than both is ranked by position, later in the file meaning newer.
+  const addedAt = s => {
+    if (s.added){ const t = Date.parse(s.added); if (!isNaN(t)) return t; }
+    const m = /^song-(\d{10,})$/.exec(s.id || "");
+    return m ? Number(m[1]) : 0;
+  };
   return songs.map((s,i)=>({s,i}))
-    .sort((a,b) => (parseInt(b.s.year||0) - parseInt(a.s.year||0)) || (a.i - b.i))
+    .sort((a,b) =>
+      (parseInt(b.s.year||0) - parseInt(a.s.year||0)) ||
+      (addedAt(b.s) - addedAt(a.s)) ||
+      (b.i - a.i))
     .slice(0, 10);
 }
 function popular(){

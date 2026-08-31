@@ -122,9 +122,22 @@ list. A flag left on an earlier song silently beats one set on a later song, whi
 nothing flagged the page falls back to index 0, which is a valid state and what the star
 toggles to when you tap the lit one.
 
+**"Latest releases" means newest, and nothing carries a `year`.** The sort was written
+around a `year` field no song has ever had, so it fell through to the file's own order
+and the rail was frozen on the first ten songs ever added: a new song could not appear
+there at all, and reordering could not fix it. It now ranks by `year` if present, then
+by when the song was added (`added`, or the timestamp the admin page mints into a
+`song-<ms>` id), then by position with later meaning newer. The admin page stamps
+`added` on every new song.
+
 To test the admin page, stub `window.fetch` for `api.github.com` against an in-memory
 copy of the two JSON files. Every commit the page makes is then inspectable without a
 token and without touching the repo.
+
+The admin page carries a `build` stamp beside its subtitle. It is the entry point, so
+nothing can cache-bust it from the inside, and Pages serves it with a ten minute
+max-age that a phone will stretch much further. When a change seems not to have landed,
+read the stamp before believing anything else.
 
 ## The shell frame and the address bar
 
