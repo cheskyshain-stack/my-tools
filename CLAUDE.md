@@ -103,7 +103,16 @@ triple click hides them again. Anything personal goes in this group.
 ### Icons
 
 512x512, black tile, artwork bleeding to the edge, the tool's name baked into the image
-as a neon label. The cards render them with `object-fit: cover` inside their own rounded
+as a neon label.
+
+An icon arriving with a checkerboard around it usually has that checkerboard **painted
+in**, not transparent: the School Calendar one was fully opaque and every corner pixel
+was a solid grey square. Do not crop it away. Cropping inside the tile to clear its
+rounded corners cost the binder rings off the top and clipped the wordmark at the sides.
+Paint the checkerboard black instead and keep the whole tile: the cards set
+`background:#000` behind the image, so black corners vanish into the card and the tile's
+own rounded corners land right on the card's frame. Check by sampling the outer ring of
+the finished file, which should be 0. The cards render them with `object-fit: cover` inside their own rounded
 frame, so an icon carrying its own visible frame reads as boxed in: crop inside it. Art
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
