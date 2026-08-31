@@ -108,6 +108,31 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
+## The school calendar
+
+`school/` is the Yeshiva K'tana calendar for 2026 to 2027, a hidden tool. It came from a
+workbook the user supplied, and the workbook is the source of truth: the tool invents
+nothing.
+
+- **Hebrew dates appear only where the workbook gives one.** They are not computed, and
+  they should not be. The sheet supplies a Hebrew date per entry, so entries carry one
+  and ordinary days do not.
+- **The dates were checked, not trusted.** `scratchpad/cal-extract.py` parses each entry's
+  date span and asserts the weekday matches the one the sheet prints beside it. All 49
+  matched. Re-run that check if the workbook is ever replaced.
+- Multi day entries are expanded to one record per day, so a span like Succos paints
+  across the grid and across a month boundary instead of sitting on its first day.
+- The data is inlined into the page rather than fetched. There is no build step in this
+  repo, so a separate JSON file would be a second thing to cache and a second thing to go
+  stale against the HTML.
+- **Below 560px a day cell shows a number and a colour, nothing else.** Cramming the
+  wording in produced "Limud Kodes beg..." and was worse than useless. The month written
+  out under the grid carries the date, the weekday, the Hebrew date and the full text,
+  which is where detail belongs at that width. Note that `.dtext` had two `display`
+  declarations once and the second silently won; that is how the phone bug got in.
+- The en dashes in the notes are the school's own wording, quoted verbatim. The no em
+  dash rule is about prose written here, not about someone else's document.
+
 ## The music catalogue
 
 `music/songs.json` and `music/albums.json` are the catalogue; the MP3s sit beside them

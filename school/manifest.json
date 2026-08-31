@@ -1,0 +1,13 @@
+{
+  "name": "School Calendar",
+  "short_name": "School Cal",
+  "description": "The Yeshiva K'tana school calendar for 2026-2027, month by month.",
+  "start_url": "/school/",
+  "scope": "/school/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    { "src": "/school/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

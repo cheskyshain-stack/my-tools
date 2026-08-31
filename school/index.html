@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="The Yeshiva K'tana school calendar for 2026-2027, laid out month by month with every dismissal, vacation and event. Part of CJ Portal.">
+<title>School Calendar | CJ Portal</title>
+<link rel="manifest" href="/school/manifest.json">
+<link rel="apple-touch-icon" href="/school/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="School Calendar">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;overscroll-behavior-y:none}
+  body{
+    background:var(--cj-bg,#050A18);
+    color:var(--cj-text,#EDF2FF);
+    font-family:var(--cj-body,"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+    line-height:1.45;
+    padding:10px 12px calc(34px + env(safe-area-inset-bottom));
+    max-width:1100px;margin:0 auto;
+  }
+  body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
+  h2{font-family:var(--cj-display,Georgia,serif);font-weight:600;font-size:1.05rem;margin:0 0 10px;letter-spacing:-.2px}
+  p.hint{margin:0;color:var(--cj-muted,#93A3C7);font-size:12.5px}
+
+  .card{
+    background:var(--cj-card,#121D38);border:1px solid var(--cj-line,rgba(255,255,255,.08));
+    border-radius:var(--cj-r-lg,20px);box-shadow:var(--cj-shadow,0 18px 44px rgba(0,0,0,.45));
+    padding:14px;margin-bottom:13px;
+  }
+
+  /* ===== The bar above the grid ===== */
+  .bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .bar .spacer{flex:1 1 auto}
+  .nav-btn{
+    width:40px;height:40px;flex:none;border-radius:12px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
+    color:var(--cj-text,#EDF2FF);font:700 17px/1 inherit;
+  }
+  .nav-btn:disabled{opacity:.3}
+  .month-name{
+    font-family:var(--cj-display,Georgia,serif);font-size:1.22rem;font-weight:600;
+    letter-spacing:-.2px;min-width:170px;text-align:center;
+  }
+  .month-name span{color:var(--cj-muted,#93A3C7);font-size:.85em;margin-left:5px}
+  .pill{
+    height:38px;padding:0 14px;border-radius:999px;cursor:pointer;flex:none;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
+    color:var(--cj-muted,#93A3C7);font:700 12.5px/1 inherit;
+  }
+  .pill.on{background:linear-gradient(140deg,#2583F7,#1763CF);border-color:transparent;color:#fff}
+  select.pill{appearance:none;padding-right:30px;
+    background-image:linear-gradient(45deg,transparent 50%,#93A3C7 50%),linear-gradient(135deg,#93A3C7 50%,transparent 50%);
+    background-position:calc(100% - 17px) 17px,calc(100% - 12px) 17px;background-size:5px 5px;background-repeat:no-repeat}
+
+  /* ===== The month grid ===== */
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+  .dow div{
+    text-align:center;font-size:10.5px;font-weight:800;letter-spacing:.1em;
+    color:var(--cj-dim,#67779C);text-transform:uppercase;padding:2px 0;
+  }
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .day{
+    position:relative;min-height:62px;border-radius:12px;padding:5px 6px 6px;
+    border:1px solid var(--cj-line,rgba(255,255,255,.07));background:rgba(255,255,255,.022);
+    display:flex;flex-direction:column;gap:3px;overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .day.blank{background:transparent;border-color:transparent}
+  .day.has{cursor:pointer;background:rgba(255,255,255,.05)}
+  .day.sat{background:rgba(37,131,247,.06)}
+  .day.today{outline:2px solid #2583F7;outline-offset:-2px}
+  .dnum{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:13px;font-weight:600;line-height:1}
+  .day.out .dnum{color:var(--cj-dim,#3d4a63)}
+  .dheb{font-size:9.5px;color:var(--cj-dim,#67779C);line-height:1.1}
+  .dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:auto}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dtext{font-size:10px;line-height:1.25;color:var(--cj-muted,#93A3C7);
+    display:none;overflow:hidden;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+
+  /* A band across the days a multi day event covers. */
+  .day.span::after{content:"";position:absolute;left:0;right:0;top:0;height:3px}
+
+  .c-off{background:#f4707d}    .b-off{background:rgba(244,112,125,.20)}
+  .c-begins{background:#34d399} .b-begins{background:rgba(52,211,153,.20)}
+  .c-dismissal{background:#4c9bf5} .b-dismissal{background:rgba(76,155,245,.20)}
+  .c-fds{background:#f5b301}    .b-fds{background:rgba(245,179,1,.20)}
+  .c-event{background:#a78bfa}  .b-event{background:rgba(167,139,250,.20)}
+
+  @media(max-width:559px){
+    .dheb{display:none}
+    .day{min-height:54px}
+    .dots{justify-content:flex-start}
+  }
+  @media(min-width:760px){
+    .day{min-height:104px}
+    .dtext{display:-webkit-box}
+    .dots{margin-top:2px}
+  }
+
+  /* ===== The month's events, written out ===== */
+  .ev{display:flex;gap:11px;padding:10px 0;border-top:1px solid var(--cj-line-soft,rgba(255,255,255,.05))}
+  .ev:first-child{border-top:0}
+  .ev-when{flex:0 0 82px;min-width:0}
+  .ev-date{font-family:var(--cj-mono,ui-monospace,Menlo,monospace);font-size:12.5px;font-weight:600}
+  .ev-day{font-size:10.5px;color:var(--cj-dim,#67779C);margin-top:1px}
+  .ev-heb{font-size:11px;color:var(--cj-muted,#93A3C7);margin-top:2px}
+  .ev-what{flex:1 1 auto;min-width:0;font-size:13.5px;white-space:pre-line;word-break:break-word}
+  .ev-tag{
+    display:inline-block;margin-top:5px;padding:2px 9px;border-radius:999px;
+    font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  }
+  .t-off{background:rgba(244,112,125,.16);color:#f9a8b1}
+  .t-begins{background:rgba(52,211,153,.16);color:#6ee7b7}
+  .t-dismissal{background:rgba(76,155,245,.16);color:#9dc6ff}
+  .t-fds{background:rgba(245,179,1,.16);color:#f7d08a}
+  .t-event{background:rgba(167,139,250,.16);color:#c9b8fd}
+
+  .legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:2px}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
+
+  .notes li{font-size:13px;margin-bottom:5px}
+  .notes ul{margin:0;padding-left:19px}
+
+  .empty{padding:20px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13px}
+
+  /* ===== The day sheet ===== */
+  #sheet{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;
+    background:rgba(4,7,14,.72);padding:14px}
+  #sheet.open{display:flex}
+  .sheet-box{width:100%;max-width:520px;max-height:86vh;overflow:auto;
+    background:linear-gradient(180deg,#16233f,#101a31);border:1px solid var(--cj-line,rgba(255,255,255,.09));
+    border-radius:20px;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px}
+  .sheet-close{width:34px;height:34px;flex:none;border-radius:10px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);color:#93A3C7;font:700 15px/1 inherit}
+  @media(min-width:620px){ #sheet{align-items:center} }
+
+  /* ===== Print: one month a page ===== */
+  @media print{
+    body{background:#fff;color:#000;max-width:none;padding:0}
+    .cj-page-header,.bar,#sheet,.no-print{display:none!important}
+    .card{background:#fff;border:1px solid #999;box-shadow:none;break-inside:avoid;margin:0 0 10px}
+    .month-page{break-after:page}
+    .month-page:last-child{break-after:auto}
+    .day{border-color:#bbb;background:#fff!important;min-height:86px}
+    .dtext{display:-webkit-box;color:#333}
+    .dnum,.ev-what,.ev-date{color:#000}
+    .dheb,.ev-day,.ev-heb,.legend span{color:#444}
+  }
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/school/icon.png" alt="School Calendar"></a>
+  <h1>School Calendar</h1>
+</header>
+
+<div class="bar no-print">
+  <button class="nav-btn" id="prev" type="button" aria-label="Previous month">‹</button>
+  <div class="month-name" id="monthName"></div>
+  <button class="nav-btn" id="next" type="button" aria-label="Next month">›</button>
+  <div class="spacer"></div>
+  <select class="pill" id="jump" aria-label="Jump to a month"></select>
+  <button class="pill" id="todayBtn" type="button">Today</button>
+  <button class="pill" id="allBtn" type="button">Whole year</button>
+</div>
+
+<div id="view"></div>
+
+<div class="card no-print">
+  <h2>What the colours mean</h2>
+  <div class="legend">
+    <span><i class="dot c-off"></i>No school</span>
+    <span><i class="dot c-begins"></i>Starts or resumes</span>
+    <span><i class="dot c-dismissal"></i>Dismissal change</span>
+    <span><i class="dot c-fds"></i>Friday schedule</span>
+    <span><i class="dot c-event"></i>School event</span>
+  </div>
+</div>
+
+<div class="card notes">
+  <h2>Notes</h2>
+  <ul id="notes"></ul>
+</div>
+
+<div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-box">
+    <div class="sheet-head">
+      <h2 id="sheetTitle" style="margin:0"></h2>
+      <button class="sheet-close" id="sheetClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <p class="hint" id="sheetSub" style="margin-bottom:12px"></p>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+/* The calendar itself, straight from the workbook. Inlined rather than
+   fetched: there is no build step here, so a second file would be a second
+   thing to cache and a second thing to go stale. */
+var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events":[{"start":"2026-08-19","end":"2026-08-19","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Aug. 19, 2026","text":"Limudei Kodesh begins Grades 1-8 F.D.S","cat":"begins"},{"start":"2026-08-20","end":"2026-08-20","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Aug. 20, 2026","text":"Primary begins 9:30\nPri – 8 F.D.S","cat":"begins"},{"start":"2026-08-23","end":"2026-08-23","days":1,"printedDay":"Sunday","hebrew":"10 Elul","gregorian":"Aug. 23, 2026","text":"Dismissal: Grades P-4 1:00\nGrades 5-8 2:15","cat":"dismissal"},{"start":"2026-08-24","end":"2026-08-27","days":4,"printedDay":"Monday - Thursday","hebrew":"11-14 Elul","gregorian":"Aug. 24-27, 2026","text":"Dismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal"},{"start":"2026-08-24","end":"2026-08-24","days":1,"printedDay":"Monday","hebrew":"11 Elul","gregorian":"Aug. 24, 2026","text":"Minyan begins 7:40","cat":"begins"},{"start":"2026-08-31","end":"2026-08-31","days":1,"printedDay":"Monday","hebrew":"18 Elul","gregorian":"Aug. 31, 2026","text":"General Studies begins\nDismissal: Primary 2:45\nGrades 1-4 3:45\nGrades 5-8 5:00","cat":"begins"},{"start":"2026-09-06","end":"2026-09-06","days":1,"printedDay":"Sunday","hebrew":"24 Elul","gregorian":"Sep. 6, 2026","text":"First day Selichos - School begins at 10:00","cat":"begins"},{"start":"2026-09-11","end":"2026-09-13","days":3,"printedDay":"Friday - Sunday","hebrew":"29 Elul-2 Tishrei","gregorian":"Sep. 11-13, 2026","text":"Rosh Hashana - No School","cat":"off"},{"start":"2026-09-14","end":"2026-09-14","days":1,"printedDay":"Monday","hebrew":"3 Tishrei","gregorian":"Sep. 14, 2026","text":"Tzom Gedalya - School begins 9:30 - F.D.S No Minyan","cat":"begins"},{"start":"2026-09-20","end":"2026-09-21","days":2,"printedDay":"Sunday - Monday","hebrew":"9-10 Tishrei","gregorian":"Sep. 20-21, 2026","text":"Erev Yom Kipper/Yom Kippur - No School","cat":"off"},{"start":"2026-09-23","end":"2026-09-23","days":1,"printedDay":"Wednesday","hebrew":"12 Tishrei","gregorian":"Sep. 23, 2026","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal"},{"start":"2026-09-24","end":"2026-09-24","days":1,"printedDay":"Thursday","hebrew":"13 Tishrei","gregorian":"Sep. 24, 2026","text":"F.D.S","cat":"fds"},{"start":"2026-09-25","end":"2026-10-05","days":11,"printedDay":"Friday - Monday","hebrew":"14-24 Tishrei","gregorian":"Sep. 25-Oct. 5, 2026","text":"Succos - No School","cat":"off"},{"start":"2026-10-06","end":"2026-10-06","days":1,"printedDay":"Tuesday","hebrew":"25 Tishrei","gregorian":"Oct. 6, 2026","text":"All Sessions Resume","cat":"begins"},{"start":"2026-10-21","end":"2026-10-21","days":1,"printedDay":"Wednesday","hebrew":"10 Cheshvan","gregorian":"Oct. 21, 2026","text":"P.T.A.","cat":"event"},{"start":"2026-11-24","end":"2026-11-24","days":1,"printedDay":"Tuesday","hebrew":"14 Kislev","gregorian":"Nov. 24, 2026","text":"Report Cards","cat":"event"},{"start":"2026-12-06","end":"2026-12-06","days":1,"printedDay":"Sunday","hebrew":"26 Kislev","gregorian":"Dec. 6, 2026","text":"Chanukah - F.D.S","cat":"fds"},{"start":"2026-12-07","end":"2026-12-08","days":2,"printedDay":"Monday-Tuesday","hebrew":"27-28 Kislev","gregorian":"Dec. 7-8, 2026","text":"Chanukah Dismissal Grades 1-4 3:45\nGrades 5-8 4:10 carpool only","cat":"dismissal"},{"start":"2026-12-09","end":"2026-12-09","days":1,"printedDay":"Wednesday","hebrew":"29 Kislev","gregorian":"Dec. 9, 2026","text":"Chanukah Dismissal Grades 1-3 3:45\nGrades 5-8 2:50 carpool only","cat":"dismissal"},{"start":"2026-12-10","end":"2026-12-10","days":1,"printedDay":"Thursday","hebrew":"30 Kislev","gregorian":"Dec. 10, 2026","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2026-12-11","end":"2026-12-13","days":3,"printedDay":"Friday - Sunday","hebrew":"1-3 Teves","gregorian":"Dec. 11-13, 2026","text":"Chanukah Vacation","cat":"off"},{"start":"2026-12-20","end":"2026-12-20","days":1,"printedDay":"Sunday","hebrew":"10 Teves","gregorian":"Dec. 20, 2026","text":"Asara B'Teves - F.D.S","cat":"fds"},{"start":"2027-01-28","end":"2027-01-28","days":1,"printedDay":"Thursday","hebrew":"20 Shevat","gregorian":"Jan. 28, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-01-29","end":"2027-01-31","days":3,"printedDay":"Friday - Sunday","hebrew":"21-23 Shevat","gregorian":"Jan. 29-31, 2027","text":"Midwinter Vacation","cat":"off"},{"start":"2027-02-16","end":"2027-02-16","days":1,"printedDay":"Tuesday","hebrew":"9 Adar I","gregorian":"Feb. 16, 2027","text":"Report cards","cat":"event"},{"start":"2027-02-17","end":"2027-02-17","days":1,"printedDay":"Wednesday","hebrew":"10 Adar I","gregorian":"Feb. 17, 2027","text":"P.T.A","cat":"event"},{"start":"2027-03-14","end":"2027-03-14","days":1,"printedDay":"Sunday","hebrew":"5 Adar","gregorian":"Mar. 14, 2027","text":"Daylight Savings Time begins\nSchool begins 10:00 - No Minyan (6-8)","cat":"begins"},{"start":"2027-03-22","end":"2027-03-22","days":1,"printedDay":"Monday","hebrew":"13 Adar","gregorian":"Mar. 22, 2027","text":"Taanis Esther F.D.S","cat":"fds"},{"start":"2027-03-23","end":"2027-03-24","days":2,"printedDay":"Tuesday-Wednesday","hebrew":"14-15 Adar","gregorian":"Mar. 23-24, 2027","text":"Purim - No Sessions","cat":"off"},{"start":"2027-04-15","end":"2027-04-15","days":1,"printedDay":"Thursday","hebrew":"8 Nissan","gregorian":"Apr. 15, 2027","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal"},{"start":"2027-04-19","end":"2027-04-19","days":1,"printedDay":"Monday","hebrew":"12 Nissan","gregorian":"Apr. 19, 2027","text":"F.D.S.","cat":"fds"},{"start":"2027-04-20","end":"2027-04-30","days":11,"printedDay":"Tuesday - Friday","hebrew":"13-23 Nissan","gregorian":"Apr. 20-30, 2027","text":"Pesach - No Sessions","cat":"off"},{"start":"2027-05-02","end":"2027-05-02","days":1,"printedDay":"Sunday","hebrew":"25 Nissan","gregorian":"May 2, 2027","text":"All Sessions Resume","cat":"begins"},{"start":"2027-05-25","end":"2027-05-25","days":1,"printedDay":"Tuesday","hebrew":"18 Iyar","gregorian":"May 25, 2027","text":"Lag Ba'Omer - F.D.S","cat":"fds"},{"start":"2027-06-10","end":"2027-06-10","days":1,"printedDay":"Thursday","hebrew":"5 Sivan","gregorian":"June 10, 2027","text":"Erev Shavuos - F.D.S.","cat":"fds"},{"start":"2027-06-11","end":"2027-06-11","days":1,"printedDay":"Friday","hebrew":"6 Sivan","gregorian":"June 11, 2027","text":"Shavuos - No Sessions","cat":"off"},{"start":"2027-06-13","end":"2027-06-13","days":1,"printedDay":"Sunday","hebrew":"8 Sivan","gregorian":"June 13, 2027","text":"Isru Chag - School begins 9:30 - No Minyan (6-8)","cat":"begins"},{"start":"2027-06-20","end":"2027-06-20","days":1,"printedDay":"Sunday","hebrew":"15 Sivan","gregorian":"June 20, 2027","text":"All grades - F.D.S","cat":"fds"},{"start":"2027-06-29","end":"2027-06-29","days":1,"printedDay":"Tuesday","hebrew":"24 Sivan","gregorian":"June 29, 2027","text":"Last day General Studies\nDismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal"},{"start":"2027-06-30","end":"2027-06-30","days":1,"printedDay":"Wednesday","hebrew":"25 Sivan","gregorian":"June 30, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-07-01","end":"2027-07-01","days":1,"printedDay":"Thursday","hebrew":"26 Sivan","gregorian":"July 1, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-07-02","end":"2027-07-04","days":3,"printedDay":"Friday-Sunday","hebrew":"27-29 Sivan","gregorian":"July 2-4, 2027","text":"No Sessions","cat":"off"},{"start":"2027-07-05","end":"2027-07-05","days":1,"printedDay":"Monday","hebrew":"30 Sivan","gregorian":"July 5, 2027","text":"Summer Schedule Begins","cat":"begins"},{"start":"2027-07-22","end":"2027-07-22","days":1,"printedDay":"Thursday","hebrew":"17 Tamuz","gregorian":"July 22, 2027","text":"Taanis - F.D.S","cat":"fds"},{"start":"2027-07-27","end":"2027-07-27","days":1,"printedDay":"Tuesday","hebrew":"22 Tamuz","gregorian":"July 27, 2027","text":"6th Grade Siyum Makos","cat":"event"},{"start":"2027-07-28","end":"2027-07-28","days":1,"printedDay":"Wednesday","hebrew":"23 Tamuz","gregorian":"July 28, 2027","text":"8th Grade Graduation","cat":"event"},{"start":"2027-07-29","end":"2027-07-29","days":1,"printedDay":"Thursday","hebrew":"24 Tamuz","gregorian":"July 29, 2027","text":"Last day of School F.D.S","cat":"fds"},{"start":"2027-09-08","end":"2027-09-08","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Sep. 8, 2027","text":"First day of School F.D.S","cat":"fds"},{"start":"2027-09-09","end":"2027-09-09","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Sep. 9, 2027","text":"Primary Begins","cat":"begins"}],"notes":["F.D.S = Friday Dismissal Schedule – All grades 12:20","Sunday Dismissal: Primary–4th 1:00; 5th–8th 2:15","Snow Number: 732-370-3182","Chumash Seudas – All primary classes – Sunday, June 20","9:15 – R’ Guttman","10:45 – R’ Birnhack","12:45 – R’ Brecher"]};
+
+(function () {
+  "use strict";
+
+  /* Dates are plain YYYY-MM-DD strings and are only ever compared as strings,
+     which keeps time zones out of a calendar entirely. */
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function iso(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+  function parse(s) { var p = s.split("-"); return { y: +p[0], m: +p[1] - 1, d: +p[2] }; }
+  function daysIn(y, m) { return new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); }
+  function dowOf(s) { var p = parse(s); return new Date(Date.UTC(p.y, p.m, p.d)).getUTCDay(); }
+  function stepISO(s, n) {
+    var p = parse(s);
+    var d = new Date(Date.UTC(p.y, p.m, p.d + n));
+    return iso(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+  function todayISO() {
+    var d = new Date();
+    return iso(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  var MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+  var SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var DOW_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var CATS = { off:"No school", begins:"Starts or resumes", dismissal:"Dismissal change",
+               fds:"Friday schedule", event:"School event", note:"Note" };
+
+  /* One entry per day the event covers, so a range paints across the grid
+     rather than sitting on its first day only. */
+  var byDay = {};
+  DATA.events.forEach(function (e, idx) {
+    var cur = e.start, n = 0;
+    while (cur <= e.end && n < 400) {
+      if (!byDay[cur]) { byDay[cur] = []; }
+      byDay[cur].push({ e: e, idx: idx, first: cur === e.start, last: cur === e.end });
+      cur = stepISO(cur, 1);
+      n++;
+    }
+  });
+
+  // Every month the calendar actually covers, first to last.
+  var first = DATA.events[0].start;
+  var lastEnd = DATA.events.reduce(function (a, e) { return e.end > a ? e.end : a; }, first);
+  var months = [];
+  (function () {
+    var p = parse(first), q = parse(lastEnd);
+    var y = p.y, m = p.m;
+    while (y < q.y || (y === q.y && m <= q.m)) {
+      months.push({ y: y, m: m });
+      m++; if (m > 11) { m = 0; y++; }
+    }
+  }());
+
+  var el = function (id) { return document.getElementById(id); };
+  var at = months.findIndex(function (x) {
+    var t = parse(todayISO());
+    return x.y === t.y && x.m === t.m;
+  });
+  if (at < 0) { at = 0; }
+  var showAll = false;
+
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function monthHtml(y, m) {
+    var lead = new Date(Date.UTC(y, m, 1)).getUTCDay();
+    var count = daysIn(y, m);
+    var today = todayISO();
+    var cells = "";
+    for (var i = 0; i < lead; i++) { cells += '<div class="day blank"></div>'; }
+    for (var d = 1; d <= count; d++) {
+      var key = iso(y, m, d);
+      var hits = byDay[key] || [];
+      var cls = ["day"];
+      if (hits.length) { cls.push("has"); }
+      if (dowOf(key) === 6) { cls.push("sat"); }
+      if (key === today) { cls.push("today"); }
+      var tint = hits.length ? " b-" + hits[0].e.cat : "";
+      var dots = hits.map(function (h) { return '<i class="dot c-' + h.e.cat + '"></i>'; }).join("");
+      var heb = hits.length && hits[0].first ? '<div class="dheb">' + esc(hits[0].e.hebrew) + "</div>" : "";
+      var text = hits.length
+        ? '<div class="dtext">' + esc(hits.map(function (h) { return h.e.text; }).join(" · ")) + "</div>"
+        : "";
+      cells += '<div class="' + cls.join(" ") + tint + '"' +
+               (hits.length ? ' data-day="' + key + '" role="button" tabindex="0"' : "") + ">" +
+               '<div class="dnum">' + d + "</div>" + heb + text +
+               (dots ? '<div class="dots">' + dots + "</div>" : "") + "</div>";
+    }
+    var trail = (7 - ((lead + count) % 7)) % 7;
+    for (var t = 0; t < trail; t++) { cells += '<div class="day blank"></div>'; }
+
+    // Everything in this month, written out, because a phone sized cell cannot
+    // hold a dismissal schedule and a calendar you have to squint at is no use.
+    var mine = DATA.events.filter(function (e) {
+      return (e.start.slice(0,7) <= iso(y,m,1).slice(0,7)) && (e.end.slice(0,7) >= iso(y,m,1).slice(0,7));
+    });
+    var list = mine.map(function (e) {
+      var s = parse(e.start), en = parse(e.end);
+      var when = SHORT[s.m] + " " + s.d + (e.days > 1 ? " to " + SHORT[en.m] + " " + en.d : "");
+      return '<div class="ev">' +
+        '<div class="ev-when"><div class="ev-date">' + esc(when) + "</div>" +
+          '<div class="ev-day">' + esc(e.printedDay) + "</div>" +
+          (e.hebrew ? '<div class="ev-heb">' + esc(e.hebrew) + "</div>" : "") + "</div>" +
+        '<div class="ev-what">' + esc(e.text) +
+          '<div><span class="ev-tag t-' + e.cat + '">' + esc(CATS[e.cat] || e.cat) + "</span></div>" +
+        "</div></div>";
+    }).join("");
+
+    return '<div class="month-page">' +
+      '<div class="card">' +
+        '<h2 class="print-only" style="margin-bottom:10px">' + MONTHS[m] + " " + y + "</h2>" +
+        '<div class="dow">' + DOW.map(function (n) { return "<div>" + n + "</div>"; }).join("") + "</div>" +
+        '<div class="grid">' + cells + "</div>" +
+      "</div>" +
+      '<div class="card"><h2>' + MONTHS[m] + " " + y + "</h2>" +
+        (list || '<div class="empty">Nothing on the calendar this month.</div>') +
+      "</div></div>";
+  }
+
+  function render() {
+    if (showAll) {
+      el("view").innerHTML = months.map(function (x) { return monthHtml(x.y, x.m); }).join("");
+      el("monthName").innerHTML = "Whole year <span>" + esc(DATA.year) + "</span>";
+    } else {
+      var x = months[at];
+      el("view").innerHTML = monthHtml(x.y, x.m);
+      el("monthName").innerHTML = MONTHS[x.m] + " <span>" + x.y + "</span>";
+    }
+    el("prev").disabled = showAll || at === 0;
+    el("next").disabled = showAll || at === months.length - 1;
+    el("jump").value = showAll ? "" : String(at);
+    el("allBtn").classList.toggle("on", showAll);
+  }
+
+  el("jump").innerHTML = months.map(function (x, i) {
+    return '<option value="' + i + '">' + SHORT[x.m] + " " + x.y + "</option>";
+  }).join("");
+
+  el("prev").addEventListener("click", function () { if (at > 0) { at--; render(); window.scrollTo(0,0); } });
+  el("next").addEventListener("click", function () { if (at < months.length - 1) { at++; render(); window.scrollTo(0,0); } });
+  el("jump").addEventListener("change", function () {
+    showAll = false; at = Number(el("jump").value) || 0; render(); window.scrollTo(0,0);
+  });
+  el("todayBtn").addEventListener("click", function () {
+    var t = parse(todayISO());
+    var i = months.findIndex(function (x) { return x.y === t.y && x.m === t.m; });
+    showAll = false;
+    at = i >= 0 ? i : 0;
+    render();
+    window.scrollTo(0,0);
+    if (i < 0) { toastNote("Today is outside this school year, showing the first month."); }
+  });
+  el("allBtn").addEventListener("click", function () {
+    showAll = !showAll; render(); window.scrollTo(0,0);
+  });
+
+  function toastNote(msg) {
+    var n = el("monthName");
+    var was = n.innerHTML;
+    n.innerHTML = '<span style="font-size:.8em">' + esc(msg) + "</span>";
+    setTimeout(function () { n.innerHTML = was; }, 2600);
+  }
+
+  /* The day sheet, because a cell cannot hold four lines of dismissal times. */
+  function openDay(key) {
+    var hits = byDay[key] || [];
+    if (!hits.length) { return; }
+    var p = parse(key);
+    el("sheetTitle").textContent = DOW_FULL[dowOf(key)] + ", " + MONTHS[p.m] + " " + p.d;
+    var heb = hits[0].e.hebrew;
+    el("sheetSub").textContent = heb ? heb + "  ·  " + p.y : String(p.y);
+    el("sheetBody").innerHTML = hits.map(function (h) {
+      var e = h.e;
+      return '<div class="ev">' +
+        '<div class="ev-when"><div class="ev-date">' + esc(e.gregorian) + "</div>" +
+          '<div class="ev-day">' + esc(e.printedDay) + "</div></div>" +
+        '<div class="ev-what">' + esc(e.text) +
+          '<div><span class="ev-tag t-' + e.cat + '">' + esc(CATS[e.cat] || e.cat) + "</span></div>" +
+        "</div></div>";
+    }).join("");
+    el("sheet").classList.add("open");
+  }
+  function closeSheet() { el("sheet").classList.remove("open"); }
+
+  el("view").addEventListener("click", function (e) {
+    var cell = e.target.closest("[data-day]");
+    if (cell) { openDay(cell.getAttribute("data-day")); }
+  });
+  el("view").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") { return; }
+    var cell = e.target.closest("[data-day]");
+    if (cell) { e.preventDefault(); openDay(cell.getAttribute("data-day")); }
+  });
+  el("sheetClose").addEventListener("click", closeSheet);
+  el("sheet").addEventListener("click", function (e) { if (e.target === el("sheet")) { closeSheet(); } });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeSheet(); return; }
+    if (el("sheet").classList.contains("open")) { return; }
+    if (e.key === "ArrowLeft") { el("prev").click(); }
+    if (e.key === "ArrowRight") { el("next").click(); }
+  });
+
+  el("notes").innerHTML = DATA.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
+  document.title = DATA.title + " " + DATA.year + " | CJ Portal";
+  render();
+}());
+
+</script>
+</body>
+</html>
