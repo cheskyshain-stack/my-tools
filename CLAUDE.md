@@ -108,6 +108,24 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
+## The music catalogue
+
+`music/songs.json` and `music/albums.json` are the catalogue; the MP3s sit beside them
+in `music/`. `admin/index.html` (not linked from the home page, reach it at
+`/admin/`) is the tool for changing any of it: it commits to GitHub directly with a
+fine-grained token the user pastes in, which lives only in that browser.
+
+**The featured song is a radio button, not a checkbox.** `featured()` in the music page
+does `songs.findIndex(s => s.featured)`, so it takes the **first** flagged song in the
+list. A flag left on an earlier song silently beats one set on a later song, which is why
+`setFeatured` in the admin page clears every flag before setting the chosen one. With
+nothing flagged the page falls back to index 0, which is a valid state and what the star
+toggles to when you tap the lit one.
+
+To test the admin page, stub `window.fetch` for `api.github.com` against an in-memory
+copy of the two JSON files. Every commit the page makes is then inspectable without a
+token and without touching the repo.
+
 ## The shell frame and the address bar
 
 The root `index.html` is an iframe shell and the outer document is `overflow: hidden`,

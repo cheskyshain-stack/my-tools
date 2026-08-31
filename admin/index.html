@@ -89,6 +89,12 @@
   .icon-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;height:27px;padding:0 10px;font-size:11.5px;font-weight:700;flex:none}
   .empty-hint{color:var(--muted);font-size:12.5px;padding:6px 4px}
   .hidden-tag{color:var(--danger);font-weight:700;font-size:11px}
+  .star-btn{
+    background:none;border:1px solid var(--line);border-radius:8px;width:30px;height:30px;flex:none;
+    display:grid;place-items:center;font-size:14px;line-height:1;color:#4b5a72;cursor:pointer;
+    transition:color .15s ease,border-color .15s ease,background .15s ease;
+  }
+  .star-btn.on{color:#f5b301;border-color:rgba(245,179,1,.45);background:rgba(245,179,1,.12)}
 
   /* ===== Modals ===== */
   .modal-scrim{position:fixed;inset:0;background:rgba(3,7,16,.72);backdrop-filter:blur(3px);z-index:80;display:none}
@@ -467,6 +473,10 @@ function songRowHtml(s, groupIds){
       <div class="lib-row-top">
         <div class="lib-thumb"${thumbStyle}>${s.artwork ? "" : "🎵"}</div>
         <div class="lib-row-title">${escapeHtml(s.title)}${s.visible === false ? ' <span class="hidden-tag">(hidden)</span>' : ""}</div>
+        <button type="button" class="star-btn${s.featured ? " on" : ""}" data-feature="${escapeHtml(s.id)}"
+                aria-pressed="${s.featured ? "true" : "false"}"
+                title="${s.featured ? "The featured song. Tap to clear it." : "Make this the featured song"}"
+                aria-label="${s.featured ? "The featured song, tap to clear" : "Make this the featured song"}">${s.featured ? "★" : "☆"}</button>
       </div>
       <div class="lib-row-controls">
         <select class="lib-move-select" data-reassign="${escapeHtml(s.id)}">${albumOptions}</select>
@@ -529,6 +539,8 @@ $("libraryBody").addEventListener("click", e => {
   if(editSong){ openSongModal(editSong.dataset.editSong); return; }
   const editAlbum = e.target.closest("[data-edit-album]");
   if(editAlbum){ openAlbumModal(editAlbum.dataset.editAlbum); return; }
+  const star = e.target.closest("[data-feature]");
+  if(star){ setFeatured(star.dataset.feature); return; }
   const move = e.target.closest("[data-move]");
   if(move && !move.disabled){ moveSong(move.dataset.move, parseInt(move.dataset.dir, 10)); }
 });
@@ -537,6 +549,37 @@ $("libraryBody").addEventListener("change", e => {
   const sel = e.target.closest("[data-reassign]");
   if(sel){ reassignAlbum(sel.dataset.reassign, sel.value || null); }
 });
+
+/* The music page picks the FIRST song in the list carrying the flag, not the
+   newest one, so a flag left on an earlier song silently beats anything set
+   later. Clearing every one before setting the chosen song is what makes this
+   behave like a radio button rather than a checkbox.
+
+   Tapping the lit star clears the flag entirely. That is a valid state: with
+   nothing flagged the page falls back to the first song in the list. */
+async function setFeatured(id){
+  if(libraryBusy) return;
+  const current = libSongs.find(s => s.id === id);
+  const turningOff = Boolean(current && current.featured);
+  setLibraryBusy(true);
+  const token = localStorage.getItem(TOKEN_KEY);
+  try{
+    const updated = await commitSongs(token, list => {
+      list.forEach(s => { delete s.featured; });
+      if(!turningOff){
+        const song = list.find(s => s.id === id);
+        if(song) song.featured = true;
+      }
+      return list;
+    }, turningOff ? "Music: no featured song" : `Music: feature ${id}`);
+    libSongs = updated;
+    renderLibrary();
+  }catch(err){
+    await handleLibraryError(err);
+  }finally{
+    setLibraryBusy(false);
+  }
+}
 
 async function moveSong(id, dir){
   if(libraryBusy) return;
