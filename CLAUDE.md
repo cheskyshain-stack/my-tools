@@ -154,7 +154,13 @@ nothing.
 - On a Shabbos the **parsha leads** and a Yom Tov follows it, because a Shabbos is named
   by its parsha: ט״ו בשבט 5787 falls on פרשת בשלח and the cell shows both. A Shabbos that
   is a full Yom Tov has no parsha, so the Yom Tov stands alone there.
-- Hebrew in a cell is wrapped in `<bdi>` inside a `dir="rtl"` block. The cell is
+- A sideways flick changes month, in the single month view only. **No `touch-action` is
+  set anywhere**, so scrolling up and down stays entirely the browser's; a swipe is only
+  recognised after the fact, from the pointer down and up positions. It needs 48px of
+  travel, more horizontal than vertical by half again, and under 900ms, which is what
+  keeps a scroll, a nudge and a tap from turning the page. The tests assert all four
+  non-cases as well as the two that work.
+- Hebrew in a cell is wrapped in `<bdi>` inside a `dir="rtl"` block, and centred. The cell is
   otherwise left to right, and the tests measure that the day number stays at the top
   left and that nothing spills past the cell edge.
 
