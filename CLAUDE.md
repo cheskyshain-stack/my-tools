@@ -160,6 +160,12 @@ nothing.
   travel, more horizontal than vertical by half again, and under 900ms, which is what
   keeps a scroll, a nudge and a tap from turning the page. The tests assert all four
   non-cases as well as the two that work.
+- Scrolling with the pointer **over the grid** pages through the months, which is the
+  desktop half of the flick. Only over the grid: the month written out, the legend and
+  the notes all scroll the page as usual, and so does the grid in the year view. A
+  trackpad sends a long tail of small deltas for one gesture, so they are summed to a
+  threshold and then ignored for 320ms; without that one flick raced through half the
+  year. The test covers the tail, the year view, both ends, and an open day sheet.
 - Hebrew in a cell is wrapped in `<bdi>` inside a `dir="rtl"` block, and centred. The cell is
   otherwise left to right, and the tests measure that the day number stays at the top
   left and that nothing spills past the cell edge.

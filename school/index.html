@@ -62,7 +62,7 @@
     text-align:center;font-size:10.5px;font-weight:800;letter-spacing:.1em;
     color:var(--cj-dim,#67779C);text-transform:uppercase;padding:2px 0;
   }
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;overscroll-behavior:contain}
   .day{
     position:relative;min-height:62px;border-radius:12px;padding:5px 6px 6px;
     border:1px solid var(--cj-line,rgba(255,255,255,.07));background:rgba(255,255,255,.022);
@@ -534,6 +534,35 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
   });
 
   el("view").addEventListener("pointercancel", function () { swipe = null; });
+
+  /* Scrolling with the pointer over the grid pages through the months, which
+     is the desktop half of the flick. Only over the grid: everything below it,
+     the month written out, the legend, the notes, scrolls the page as usual,
+     and so does the grid in the year view.
+
+     A trackpad sends a long tail of small deltas for one gesture, so they are
+     added up to a threshold and then ignored until the tail has died down.
+     Without that, one flick would race through half the year. */
+  var wheelAcc = 0, wheelUntil = 0;
+
+  el("view").addEventListener("wheel", function (e) {
+    if (showAll || el("sheet").classList.contains("open")) { return; }
+    if (!e.target.closest || !e.target.closest(".grid")) { return; }
+    e.preventDefault();
+
+    var now = Date.now();
+    if (now < wheelUntil) { return; }          // still the tail of the last one
+    // Sideways on a trackpad, or an ordinary wheel: whichever is the stronger.
+    var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (!d) { return; }
+    if (wheelAcc && (wheelAcc > 0) !== (d > 0)) { wheelAcc = 0; }   // turned round
+    wheelAcc += d;
+    if (Math.abs(wheelAcc) < 60) { return; }
+    wheelAcc = 0;
+    wheelUntil = now + 320;
+    if (d > 0 && at < months.length - 1) { at++; render(); slide(1); }
+    else if (d < 0 && at > 0) { at--; render(); slide(-1); }
+  }, { passive: false });
 
   el("notes").innerHTML = DATA.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
   document.title = DATA.title + " " + DATA.year + " | CJ Portal";
