@@ -141,6 +141,22 @@ nothing.
   declarations once and the second silently won; that is how the phone bug got in.
 - The en dashes in the notes are the school's own wording, quoted verbatim. The no em
   dash rule is about prose written here, not about someone else's document.
+- **The year view is forward looking.** A month wholly behind us is left out, and a day
+  that has passed carries nothing. A span is judged on its end, not its start, so Succos
+  stays listed all the way through. An Include past pill brings it all back, and picking
+  a single month always shows that month whole: navigating to one is a deliberate act.
+- **The parshiyos and yomim tovim come from the zmanim project's own engine**, not from
+  a Hebrew calendar written here. `scratchpad/hebdump.mjs` imports
+  `zmanim-tool/js/hebrew-calendar.js` and runs `hasParsha`, `hasYomTov`, `hasRoshChodesh`
+  and `hasTaanis` over the school year, and the result is baked into `DATA.heb`. That
+  engine was ported 1:1 from the user's workbook and drives boards they print, so it is
+  the trustworthy source. Re-run it to extend the calendar to another year.
+- On a Shabbos the **parsha leads** and a Yom Tov follows it, because a Shabbos is named
+  by its parsha: ט״ו בשבט 5787 falls on פרשת בשלח and the cell shows both. A Shabbos that
+  is a full Yom Tov has no parsha, so the Yom Tov stands alone there.
+- Hebrew in a cell is wrapped in `<bdi>` inside a `dir="rtl"` block. The cell is
+  otherwise left to right, and the tests measure that the day number stays at the top
+  left and that nothing spills past the cell edge.
 
 ## The music catalogue
 
