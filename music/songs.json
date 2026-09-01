@@ -171,5 +171,14 @@
     "lyrics": "",
     "albumId": "best-songs",
     "genre": "Hebrew"
+  },
+  {
+    "id": "song-1788291946772",
+    "title": "Elokai",
+    "audio": "song-1788291946772.wav",
+    "added": "2026-09-01T19:46:02.787Z",
+    "albumId": "best-songs",
+    "artwork": "art/song-1788291946772.png",
+    "lyrics": ""
   }
 ]
