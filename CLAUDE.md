@@ -245,6 +245,33 @@ To test any of this, stub `window.visualViewport` and `window.innerHeight` befor
 page's own script runs, then shrink them. A headless browser has no keyboard, which is
 exactly why this bug survived testing the first time.
 
+## Pull to refresh
+
+Every page sets `overscroll-behavior` on `html, body`, which was asked for and stays:
+it stops the whole page rubber-banding when a scroll runs out. It also switches off
+Chrome's own pull to refresh, and the user later asked for that gesture back. Inside
+the portal the tool sits in an iframe, so the native gesture would have had to chain
+out to the shell to reach the browser at all.
+
+So the gesture is drawn, in `assets/cj-refresh.js`, loaded by every page except the
+shell (the shell has no content of its own, and the frame it holds carries the script).
+It reloads **the frame it runs in**, so in the portal that is the tool, not the shell,
+and the address bar does not move.
+
+What it will not do, all of it deliberate and all of it tested:
+
+- Nothing on a mouse. It needs `ontouchstart` **and** `(pointer: coarse)`.
+- Nothing unless the scroller under the finger is already at its top. That scroller is
+  not always the page: the Shopping List and the calendar's day sheet are their own.
+- Nothing from inside a field, or inside anything with `role="dialog"`.
+- Nothing sideways. A drag whose horizontal part beats its vertical part is dropped
+  before any `preventDefault`, so a page's own sideways flick is untouched.
+- A page can opt out entirely with `data-no-refresh` on `<html>`.
+
+Testing this needs real touch, which Playwright's `mouse` is not: use
+`Input.dispatchTouchEvent` over a CDP session in a context with `hasTouch` and
+`isMobile`. `pull-test.mjs` does the whole set, the portal case included.
+
 ## The stopwatch
 
 The dial is drawn, not drawn on. `buildFace()` lays out the ticks, the numerals and
