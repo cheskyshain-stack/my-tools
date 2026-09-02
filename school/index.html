@@ -56,6 +56,16 @@
     background-image:linear-gradient(45deg,transparent 50%,#93A3C7 50%),linear-gradient(135deg,#93A3C7 50%,transparent 50%);
     background-position:calc(100% - 17px) 17px,calc(100% - 12px) 17px;background-size:5px 5px;background-repeat:no-repeat}
 
+  /* ===== Whose calendar ===== */
+  /* Three segments rather than a dropdown: which child you are looking at is
+     the first thing you decide here, and it should be one tap, not two. */
+  .who{display:flex;gap:4px;padding:4px;margin-bottom:11px;border-radius:14px;
+    background:rgba(255,255,255,.045);border:1px solid var(--cj-line,rgba(255,255,255,.08))}
+  .who button{flex:1 1 0;min-width:0;height:36px;padding:0 6px;border:0;border-radius:10px;cursor:pointer;
+    background:transparent;color:var(--cj-muted,#93A3C7);font:700 12.5px/1 inherit;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who button.on{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff}
+
   /* ===== The month grid ===== */
   .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
   .dow div{
@@ -132,6 +142,17 @@
   .t-fds{background:rgba(245,179,1,.16);color:#f7d08a}
   .t-event{background:rgba(167,139,250,.16);color:#c9b8fd}
 
+  /* In Both, a kindergarten day keeps its category colour and wears a ring, so
+     one glance still answers "what kind of day" and "whose". */
+  .dot.is-kg{background:transparent;box-shadow:inset 0 0 0 2px currentColor}
+  .dot.is-kg.c-off{color:#F26D6D}.dot.is-kg.c-begins{color:#34D399}
+  .dot.is-kg.c-dismissal{color:#4C9BF5}.dot.is-kg.c-fds{color:#F5B301}
+  .dot.is-kg.c-event{color:#A78BFA}
+  .ev-tag.t-who{background:rgba(255,255,255,.07);color:var(--cj-muted,#93A3C7)}
+  .notes h3{font:600 12.5px/1.3 inherit;color:var(--cj-muted,#93A3C7);margin:14px 0 7px;
+    text-transform:uppercase;letter-spacing:.5px}
+  .notes h3:first-child{margin-top:0}
+
   .legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:2px}
   .legend span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
 
@@ -172,7 +193,7 @@
   /* ===== Print: one month a page ===== */
   @media print{
     body{background:#fff;color:#000;max-width:none;padding:0}
-    .cj-page-header,.bar,#sheet,.no-print{display:none!important}
+    .cj-page-header,.bar,.who,#sheet,.no-print{display:none!important}
     .card{background:#fff;border:1px solid #999;box-shadow:none;break-inside:avoid;margin:0 0 10px}
     .month-page{break-after:page}
     .month-page:last-child{break-after:auto}
@@ -191,6 +212,12 @@
   <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/school/icon.png" alt="School Calendar"></a>
   <h1>School Calendar</h1>
 </header>
+
+<div class="who no-print" id="who" role="group" aria-label="Whose calendar to show">
+  <button type="button" data-who="yk">Yeshiva K'tana</button>
+  <button type="button" data-who="kg">Miriam</button>
+  <button type="button" data-who="both">Both</button>
+</div>
 
 <div class="bar no-print">
   <button class="nav-btn" id="prev" type="button" aria-label="Previous month">‹</button>
@@ -213,12 +240,13 @@
     <span><i class="dot c-dismissal"></i>Dismissal change</span>
     <span><i class="dot c-fds"></i>Friday schedule</span>
     <span><i class="dot c-event"></i>School event</span>
+    <span id="legendKg" style="display:none"><i class="dot is-kg c-off"></i>A ring means Miriam</span>
   </div>
 </div>
 
 <div class="card notes">
   <h2>Notes</h2>
-  <ul id="notes"></ul>
+  <div id="notes"></div>
 </div>
 
 <div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -236,7 +264,7 @@
 /* The calendar itself, straight from the workbook. Inlined rather than
    fetched: there is no build step here, so a second file would be a second
    thing to cache and a second thing to go stale. */
-var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events":[{"start":"2026-08-19","end":"2026-08-19","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Aug. 19, 2026","text":"Limudei Kodesh begins Grades 1-8 F.D.S","cat":"begins"},{"start":"2026-08-20","end":"2026-08-20","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Aug. 20, 2026","text":"Primary begins 9:30\nPri – 8 F.D.S","cat":"begins"},{"start":"2026-08-23","end":"2026-08-23","days":1,"printedDay":"Sunday","hebrew":"10 Elul","gregorian":"Aug. 23, 2026","text":"Dismissal: Grades P-4 1:00\nGrades 5-8 2:15","cat":"dismissal"},{"start":"2026-08-24","end":"2026-08-27","days":4,"printedDay":"Monday - Thursday","hebrew":"11-14 Elul","gregorian":"Aug. 24-27, 2026","text":"Dismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal"},{"start":"2026-08-24","end":"2026-08-24","days":1,"printedDay":"Monday","hebrew":"11 Elul","gregorian":"Aug. 24, 2026","text":"Minyan begins 7:40","cat":"begins"},{"start":"2026-08-31","end":"2026-08-31","days":1,"printedDay":"Monday","hebrew":"18 Elul","gregorian":"Aug. 31, 2026","text":"General Studies begins\nDismissal: Primary 2:45\nGrades 1-4 3:45\nGrades 5-8 5:00","cat":"begins"},{"start":"2026-09-06","end":"2026-09-06","days":1,"printedDay":"Sunday","hebrew":"24 Elul","gregorian":"Sep. 6, 2026","text":"First day Selichos - School begins at 10:00","cat":"begins"},{"start":"2026-09-11","end":"2026-09-13","days":3,"printedDay":"Friday - Sunday","hebrew":"29 Elul-2 Tishrei","gregorian":"Sep. 11-13, 2026","text":"Rosh Hashana - No School","cat":"off"},{"start":"2026-09-14","end":"2026-09-14","days":1,"printedDay":"Monday","hebrew":"3 Tishrei","gregorian":"Sep. 14, 2026","text":"Tzom Gedalya - School begins 9:30 - F.D.S No Minyan","cat":"begins"},{"start":"2026-09-20","end":"2026-09-21","days":2,"printedDay":"Sunday - Monday","hebrew":"9-10 Tishrei","gregorian":"Sep. 20-21, 2026","text":"Erev Yom Kipper/Yom Kippur - No School","cat":"off"},{"start":"2026-09-23","end":"2026-09-23","days":1,"printedDay":"Wednesday","hebrew":"12 Tishrei","gregorian":"Sep. 23, 2026","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal"},{"start":"2026-09-24","end":"2026-09-24","days":1,"printedDay":"Thursday","hebrew":"13 Tishrei","gregorian":"Sep. 24, 2026","text":"F.D.S","cat":"fds"},{"start":"2026-09-25","end":"2026-10-05","days":11,"printedDay":"Friday - Monday","hebrew":"14-24 Tishrei","gregorian":"Sep. 25-Oct. 5, 2026","text":"Succos - No School","cat":"off"},{"start":"2026-10-06","end":"2026-10-06","days":1,"printedDay":"Tuesday","hebrew":"25 Tishrei","gregorian":"Oct. 6, 2026","text":"All Sessions Resume","cat":"begins"},{"start":"2026-10-21","end":"2026-10-21","days":1,"printedDay":"Wednesday","hebrew":"10 Cheshvan","gregorian":"Oct. 21, 2026","text":"P.T.A.","cat":"event"},{"start":"2026-11-24","end":"2026-11-24","days":1,"printedDay":"Tuesday","hebrew":"14 Kislev","gregorian":"Nov. 24, 2026","text":"Report Cards","cat":"event"},{"start":"2026-12-06","end":"2026-12-06","days":1,"printedDay":"Sunday","hebrew":"26 Kislev","gregorian":"Dec. 6, 2026","text":"Chanukah - F.D.S","cat":"fds"},{"start":"2026-12-07","end":"2026-12-08","days":2,"printedDay":"Monday-Tuesday","hebrew":"27-28 Kislev","gregorian":"Dec. 7-8, 2026","text":"Chanukah Dismissal Grades 1-4 3:45\nGrades 5-8 4:10 carpool only","cat":"dismissal"},{"start":"2026-12-09","end":"2026-12-09","days":1,"printedDay":"Wednesday","hebrew":"29 Kislev","gregorian":"Dec. 9, 2026","text":"Chanukah Dismissal Grades 1-3 3:45\nGrades 5-8 2:50 carpool only","cat":"dismissal"},{"start":"2026-12-10","end":"2026-12-10","days":1,"printedDay":"Thursday","hebrew":"30 Kislev","gregorian":"Dec. 10, 2026","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2026-12-11","end":"2026-12-13","days":3,"printedDay":"Friday - Sunday","hebrew":"1-3 Teves","gregorian":"Dec. 11-13, 2026","text":"Chanukah Vacation","cat":"off"},{"start":"2026-12-20","end":"2026-12-20","days":1,"printedDay":"Sunday","hebrew":"10 Teves","gregorian":"Dec. 20, 2026","text":"Asara B'Teves - F.D.S","cat":"fds"},{"start":"2027-01-28","end":"2027-01-28","days":1,"printedDay":"Thursday","hebrew":"20 Shevat","gregorian":"Jan. 28, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-01-29","end":"2027-01-31","days":3,"printedDay":"Friday - Sunday","hebrew":"21-23 Shevat","gregorian":"Jan. 29-31, 2027","text":"Midwinter Vacation","cat":"off"},{"start":"2027-02-16","end":"2027-02-16","days":1,"printedDay":"Tuesday","hebrew":"9 Adar I","gregorian":"Feb. 16, 2027","text":"Report cards","cat":"event"},{"start":"2027-02-17","end":"2027-02-17","days":1,"printedDay":"Wednesday","hebrew":"10 Adar I","gregorian":"Feb. 17, 2027","text":"P.T.A","cat":"event"},{"start":"2027-03-14","end":"2027-03-14","days":1,"printedDay":"Sunday","hebrew":"5 Adar","gregorian":"Mar. 14, 2027","text":"Daylight Savings Time begins\nSchool begins 10:00 - No Minyan (6-8)","cat":"begins"},{"start":"2027-03-22","end":"2027-03-22","days":1,"printedDay":"Monday","hebrew":"13 Adar","gregorian":"Mar. 22, 2027","text":"Taanis Esther F.D.S","cat":"fds"},{"start":"2027-03-23","end":"2027-03-24","days":2,"printedDay":"Tuesday-Wednesday","hebrew":"14-15 Adar","gregorian":"Mar. 23-24, 2027","text":"Purim - No Sessions","cat":"off"},{"start":"2027-04-15","end":"2027-04-15","days":1,"printedDay":"Thursday","hebrew":"8 Nissan","gregorian":"Apr. 15, 2027","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal"},{"start":"2027-04-19","end":"2027-04-19","days":1,"printedDay":"Monday","hebrew":"12 Nissan","gregorian":"Apr. 19, 2027","text":"F.D.S.","cat":"fds"},{"start":"2027-04-20","end":"2027-04-30","days":11,"printedDay":"Tuesday - Friday","hebrew":"13-23 Nissan","gregorian":"Apr. 20-30, 2027","text":"Pesach - No Sessions","cat":"off"},{"start":"2027-05-02","end":"2027-05-02","days":1,"printedDay":"Sunday","hebrew":"25 Nissan","gregorian":"May 2, 2027","text":"All Sessions Resume","cat":"begins"},{"start":"2027-05-25","end":"2027-05-25","days":1,"printedDay":"Tuesday","hebrew":"18 Iyar","gregorian":"May 25, 2027","text":"Lag Ba'Omer - F.D.S","cat":"fds"},{"start":"2027-06-10","end":"2027-06-10","days":1,"printedDay":"Thursday","hebrew":"5 Sivan","gregorian":"June 10, 2027","text":"Erev Shavuos - F.D.S.","cat":"fds"},{"start":"2027-06-11","end":"2027-06-11","days":1,"printedDay":"Friday","hebrew":"6 Sivan","gregorian":"June 11, 2027","text":"Shavuos - No Sessions","cat":"off"},{"start":"2027-06-13","end":"2027-06-13","days":1,"printedDay":"Sunday","hebrew":"8 Sivan","gregorian":"June 13, 2027","text":"Isru Chag - School begins 9:30 - No Minyan (6-8)","cat":"begins"},{"start":"2027-06-20","end":"2027-06-20","days":1,"printedDay":"Sunday","hebrew":"15 Sivan","gregorian":"June 20, 2027","text":"All grades - F.D.S","cat":"fds"},{"start":"2027-06-29","end":"2027-06-29","days":1,"printedDay":"Tuesday","hebrew":"24 Sivan","gregorian":"June 29, 2027","text":"Last day General Studies\nDismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal"},{"start":"2027-06-30","end":"2027-06-30","days":1,"printedDay":"Wednesday","hebrew":"25 Sivan","gregorian":"June 30, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-07-01","end":"2027-07-01","days":1,"printedDay":"Thursday","hebrew":"26 Sivan","gregorian":"July 1, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal"},{"start":"2027-07-02","end":"2027-07-04","days":3,"printedDay":"Friday-Sunday","hebrew":"27-29 Sivan","gregorian":"July 2-4, 2027","text":"No Sessions","cat":"off"},{"start":"2027-07-05","end":"2027-07-05","days":1,"printedDay":"Monday","hebrew":"30 Sivan","gregorian":"July 5, 2027","text":"Summer Schedule Begins","cat":"begins"},{"start":"2027-07-22","end":"2027-07-22","days":1,"printedDay":"Thursday","hebrew":"17 Tamuz","gregorian":"July 22, 2027","text":"Taanis - F.D.S","cat":"fds"},{"start":"2027-07-27","end":"2027-07-27","days":1,"printedDay":"Tuesday","hebrew":"22 Tamuz","gregorian":"July 27, 2027","text":"6th Grade Siyum Makos","cat":"event"},{"start":"2027-07-28","end":"2027-07-28","days":1,"printedDay":"Wednesday","hebrew":"23 Tamuz","gregorian":"July 28, 2027","text":"8th Grade Graduation","cat":"event"},{"start":"2027-07-29","end":"2027-07-29","days":1,"printedDay":"Thursday","hebrew":"24 Tamuz","gregorian":"July 29, 2027","text":"Last day of School F.D.S","cat":"fds"},{"start":"2027-09-08","end":"2027-09-08","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Sep. 8, 2027","text":"First day of School F.D.S","cat":"fds"},{"start":"2027-09-09","end":"2027-09-09","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Sep. 9, 2027","text":"Primary Begins","cat":"begins"}],"notes":["General Studies dismissal:\nPrimary 2:45\nGr. 1–4 3:45\nGr. 5–8 5:00","FDS: Friday dismissal\n12:20 all grades","Sunday:\nPrimary–4th 1:00\n5th–8th 2:15","Office #: 732-363-0303","Snow #: 732-370-3182","Chumash Seudas: Sun., June 20\n9:15 R’ Guttman | 10:45 R’ Birnhack | 12:45 R’ Brecher"],"heb":{"2026-08-22":{"p":"כי תצא"},"2026-08-29":{"p":"כי תבא"},"2026-09-05":{"p":"נצבים - וילך"},"2026-09-12":{"yt":"ראש השנה"},"2026-09-13":{"yt":"ראש השנה"},"2026-09-14":{"yt":"צום גדליה"},"2026-09-19":{"p":"האזינו","sp":"שובה"},"2026-09-21":{"yt":"יום כיפור"},"2026-09-26":{"yt":"סוכות"},"2026-09-27":{"yt":"סוכות"},"2026-09-28":{"yt":"חול המועד סוכות"},"2026-09-29":{"yt":"חול המועד סוכות"},"2026-09-30":{"yt":"חול המועד סוכות"},"2026-10-01":{"yt":"חול המועד סוכות"},"2026-10-02":{"yt":"הושענא רבה"},"2026-10-03":{"yt":"שמיני עצרת"},"2026-10-04":{"yt":"שמחת תורה"},"2026-10-10":{"p":"בראשית"},"2026-10-11":{"rc":"ראש חודש חשון"},"2026-10-12":{"rc":"ראש חודש חשון"},"2026-10-17":{"p":"נח"},"2026-10-24":{"p":"לך לך"},"2026-10-31":{"p":"וירא"},"2026-11-07":{"p":"חיי שרה"},"2026-11-10":{"rc":"ראש חודש כסלו"},"2026-11-11":{"rc":"ראש חודש כסלו"},"2026-11-14":{"p":"תולדות"},"2026-11-21":{"p":"ויצא"},"2026-11-28":{"p":"וישלח"},"2026-12-05":{"yt":"א׳ חנוכה","p":"וישב"},"2026-12-06":{"yt":"ב׳ חנוכה"},"2026-12-07":{"yt":"ג׳ חנוכה"},"2026-12-08":{"yt":"ד׳ חנוכה"},"2026-12-09":{"yt":"ה׳ חנוכה"},"2026-12-10":{"yt":"ו׳ חנוכה","rc":"ראש חודש טבת"},"2026-12-11":{"yt":"ז׳ חנוכה","rc":"ראש חודש טבת"},"2026-12-12":{"yt":"ח׳ חנוכה","p":"מקץ"},"2026-12-19":{"p":"ויגש"},"2026-12-20":{"yt":"עשרה בטבת"},"2026-12-26":{"p":"ויחי"},"2027-01-02":{"p":"שמות"},"2027-01-09":{"p":"וארא","rc":"ראש חודש שבט"},"2027-01-16":{"p":"בא"},"2027-01-23":{"yt":"ט״ו בשבט","p":"בשלח","sp":"שירה"},"2027-01-30":{"p":"יתרו"},"2027-02-06":{"p":"משפטים"},"2027-02-07":{"rc":"ראש חודש אדר א׳"},"2027-02-08":{"rc":"ראש חודש אדר א׳"},"2027-02-13":{"p":"תרומה"},"2027-02-20":{"p":"תצוה"},"2027-02-27":{"p":"כי תשא"},"2027-03-06":{"p":"ויקהל","sp":"שקלים"},"2027-03-09":{"rc":"ראש חודש אדר ב׳"},"2027-03-10":{"rc":"ראש חודש אדר ב׳"},"2027-03-13":{"p":"פקודי"},"2027-03-20":{"p":"ויקרא","sp":"זכור"},"2027-03-22":{"yt":"תענית אסתר"},"2027-03-23":{"yt":"פורים"},"2027-03-24":{"yt":"שושן פורים"},"2027-03-27":{"p":"צו","sp":"פרה"},"2027-04-03":{"p":"שמיני","sp":"החדש"},"2027-04-08":{"rc":"ראש חודש ניסן"},"2027-04-10":{"p":"תזריע"},"2027-04-17":{"p":"מצורע","sp":"הגדול"},"2027-04-22":{"yt":"פסח"},"2027-04-23":{"yt":"פסח"},"2027-04-24":{"yt":"חול המועד פסח"},"2027-04-25":{"yt":"חול המועד פסח"},"2027-04-26":{"yt":"חול המועד פסח"},"2027-04-27":{"yt":"חול המועד פסח"},"2027-04-28":{"yt":"פסח"},"2027-04-29":{"yt":"פסח"},"2027-05-01":{"p":"אחרי מות"},"2027-05-07":{"rc":"ראש חודש אייר"},"2027-05-08":{"p":"קדושים","rc":"ראש חודש אייר"},"2027-05-15":{"p":"אמור"},"2027-05-21":{"yt":"פסח שני"},"2027-05-22":{"p":"בהר"},"2027-05-25":{"yt":"ל״ג בעומר"},"2027-05-29":{"p":"בחוקותי"},"2027-06-05":{"p":"במדבר"},"2027-06-06":{"rc":"ראש חודש סיון"},"2027-06-11":{"yt":"שבועות"},"2027-06-12":{"yt":"שבועות"},"2027-06-19":{"p":"נשא"},"2027-06-26":{"p":"בהעלותך"},"2027-07-03":{"p":"שלח"},"2027-07-05":{"rc":"ראש חודש תמוז"},"2027-07-06":{"rc":"ראש חודש תמוז"},"2027-07-10":{"p":"קרח"},"2027-07-17":{"p":"חקת - בלק"},"2027-07-22":{"yt":"שבעה עשר בתמוז"},"2027-07-24":{"p":"פינחס"},"2027-07-31":{"p":"מטות - מסעי"},"2027-08-04":{"rc":"ראש חודש אב"},"2027-08-07":{"p":"דברים","sp":"חזון"},"2027-08-12":{"yt":"תשעה באב"},"2027-08-14":{"p":"ואתחנן","sp":"נחמו"},"2027-08-18":{"yt":"ט״ו באב"},"2027-08-21":{"p":"עקב"},"2027-08-28":{"p":"ראה"},"2027-09-02":{"rc":"ראש חודש אלול"},"2027-09-03":{"rc":"ראש חודש אלול"},"2027-09-04":{"p":"שופטים"}}};
+var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events":[{"start":"2026-08-19","end":"2026-08-19","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Aug. 19, 2026","text":"Limudei Kodesh begins Grades 1-8 F.D.S","cat":"begins","who":"yk"},{"start":"2026-08-20","end":"2026-08-20","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Aug. 20, 2026","text":"Primary begins 9:30\nPri – 8 F.D.S","cat":"begins","who":"yk"},{"start":"2026-08-23","end":"2026-08-23","days":1,"printedDay":"Sunday","hebrew":"10 Elul","gregorian":"Aug. 23, 2026","text":"Dismissal: Grades P-4 1:00\nGrades 5-8 2:15","cat":"dismissal","who":"yk"},{"start":"2026-08-24","end":"2026-08-24","days":1,"printedDay":"Monday","hebrew":"11 Elul","gregorian":"Aug. 24, 2026","text":"Minyan begins 7:40","cat":"begins","who":"yk"},{"start":"2026-08-24","end":"2026-08-27","days":4,"printedDay":"Monday - Thursday","hebrew":"11-14 Elul","gregorian":"Aug. 24-27, 2026","text":"Dismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal","who":"yk"},{"start":"2026-08-31","end":"2026-08-31","days":1,"printedDay":"Monday","hebrew":"18 Elul","gregorian":"Aug. 31, 2026","text":"General Studies begins\nDismissal: Primary 2:45\nGrades 1-4 3:45\nGrades 5-8 5:00","cat":"begins","who":"yk"},{"start":"2026-09-02","end":"2026-09-02","days":1,"printedDay":"Wednesday","hebrew":"20 Elul","gregorian":"Sep. 2, 2026","text":"Orientation","cat":"event","who":"kg"},{"start":"2026-09-03","end":"2026-09-03","days":1,"printedDay":"Thursday","hebrew":"21 Elul","gregorian":"Sep. 3, 2026","text":"Kindergarten begins","cat":"begins","who":"kg"},{"start":"2026-09-06","end":"2026-09-06","days":1,"printedDay":"Sunday","hebrew":"24 Elul","gregorian":"Sep. 6, 2026","text":"First day Selichos - School begins at 10:00","cat":"begins","who":"yk"},{"start":"2026-09-11","end":"2026-09-13","days":3,"printedDay":"Friday - Sunday","hebrew":"29 Elul-2 Tishrei","gregorian":"Sep. 11-13, 2026","text":"Rosh Hashana - No School","cat":"off","who":"yk"},{"start":"2026-09-11","end":"2026-09-11","days":1,"printedDay":"Friday","hebrew":"29 Elul","gregorian":"Sep. 11, 2026","text":"Erev Rosh Hashana - No School","cat":"off","who":"kg"},{"start":"2026-09-14","end":"2026-09-14","days":1,"printedDay":"Monday","hebrew":"3 Tishrei","gregorian":"Sep. 14, 2026","text":"Tzom Gedalya - School begins 9:30 - F.D.S No Minyan","cat":"begins","who":"yk"},{"start":"2026-09-14","end":"2026-09-14","days":1,"printedDay":"Monday","hebrew":"3 Tishrei","gregorian":"Sep. 14, 2026","text":"Tzom Gedalya - Friday Dismissal","cat":"fds","who":"kg"},{"start":"2026-09-20","end":"2026-09-21","days":2,"printedDay":"Sunday - Monday","hebrew":"9-10 Tishrei","gregorian":"Sep. 20-21, 2026","text":"Erev Yom Kipper/Yom Kippur - No School","cat":"off","who":"yk"},{"start":"2026-09-21","end":"2026-09-21","days":1,"printedDay":"Monday","hebrew":"10 Tishrei","gregorian":"Sep. 21, 2026","text":"Yom Kippur - No School","cat":"off","who":"kg"},{"start":"2026-09-23","end":"2026-09-23","days":1,"printedDay":"Wednesday","hebrew":"12 Tishrei","gregorian":"Sep. 23, 2026","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal","who":"yk"},{"start":"2026-09-24","end":"2026-09-24","days":1,"printedDay":"Thursday","hebrew":"13 Tishrei","gregorian":"Sep. 24, 2026","text":"F.D.S","cat":"fds","who":"yk"},{"start":"2026-09-24","end":"2026-10-05","days":12,"printedDay":"Thursday - Monday","hebrew":"13-24 Tishrei","gregorian":"Sep. 24-Oct. 5, 2026","text":"Succos Vacation - No School","cat":"off","who":"kg"},{"start":"2026-09-25","end":"2026-10-05","days":11,"printedDay":"Friday - Monday","hebrew":"14-24 Tishrei","gregorian":"Sep. 25-Oct. 5, 2026","text":"Succos - No School","cat":"off","who":"yk"},{"start":"2026-10-06","end":"2026-10-06","days":1,"printedDay":"Tuesday","hebrew":"25 Tishrei","gregorian":"Oct. 6, 2026","text":"All Sessions Resume","cat":"begins","who":"yk"},{"start":"2026-10-21","end":"2026-10-21","days":1,"printedDay":"Wednesday","hebrew":"10 Cheshvan","gregorian":"Oct. 21, 2026","text":"P.T.A.","cat":"event","who":"yk"},{"start":"2026-11-24","end":"2026-11-24","days":1,"printedDay":"Tuesday","hebrew":"14 Kislev","gregorian":"Nov. 24, 2026","text":"Report Cards","cat":"event","who":"yk"},{"start":"2026-12-04","end":"2026-12-04","days":1,"printedDay":"Friday","hebrew":"24 Kislev","gregorian":"Dec. 4, 2026","text":"Chanuka Vacation - No School","cat":"off","who":"kg"},{"start":"2026-12-06","end":"2026-12-06","days":1,"printedDay":"Sunday","hebrew":"26 Kislev","gregorian":"Dec. 6, 2026","text":"Chanukah - F.D.S","cat":"fds","who":"yk"},{"start":"2026-12-07","end":"2026-12-08","days":2,"printedDay":"Monday-Tuesday","hebrew":"27-28 Kislev","gregorian":"Dec. 7-8, 2026","text":"Chanukah Dismissal Grades 1-4 3:45\nGrades 5-8 4:10 carpool only","cat":"dismissal","who":"yk"},{"start":"2026-12-09","end":"2026-12-09","days":1,"printedDay":"Wednesday","hebrew":"29 Kislev","gregorian":"Dec. 9, 2026","text":"Chanukah Dismissal Grades 1-3 3:45\nGrades 5-8 2:50 carpool only","cat":"dismissal","who":"yk"},{"start":"2026-12-10","end":"2026-12-10","days":1,"printedDay":"Thursday","hebrew":"30 Kislev","gregorian":"Dec. 10, 2026","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal","who":"yk"},{"start":"2026-12-10","end":"2026-12-11","days":2,"printedDay":"Thursday - Friday","hebrew":"30 Kislev-1 Teves","gregorian":"Dec. 10-11, 2026","text":"Chanuka Vacation - No School","cat":"off","who":"kg"},{"start":"2026-12-11","end":"2026-12-13","days":3,"printedDay":"Friday - Sunday","hebrew":"1-3 Teves","gregorian":"Dec. 11-13, 2026","text":"Chanukah Vacation","cat":"off","who":"yk"},{"start":"2026-12-20","end":"2026-12-20","days":1,"printedDay":"Sunday","hebrew":"10 Teves","gregorian":"Dec. 20, 2026","text":"Asara B'Teves - F.D.S","cat":"fds","who":"yk"},{"start":"2027-01-28","end":"2027-01-28","days":1,"printedDay":"Thursday","hebrew":"20 Shevat","gregorian":"Jan. 28, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal","who":"yk"},{"start":"2027-01-29","end":"2027-01-31","days":3,"printedDay":"Friday - Sunday","hebrew":"21-23 Shevat","gregorian":"Jan. 29-31, 2027","text":"Midwinter Vacation","cat":"off","who":"yk"},{"start":"2027-01-29","end":"2027-02-01","days":4,"printedDay":"Friday - Monday","hebrew":"21-24 Shevat","gregorian":"Jan. 29-Feb. 1, 2027","text":"Mid-Winter Vacation - No School","cat":"off","who":"kg"},{"start":"2027-02-16","end":"2027-02-16","days":1,"printedDay":"Tuesday","hebrew":"9 Adar I","gregorian":"Feb. 16, 2027","text":"Report cards","cat":"event","who":"yk"},{"start":"2027-02-17","end":"2027-02-17","days":1,"printedDay":"Wednesday","hebrew":"10 Adar I","gregorian":"Feb. 17, 2027","text":"P.T.A","cat":"event","who":"yk"},{"start":"2027-03-14","end":"2027-03-14","days":1,"printedDay":"Sunday","hebrew":"5 Adar","gregorian":"Mar. 14, 2027","text":"Daylight Savings Time begins\nSchool begins 10:00 - No Minyan (6-8)","cat":"begins","who":"yk"},{"start":"2027-03-22","end":"2027-03-22","days":1,"printedDay":"Monday","hebrew":"13 Adar","gregorian":"Mar. 22, 2027","text":"Taanis Esther F.D.S","cat":"fds","who":"yk"},{"start":"2027-03-22","end":"2027-03-22","days":1,"printedDay":"Monday","hebrew":"13 Adar","gregorian":"Mar. 22, 2027","text":"Friday Dismissal","cat":"fds","who":"kg"},{"start":"2027-03-23","end":"2027-03-24","days":2,"printedDay":"Tuesday-Wednesday","hebrew":"14-15 Adar","gregorian":"Mar. 23-24, 2027","text":"Purim - No Sessions","cat":"off","who":"yk"},{"start":"2027-03-23","end":"2027-03-24","days":2,"printedDay":"Tuesday - Wednesday","hebrew":"14-15 Adar","gregorian":"Mar. 23-24, 2027","text":"Purim - No School","cat":"off","who":"kg"},{"start":"2027-04-15","end":"2027-04-15","days":1,"printedDay":"Thursday","hebrew":"8 Nissan","gregorian":"Apr. 15, 2027","text":"Grade 8 - Dismissal 3:00, no transportation","cat":"dismissal","who":"yk"},{"start":"2027-04-16","end":"2027-04-30","days":15,"printedDay":"Friday - Friday","hebrew":"9-23 Nissan","gregorian":"Apr. 16-30, 2027","text":"Pesach Vacation - No School","cat":"off","who":"kg"},{"start":"2027-04-19","end":"2027-04-19","days":1,"printedDay":"Monday","hebrew":"12 Nissan","gregorian":"Apr. 19, 2027","text":"F.D.S.","cat":"fds","who":"yk"},{"start":"2027-04-20","end":"2027-04-30","days":11,"printedDay":"Tuesday - Friday","hebrew":"13-23 Nissan","gregorian":"Apr. 20-30, 2027","text":"Pesach - No Sessions","cat":"off","who":"yk"},{"start":"2027-05-02","end":"2027-05-02","days":1,"printedDay":"Sunday","hebrew":"25 Nissan","gregorian":"May 2, 2027","text":"All Sessions Resume","cat":"begins","who":"yk"},{"start":"2027-05-25","end":"2027-05-25","days":1,"printedDay":"Tuesday","hebrew":"18 Iyar","gregorian":"May 25, 2027","text":"Lag Ba'Omer - F.D.S","cat":"fds","who":"yk"},{"start":"2027-06-10","end":"2027-06-10","days":1,"printedDay":"Thursday","hebrew":"5 Sivan","gregorian":"June 10, 2027","text":"Erev Shavuos - F.D.S.","cat":"fds","who":"yk"},{"start":"2027-06-10","end":"2027-06-11","days":2,"printedDay":"Thursday - Friday","hebrew":"5-6 Sivan","gregorian":"June 10-11, 2027","text":"Shavuos - No School","cat":"off","who":"kg"},{"start":"2027-06-11","end":"2027-06-11","days":1,"printedDay":"Friday","hebrew":"6 Sivan","gregorian":"June 11, 2027","text":"Shavuos - No Sessions","cat":"off","who":"yk"},{"start":"2027-06-13","end":"2027-06-13","days":1,"printedDay":"Sunday","hebrew":"8 Sivan","gregorian":"June 13, 2027","text":"Isru Chag - School begins 9:30 - No Minyan (6-8)","cat":"begins","who":"yk"},{"start":"2027-06-20","end":"2027-06-20","days":1,"printedDay":"Sunday","hebrew":"15 Sivan","gregorian":"June 20, 2027","text":"All grades - F.D.S","cat":"fds","who":"yk"},{"start":"2027-06-29","end":"2027-06-29","days":1,"printedDay":"Tuesday","hebrew":"24 Sivan","gregorian":"June 29, 2027","text":"Last day General Studies\nDismissal: Grades P-4 1:35\nGrades 5-8 2:35","cat":"dismissal","who":"yk"},{"start":"2027-06-30","end":"2027-06-30","days":1,"printedDay":"Wednesday","hebrew":"25 Sivan","gregorian":"June 30, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal","who":"yk"},{"start":"2027-07-01","end":"2027-07-01","days":1,"printedDay":"Thursday","hebrew":"26 Sivan","gregorian":"July 1, 2027","text":"Dismissal: Primary - 8 F.D.S","cat":"dismissal","who":"yk"},{"start":"2027-07-02","end":"2027-07-04","days":3,"printedDay":"Friday-Sunday","hebrew":"27-29 Sivan","gregorian":"July 2-4, 2027","text":"No Sessions","cat":"off","who":"yk"},{"start":"2027-07-05","end":"2027-07-05","days":1,"printedDay":"Monday","hebrew":"30 Sivan","gregorian":"July 5, 2027","text":"Summer Schedule Begins","cat":"begins","who":"yk"},{"start":"2027-07-22","end":"2027-07-22","days":1,"printedDay":"Thursday","hebrew":"17 Tamuz","gregorian":"July 22, 2027","text":"Taanis - F.D.S","cat":"fds","who":"yk"},{"start":"2027-07-27","end":"2027-07-27","days":1,"printedDay":"Tuesday","hebrew":"22 Tamuz","gregorian":"July 27, 2027","text":"6th Grade Siyum Makos","cat":"event","who":"yk"},{"start":"2027-07-28","end":"2027-07-28","days":1,"printedDay":"Wednesday","hebrew":"23 Tamuz","gregorian":"July 28, 2027","text":"8th Grade Graduation","cat":"event","who":"yk"},{"start":"2027-07-29","end":"2027-07-29","days":1,"printedDay":"Thursday","hebrew":"24 Tamuz","gregorian":"July 29, 2027","text":"Last day of School F.D.S","cat":"fds","who":"yk"},{"start":"2027-09-08","end":"2027-09-08","days":1,"printedDay":"Wednesday","hebrew":"6 Elul","gregorian":"Sep. 8, 2027","text":"First day of School F.D.S","cat":"fds","who":"yk"},{"start":"2027-09-09","end":"2027-09-09","days":1,"printedDay":"Thursday","hebrew":"7 Elul","gregorian":"Sep. 9, 2027","text":"Primary Begins","cat":"begins","who":"yk"}],"notes":["General Studies dismissal:\nPrimary 2:45\nGr. 1–4 3:45\nGr. 5–8 5:00","FDS: Friday dismissal\n12:20 all grades","Sunday:\nPrimary–4th 1:00\n5th–8th 2:15","Office #: 732-363-0303","Snow #: 732-370-3182","Chumash Seudas: Sun., June 20\n9:15 R’ Guttman | 10:45 R’ Birnhack | 12:45 R’ Brecher"],"heb":{"2026-08-22":{"p":"כי תצא"},"2026-08-29":{"p":"כי תבא"},"2026-09-05":{"p":"נצבים - וילך"},"2026-09-12":{"yt":"ראש השנה"},"2026-09-13":{"yt":"ראש השנה"},"2026-09-14":{"yt":"צום גדליה"},"2026-09-19":{"p":"האזינו","sp":"שובה"},"2026-09-21":{"yt":"יום כיפור"},"2026-09-26":{"yt":"סוכות"},"2026-09-27":{"yt":"סוכות"},"2026-09-28":{"yt":"חול המועד סוכות"},"2026-09-29":{"yt":"חול המועד סוכות"},"2026-09-30":{"yt":"חול המועד סוכות"},"2026-10-01":{"yt":"חול המועד סוכות"},"2026-10-02":{"yt":"הושענא רבה"},"2026-10-03":{"yt":"שמיני עצרת"},"2026-10-04":{"yt":"שמחת תורה"},"2026-10-10":{"p":"בראשית"},"2026-10-11":{"rc":"ראש חודש חשון"},"2026-10-12":{"rc":"ראש חודש חשון"},"2026-10-17":{"p":"נח"},"2026-10-24":{"p":"לך לך"},"2026-10-31":{"p":"וירא"},"2026-11-07":{"p":"חיי שרה"},"2026-11-10":{"rc":"ראש חודש כסלו"},"2026-11-11":{"rc":"ראש חודש כסלו"},"2026-11-14":{"p":"תולדות"},"2026-11-21":{"p":"ויצא"},"2026-11-28":{"p":"וישלח"},"2026-12-05":{"yt":"א׳ חנוכה","p":"וישב"},"2026-12-06":{"yt":"ב׳ חנוכה"},"2026-12-07":{"yt":"ג׳ חנוכה"},"2026-12-08":{"yt":"ד׳ חנוכה"},"2026-12-09":{"yt":"ה׳ חנוכה"},"2026-12-10":{"yt":"ו׳ חנוכה","rc":"ראש חודש טבת"},"2026-12-11":{"yt":"ז׳ חנוכה","rc":"ראש חודש טבת"},"2026-12-12":{"yt":"ח׳ חנוכה","p":"מקץ"},"2026-12-19":{"p":"ויגש"},"2026-12-20":{"yt":"עשרה בטבת"},"2026-12-26":{"p":"ויחי"},"2027-01-02":{"p":"שמות"},"2027-01-09":{"p":"וארא","rc":"ראש חודש שבט"},"2027-01-16":{"p":"בא"},"2027-01-23":{"yt":"ט״ו בשבט","p":"בשלח","sp":"שירה"},"2027-01-30":{"p":"יתרו"},"2027-02-06":{"p":"משפטים"},"2027-02-07":{"rc":"ראש חודש אדר א׳"},"2027-02-08":{"rc":"ראש חודש אדר א׳"},"2027-02-13":{"p":"תרומה"},"2027-02-20":{"p":"תצוה"},"2027-02-27":{"p":"כי תשא"},"2027-03-06":{"p":"ויקהל","sp":"שקלים"},"2027-03-09":{"rc":"ראש חודש אדר ב׳"},"2027-03-10":{"rc":"ראש חודש אדר ב׳"},"2027-03-13":{"p":"פקודי"},"2027-03-20":{"p":"ויקרא","sp":"זכור"},"2027-03-22":{"yt":"תענית אסתר"},"2027-03-23":{"yt":"פורים"},"2027-03-24":{"yt":"שושן פורים"},"2027-03-27":{"p":"צו","sp":"פרה"},"2027-04-03":{"p":"שמיני","sp":"החדש"},"2027-04-08":{"rc":"ראש חודש ניסן"},"2027-04-10":{"p":"תזריע"},"2027-04-17":{"p":"מצורע","sp":"הגדול"},"2027-04-22":{"yt":"פסח"},"2027-04-23":{"yt":"פסח"},"2027-04-24":{"yt":"חול המועד פסח"},"2027-04-25":{"yt":"חול המועד פסח"},"2027-04-26":{"yt":"חול המועד פסח"},"2027-04-27":{"yt":"חול המועד פסח"},"2027-04-28":{"yt":"פסח"},"2027-04-29":{"yt":"פסח"},"2027-05-01":{"p":"אחרי מות"},"2027-05-07":{"rc":"ראש חודש אייר"},"2027-05-08":{"p":"קדושים","rc":"ראש חודש אייר"},"2027-05-15":{"p":"אמור"},"2027-05-21":{"yt":"פסח שני"},"2027-05-22":{"p":"בהר"},"2027-05-25":{"yt":"ל״ג בעומר"},"2027-05-29":{"p":"בחוקותי"},"2027-06-05":{"p":"במדבר"},"2027-06-06":{"rc":"ראש חודש סיון"},"2027-06-11":{"yt":"שבועות"},"2027-06-12":{"yt":"שבועות"},"2027-06-19":{"p":"נשא"},"2027-06-26":{"p":"בהעלותך"},"2027-07-03":{"p":"שלח"},"2027-07-05":{"rc":"ראש חודש תמוז"},"2027-07-06":{"rc":"ראש חודש תמוז"},"2027-07-10":{"p":"קרח"},"2027-07-17":{"p":"חקת - בלק"},"2027-07-22":{"yt":"שבעה עשר בתמוז"},"2027-07-24":{"p":"פינחס"},"2027-07-31":{"p":"מטות - מסעי"},"2027-08-04":{"rc":"ראש חודש אב"},"2027-08-07":{"p":"דברים","sp":"חזון"},"2027-08-12":{"yt":"תשעה באב"},"2027-08-14":{"p":"ואתחנן","sp":"נחמו"},"2027-08-18":{"yt":"ט״ו באב"},"2027-08-21":{"p":"עקב"},"2027-08-28":{"p":"ראה"},"2027-09-02":{"rc":"ראש חודש אלול"},"2027-09-03":{"rc":"ראש חודש אלול"},"2027-09-04":{"p":"שופטים"}},"kgNotes":["Last day of school: to be announced"],"whoTitle":{"yk":"Yeshiva K'tana","kg":"Miriam"}};
 
 (function () {
   "use strict";
@@ -266,43 +294,77 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
   var CATS = { off:"No school", begins:"Starts or resumes", dismissal:"Dismissal change",
                fds:"Friday schedule", event:"School event", note:"Note" };
 
-  /* One entry per day the event covers, so a range paints across the grid
-     rather than sitting on its first day only. */
-  var byDay = {};
-  DATA.events.forEach(function (e, idx) {
-    var cur = e.start, n = 0;
-    while (cur <= e.end && n < 400) {
-      if (!byDay[cur]) { byDay[cur] = []; }
-      byDay[cur].push({ e: e, idx: idx, first: cur === e.start, last: cur === e.end });
-      cur = stepISO(cur, 1);
-      n++;
-    }
-  });
+  /* Two schools share this calendar: the boys' Yeshiva K'tana and Miriam's
+     kindergarten. They are not one schedule with a few extras. On 13 school
+     days one is off and the other is not, Dec 4 the sharpest of them, which is
+     why they are kept apart and the switch at the top says which you are
+     reading rather than merging them and hoping. */
+  var WHO_KEY = "cjSchoolWho";
+  var WHO_NAME = DATA.whoTitle || { yk: "Yeshiva K'tana", kg: "Miriam" };
+  var who = "both";
+  try {
+    var savedWho = localStorage.getItem(WHO_KEY);
+    if (savedWho === "yk" || savedWho === "kg" || savedWho === "both") { who = savedWho; }
+  } catch (err) {}
 
-  // Every month the calendar actually covers, first to last.
-  var first = DATA.events[0].start;
-  var lastEnd = DATA.events.reduce(function (a, e) { return e.end > a ? e.end : a; }, first);
-  var months = [];
-  (function () {
-    var p = parse(first), q = parse(lastEnd);
+  var el = function (id) { return document.getElementById(id); };
+  var events = [], byDay = {}, months = [], at = 0;
+
+  function rebuild(keepMonth) {
+    events = DATA.events.filter(function (e) { return who === "both" || e.who === who; });
+    if (!events.length) { events = DATA.events.slice(); }
+
+    /* One entry per day the event covers, so a range paints across the grid
+       rather than sitting on its first day only. */
+    byDay = {};
+    events.forEach(function (e, idx) {
+      var cur = e.start, n = 0;
+      while (cur <= e.end && n < 400) {
+        if (!byDay[cur]) { byDay[cur] = []; }
+        byDay[cur].push({ e: e, idx: idx, first: cur === e.start, last: cur === e.end });
+        cur = stepISO(cur, 1);
+        n++;
+      }
+    });
+
+    // Every month this selection actually covers, first to last. The
+    // kindergarten year is shorter than the yeshiva's, so this moves.
+    var firstDay = events[0].start;
+    var lastEnd = events.reduce(function (a, e) { return e.end > a ? e.end : a; }, firstDay);
+    months = [];
+    var p = parse(firstDay), q = parse(lastEnd);
     var y = p.y, m = p.m;
     while (y < q.y || (y === q.y && m <= q.m)) {
       months.push({ y: y, m: m });
       m++; if (m > 11) { m = 0; y++; }
     }
-  }());
 
-  var el = function (id) { return document.getElementById(id); };
-  var at = months.findIndex(function (x) {
-    var t = parse(todayISO());
-    return x.y === t.y && x.m === t.m;
-  });
-  if (at < 0) { at = 0; }
+    /* Switching schools leaves you on the month you were reading. If that month
+       is outside the shorter year, the nearest one after it is the honest
+       landing place, not January. */
+    var want = keepMonth || parse(todayISO());
+    var i = months.findIndex(function (x) { return x.y === want.y && x.m === want.m; });
+    if (i < 0) {
+      i = months.findIndex(function (x) { return x.y > want.y || (x.y === want.y && x.m > want.m); });
+    }
+    at = i < 0 ? months.length - 1 : i;
+
+    el("jump").innerHTML = months.map(function (x, k) {
+      return '<option value="' + k + '">' + SHORT[x.m] + " " + x.y + "</option>";
+    }).join("");
+  }
   var showAll = false;
   // The year view is for what is still coming, so a day that has been and gone
   // drops out of it. The pill brings it back, and picking a single month always
   // shows that month whole: navigating to one is a deliberate act.
   var showPast = false;
+
+  // Only worth saying when both are on screen at once.
+  function whoTag(e) {
+    return who === "both"
+      ? '<span class="ev-tag t-who">' + esc(WHO_NAME[e.who] || e.who) + "</span> "
+      : "";
+  }
 
   function esc(s) {
     return String(s === undefined || s === null ? "" : s)
@@ -310,6 +372,7 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
   }
 
   function monthHtml(y, m, hideOld) {
+    var both = who === "both";
     var lead = new Date(Date.UTC(y, m, 1)).getUTCDay();
     var count = daysIn(y, m);
     var today = todayISO();
@@ -325,7 +388,10 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
       if (dowOf(key) === 6) { cls.push("sat"); }
       if (key === today) { cls.push("today"); }
       var tint = hits.length ? " b-" + hits[0].e.cat : "";
-      var dots = hits.map(function (h) { return '<i class="dot c-' + h.e.cat + '"></i>'; }).join("");
+      var dots = hits.map(function (h) {
+        return '<i class="dot' + (both && h.e.who === "kg" ? " is-kg" : "") +
+               " c-" + h.e.cat + '"></i>';
+      }).join("");
       var heb = hits.length && hits[0].first ? '<div class="dheb">' + esc(hits[0].e.hebrew) + "</div>" : "";
       var hb = gone ? null : (DATA.heb && DATA.heb[key]);
       // A Shabbos is named by its parsha, so the parsha leads even when the day
@@ -343,8 +409,14 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
                     esc(parts.join(" · ")) + "</bdi></div>";
         }
       }
+      /* In Both the ring is the glance. The name is what settles it, on the
+         wider screens where a cell has room for its text at all, and in the
+         month list and the day sheet everywhere else: "no school" in a shared
+         cell is exactly where a glance goes wrong. */
       var text = hits.length
-        ? '<div class="dtext">' + esc(hits.map(function (h) { return h.e.text; }).join(" · ")) + "</div>"
+        ? '<div class="dtext">' + esc(hits.map(function (h) {
+            return (both && h.e.who === "kg" ? WHO_NAME.kg + ": " : "") + h.e.text;
+          }).join(" · ")) + "</div>"
         : "";
       // A day with only a parsha on it is still worth opening, so it is
       // tappable without being marked as something the school has scheduled.
@@ -360,7 +432,7 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
 
     // Everything in this month, written out, because a phone sized cell cannot
     // hold a dismissal schedule and a calendar you have to squint at is no use.
-    var mine = DATA.events.filter(function (e) {
+    var mine = events.filter(function (e) {
       var inMonth = (e.start.slice(0,7) <= iso(y,m,1).slice(0,7)) && (e.end.slice(0,7) >= iso(y,m,1).slice(0,7));
       // Something running today has not passed, however long ago it started,
       // so it is the end of a span that decides, not the start.
@@ -374,7 +446,8 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
           '<div class="ev-day">' + esc(e.printedDay) + "</div>" +
           (e.hebrew ? '<div class="ev-heb">' + esc(e.hebrew) + "</div>" : "") + "</div>" +
         '<div class="ev-what">' + esc(e.text) +
-          '<div><span class="ev-tag t-' + e.cat + '">' + esc(CATS[e.cat] || e.cat) + "</span></div>" +
+          '<div>' + whoTag(e) + '<span class="ev-tag t-' + e.cat + '">' +
+            esc(CATS[e.cat] || e.cat) + "</span></div>" +
         "</div></div>";
     }).join("");
 
@@ -425,10 +498,6 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
     var last = months[months.length - 1];
     return MONTHS[last.m] + " " + last.y;
   }
-
-  el("jump").innerHTML = months.map(function (x, i) {
-    return '<option value="' + i + '">' + SHORT[x.m] + " " + x.y + "</option>";
-  }).join("");
 
   el("prev").addEventListener("click", function () { if (at > 0) { at--; render(); slide(-1); window.scrollTo(0,0); } });
   el("next").addEventListener("click", function () { if (at < months.length - 1) { at++; render(); slide(1); window.scrollTo(0,0); } });
@@ -484,7 +553,8 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
         '<div class="ev-when"><div class="ev-date">' + esc(e.gregorian) + "</div>" +
           '<div class="ev-day">' + esc(e.printedDay) + "</div></div>" +
         '<div class="ev-what">' + esc(e.text) +
-          '<div><span class="ev-tag t-' + e.cat + '">' + esc(CATS[e.cat] || e.cat) + "</span></div>" +
+          '<div>' + whoTag(e) + '<span class="ev-tag t-' + e.cat + '">' +
+            esc(CATS[e.cat] || e.cat) + "</span></div>" +
         "</div></div>";
     }).join("");
     el("sheet").classList.add("open");
@@ -595,12 +665,53 @@ var DATA = {"title":"Yeshiva K'tana School Calendar","year":"2026-2027","events"
 
   // Line by line, so a chunk can never swallow a newline: nowrap on a span
   // holding one would delete the break the note was written with.
-  el("notes").innerHTML = DATA.notes.map(function (n) {
-    var body = esc(n).split("\n").map(function (line) {
-      return chunky(telify(line));
-    }).join("\n");
-    return "<li>" + body + "</li>";
-  }).join("");
+  function noteList(items) {
+    return "<ul>" + items.map(function (n) {
+      var body = esc(n).split("\n").map(function (line) {
+        return chunky(telify(line));
+      }).join("\n");
+      return "<li>" + body + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  // Each school's notes belong to that school. Together they get a heading
+  // each, so a dismissal time is never read against the wrong child.
+  function paintNotes() {
+    var out = "";
+    if (who !== "kg") {
+      out += (who === "both" ? "<h3>" + esc(WHO_NAME.yk) + "</h3>" : "") + noteList(DATA.notes);
+    }
+    if (who !== "yk" && DATA.kgNotes && DATA.kgNotes.length) {
+      out += (who === "both" ? "<h3>" + esc(WHO_NAME.kg) + "</h3>" : "") + noteList(DATA.kgNotes);
+    }
+    el("notes").innerHTML = out;
+  }
+
+  function paintWho() {
+    [].forEach.call(el("who").children, function (b) {
+      b.classList.toggle("on", b.getAttribute("data-who") === who);
+    });
+    el("legendKg").style.display = who === "both" ? "" : "none";
+  }
+
+  el("who").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-who]");
+    if (!b) { return; }
+    var pick = b.getAttribute("data-who");
+    if (pick === who) { return; }
+    who = pick;
+    try { localStorage.setItem(WHO_KEY, who); } catch (err) {}
+    var keep = showAll ? null : months[at];
+    paintWho();
+    paintNotes();
+    rebuild(keep);
+    render();
+    window.scrollTo(0, 0);
+  });
+
+  paintWho();
+  paintNotes();
+  rebuild();
   document.title = DATA.title + " " + DATA.year + " | CJ Portal";
   render();
 }());
