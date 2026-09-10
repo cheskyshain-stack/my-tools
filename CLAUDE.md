@@ -117,50 +117,6 @@ frame, so an icon carrying its own visible frame reads as boxed in: crop inside 
 that is taller than it is wide should be centred on black rather than cover-cropped, or
 the longer labels lose their ends.
 
-## The upscaler, and the one build step on this site
-
-`upscaler/` is the exception to "no build step". It is a React and TypeScript app that
-runs ESRGAN neural networks in the browser through TensorFlow.js, and it is not
-something that can be written as one hand edited HTML file: about 13 MB of it is model
-weights.
-
-**Its source is not here.** It lives in the zmanim project, at `upscaler/` on the
-`claude/mobile-image-upscaler-print-byi4hf` branch, and only the built output is
-committed to this repo. Editing the copy in this folder is editing build output: the
-next publish overwrites it and the change is gone.
-
-To change it, work in the source repo and then run, from there:
-
-```bash
-node scripts/publish-to-portal.mjs /path/to/my-tools
-```
-
-That builds with the base path set to `/upscaler/`, turns on this site's page
-conventions, wipes this folder and writes the new build into it. Then commit here as
-usual. The wipe is deliberate: a stale hashed chunk left behind would sit in this repo
-for ever and stay listed in the service worker's precache.
-
-Three things about it that are deliberate and should not be tidied away:
-
-- **It does not link `assets/cj.css`.** Every other tool should. That stylesheet sets
-  `html, body` background, colour and font and is meant to be linked last so it wins,
-  which is right for a plain HTML page and wrong for an app that ships its own tested
-  light and dark themes. What matters for consistency is done instead: the head
-  conventions, `#080b12` as its dark background, the way home, and the card.
-- **The way home is in its own header, not a `.cj-float`.** The app has a sticky header
-  of its own, so a fixed logo in the top left would sit on top of it. The logo is the
-  leftmost item in that header instead, beside Back rather than replacing it, so home is
-  one tap from every step.
-- **`<html>` carries `data-no-refresh`.** It loads `cj-refresh.js` like everything else
-  and then opts out through the documented flag. A render here can run for a long time
-  on a large print, and a stray downward drag reloading the frame would throw the whole
-  job away.
-
-Its icon is built from `assets/icon-source.png` in the source repo, cropped just inside
-the artwork's own neon frame. That crop follows the icon rule below: rendered on a real
-card, the uncropped version sat small inside a double border while the cropped one fills
-its tile the way Stopwatch and QR Code do.
-
 ## The school calendar
 
 `school/` is the family's school calendar for 2026 to 2027, a hidden tool. It holds two

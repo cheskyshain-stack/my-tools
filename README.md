@@ -1,10 +1,8 @@
 # CJ Portal
 
 The small web tools at **https://tools.cjaffa.com**: shopping list, QR codes, Braille,
-stopwatch, image upscaler, chess, sudoku, tic-tac-toe, music, and a few private ones.
-Plain HTML, CSS and JavaScript, one folder per tool, no backend. The upscaler is the one
-exception: it is a built app whose source lives in the zmanim project, and `CLAUDE.md`
-explains how it is published here.
+stopwatch, chess, sudoku, tic-tac-toe, music, and a few private ones. Plain HTML, CSS and
+JavaScript, one folder per tool, no backend and no build step.
 
 ## How it is published
 
