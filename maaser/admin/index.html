@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>Maaser Admin</title>
+<link rel="stylesheet" href="../style.css"><link rel="icon" href="/logo.png">
+</head>
+<body><main class="mz-page">
+<div class="mz-card"><h1>Maaser Admin</h1><p>Create a private invitation for each person. They choose a PIN the first time they open it. A replacement link keeps their records but disables their old link and PIN.</p>
+<div class="mz-field"><label for="key">Admin key</label><input id="key" class="mz-input" type="password" autocomplete="off" placeholder="Paste your admin key"></div>
+<button id="unlock" class="mz-btn mz-btn-primary mz-btn-block">Open Admin</button></div>
+<section id="admin" hidden><div class="mz-card"><h2>Create invitation</h2><form id="create"><div class="mz-field"><label for="label">Person or tracker name</label><input id="label" class="mz-input" maxlength="100" required></div><button class="mz-btn mz-btn-primary mz-btn-block">Create Link</button></form></div>
+<div id="issued" class="mz-card" hidden></div><div class="mz-card"><h2>Trackers</h2><div id="list"></div></div></section>
+<p id="message" role="status"></p></main><script src="admin.js"></script></body></html>

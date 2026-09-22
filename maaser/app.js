@@ -210,6 +210,7 @@
         setView({ screen: 'pin', token, wrong: err.code === 'wrong_pin' });
         return;
       }
+      if (err.code === 'pin_setup_required') { setView({ screen: 'pin-setup', token }); return; }
       if (err.code === 'not_configured') {
         setView({ screen: 'not-configured' });
         return;
@@ -233,6 +234,7 @@
     if (view.screen === 'open-form') return renderOpenForm();
     if (view.screen === 'open-error') return renderOpenError();
     if (view.screen === 'pin') return renderPinScreen();
+    if (view.screen === 'pin-setup') return renderPinSetup();
     if (view.screen === 'created') return renderCreated();
     if (view.screen === 'recover') return renderRecover();
     if (view.screen === 'recovered') return renderRecovered();
@@ -270,11 +272,7 @@
         <div class="mz-card mz-hero">
           <div class="mz-coin" aria-hidden="true">🪙</div>
           <h1>Income &amp; Maaser Tracker</h1>
-          <p>Track what you earn, what you owe in maaser, and what you have given, by
-             income source. No account and no email address, ever.</p>
-          <button class="mz-btn mz-btn-primary mz-btn-lg mz-btn-block" data-action="create-tracker">
-            Create My Tracker
-          </button>
+          <p>Track income and giving across devices. Ask the admin for a private invitation link to get started.</p>
         </div>
         <button class="mz-btn mz-btn-block" data-action="show-open-form">Open Existing Tracker</button>
         ${remembered.length ? `
@@ -285,7 +283,7 @@
               <span aria-hidden="true">→</span>
             </button>`).join('')}
         ` : ''}
-        <p style="text-align:center;margin-top:1.4rem;"><a class="mz-back-link" href="#recover" style="justify-content:center;">Lost your link? Recover with your recovery code</a></p>
+        <p style="text-align:center;margin-top:1.4rem;">Lost your link or PIN? Ask the admin for a new invitation. Existing trackers with a recovery code can <a href="#recover">recover here</a>.</p>
       </div>`;
   }
 
@@ -339,6 +337,17 @@
           </form>
         </div>
       </div>`;
+  }
+
+  function renderPinSetup() {
+    root.innerHTML = `<div class="mz-page"><div class="mz-card">
+      <h1>Create your PIN</h1>
+      <p>This is the first use of your invitation. Choose a 6 to 10 digit PIN. You will need both this link and PIN on any device. If you lose either, ask the admin for a new link.</p>
+      <form data-form="pin-setup">
+        <div class="mz-field"><label for="setup-pin">New PIN</label><input id="setup-pin" class="mz-input" type="password" inputmode="numeric" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required autocomplete="new-password"></div>
+        <div class="mz-field"><label for="setup-confirm">Confirm PIN</label><input id="setup-confirm" class="mz-input" type="password" inputmode="numeric" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required autocomplete="new-password"></div>
+        <button class="mz-btn mz-btn-primary mz-btn-block" type="submit">Activate Tracker</button>
+      </form></div></div>`;
   }
 
   function renderCreated() {
@@ -1105,13 +1114,14 @@
 
   function openSettingsSheet() {
     const pinEnabled = !!data.pinEnabled;
+    const managed = !!data.adminManaged;
     openSheet(`
       <div class="mz-sheet-head"><h2>Settings</h2><button class="mz-icon-btn" data-action="close-sheet">&times;</button></div>
 
       <div class="mz-section-title" style="margin-top:0">PIN Protection</div>
       <p>${pinEnabled ? 'A PIN is currently required, in addition to the private link.' : 'No PIN is set. Anyone with your private link can open and change this tracker.'}</p>
       <form data-form="pin-settings">
-        ${!pinEnabled ? `
+        ${managed ? `<div class="mz-notice mz-notice-info">Ask the admin if you need your PIN or link reset.</div>` : !pinEnabled ? `
           <div class="mz-field"><label for="new-pin">Set a PIN (4-10 digits)</label><input id="new-pin" class="mz-input" type="password" inputmode="numeric" pattern="[0-9]*"></div>
           <button class="mz-btn mz-btn-primary mz-btn-block" type="submit">Turn On PIN</button>
         ` : `
@@ -1121,12 +1131,11 @@
       </form>
 
       <div class="mz-section-title">Private Link</div>
-      <p>If you think your link may have been seen by someone else, replace it. The old link
-         stops working immediately.</p>
-      <button class="mz-btn mz-btn-danger mz-btn-block" id="rotate-link-btn">Replace Private Link</button>
+      ${managed ? '<p>Ask the admin for a replacement invitation if you lose access.</p>' : `<p>Replacing your private link requires the separate recovery code. The old link stops working when recovery succeeds.</p><button class="mz-btn mz-btn-block" data-action="show-recover">Replace Link with Recovery Code</button>`}
 
       <div class="mz-section-title">Export</div>
       <button class="mz-btn mz-btn-block" data-action="export-csv">Export CSV</button>`, (el) => {
+      if (managed) return;
       el.querySelector('[data-form="pin-settings"]').addEventListener('submit', async (e) => {
         e.preventDefault();
         setSaveState(el, 'saving');
@@ -1146,22 +1155,6 @@
           closeSheet();
           render();
         } catch (err) { setSaveState(el, 'error', err.message); }
-      });
-      el.querySelector('#rotate-link-btn').addEventListener('click', async () => {
-        if (!confirm('Replace your private link? Your current link will stop working immediately, so copy the new one before leaving this screen.')) return;
-        try {
-          const res = await api('/api/settings/rotate-link', { method: 'POST' });
-          session.token = res.token;
-          rememberTracker(res.token);
-          closeSheet();
-          openSheet(`
-            <div class="mz-sheet-head"><h2>New Private Link</h2></div>
-            <div class="mz-notice mz-notice-warn">Your old link no longer works. Save this new one before continuing.</div>
-            <div class="mz-link-box"><code>${escapeHtml(trackerLink(res.token))}</code></div>
-            <button class="mz-btn mz-btn-primary mz-btn-block mz-btn-lg" data-action="copy-link" data-token="${escapeHtml(res.token)}">Copy Private Link</button>
-            <button class="mz-btn mz-btn-block" data-action="close-sheet" style="margin-top:0.6rem">Done</button>`);
-          history.replaceState(null, '', `#t=${res.token}`);
-        } catch (err) { showToast(err.message); }
       });
     });
   }
@@ -1246,6 +1239,7 @@
       return;
     }
     if (action === 'open-settings') { openSettingsSheet(); return; }
+    if (action === 'show-recover') { closeSheet(); history.replaceState(null, '', '#recover'); setView({ screen: 'recover' }); return; }
     if (action === 'close-sheet') { closeSheet(); return; }
     if (action === 'add-income') { openAddIncomeSheet(btn.dataset.source); return; }
     if (action === 'add-giving') { openAddGivingSheet(btn.dataset.source); return; }
@@ -1348,6 +1342,15 @@
     if (kind === 'pin') {
       const pin = document.getElementById('pin-input').value;
       openTracker(view.token, { pin });
+      return;
+    }
+    if (kind === 'pin-setup') {
+      const pin = document.getElementById('setup-pin').value;
+      if (pin !== document.getElementById('setup-confirm').value) { showToast('PINs do not match.'); return; }
+      try {
+        await api('/api/activate', { method: 'POST', body: JSON.stringify({ pin }) });
+        openTracker(view.token, { pin });
+      } catch (err) { showToast(err.message); }
       return;
     }
     if (kind === 'recover') {
