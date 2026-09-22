@@ -147,12 +147,19 @@
 
   function overallTotals(data, range) {
     const totals = data.sources.map((s) => sourceTotals(data, s.id, range));
-    return totals.reduce((acc, t) => ({
+    const bySource = totals.reduce((acc, t) => ({
       incomeCents: acc.incomeCents + t.incomeCents,
       goalCents: acc.goalCents + t.goalCents,
       givenTotalCents: acc.givenTotalCents + t.givenTotalCents,
       netCents: acc.netCents + t.netCents,
     }), { incomeCents: 0, goalCents: 0, givenTotalCents: 0, netCents: 0 });
+    const allocated = new Map();
+    for (const a of data.allocations) allocated.set(a.giving_id, (allocated.get(a.giving_id) || 0) + a.amount_cents);
+    const unassigned = data.giving.filter((g) => inRange(g.entry_date, range))
+      .reduce((sum, g) => sum + g.amount_cents - (allocated.get(g.id) || 0), 0);
+    bySource.givenTotalCents += unassigned;
+    bySource.netCents -= unassigned;
+    return bySource;
   }
 
   // ---------------------------------------------------------------------------------------
@@ -645,7 +652,7 @@
       }
       const g = r.g;
       const allocs = data.allocations.filter((a) => a.giving_id === g.id);
-      const splitLabel = allocs.length > 1 ? `split across ${allocs.length} sources` : sourceName(allocs[0]?.source_id);
+      const splitLabel = g.mode === 'unassigned' ? 'General giving (unassigned)' : g.mode === 'general' ? 'General giving' : allocs.length > 1 ? `split across ${allocs.length} sources` : sourceName(allocs[0]?.source_id);
       return `<div class="mz-history-row">
         <div class="mz-history-main">
           <div class="mz-history-title">${escapeHtml(splitLabel)}</div>
@@ -810,9 +817,10 @@
 
   function openAddGivingSheet(preselectSourceId) {
     const sources = data.sources.filter((s) => !s.archived);
-    if (!sources.length) { showToast('Add an income source first.'); return; }
     const idemKey = uid();
-    let rows = [{ sourceId: preselectSourceId || sources[0].id, amount: '' }];
+    let rows = [{ sourceId: preselectSourceId || sources[0]?.id, amount: '' }];
+    let mode = preselectSourceId ? 'source' : (data.givingDefaultMode || 'source');
+    if (!sources.length && mode === 'source') mode = 'unassigned';
     let splitMode = false;
 
     const sheet = openSheet(`
@@ -824,8 +832,13 @@
             <input id="give-amount" class="mz-input" type="text" inputmode="decimal" placeholder="0.00" autofocus required>
           </div>
         </div>
-        <div id="split-toggle-wrap" class="mz-field">
-          <button type="button" class="mz-btn" id="split-toggle">Split across sources (advanced)</button>
+        <div class="mz-field">
+          <label for="give-mode">Apply this giving</label>
+          <select id="give-mode" class="mz-select">
+            <option value="unassigned" ${mode === 'unassigned' ? 'selected' : ''}>Generally, without assigning to a source</option>
+            <option value="general" ${mode === 'general' ? 'selected' : ''}>Across outstanding source balances</option>
+            ${sources.length ? `<option value="source" ${mode === 'source' ? 'selected' : ''}>To one income source</option><option value="split">Custom split across sources</option>` : ''}
+          </select>
         </div>
         <div id="split-area"></div>
         <div class="mz-field" id="single-source-field">
@@ -850,12 +863,16 @@
         <button class="mz-btn mz-btn-primary mz-btn-block mz-btn-lg" type="submit" style="background:var(--ahead);border-color:var(--ahead)">Save Giving</button>
       </form>`, (el) => {
       const amountInput = el.querySelector('#give-amount');
-      const splitToggle = el.querySelector('#split-toggle');
+      const modeSelect = el.querySelector('#give-mode');
       const splitArea = el.querySelector('#split-area');
       const singleField = el.querySelector('#single-source-field');
 
       function renderSplit() {
-        if (!splitMode) { splitArea.innerHTML = ''; singleField.style.display = ''; return; }
+        if (!splitMode) {
+          singleField.style.display = mode === 'source' ? '' : 'none';
+          splitArea.innerHTML = mode === 'general' ? '<p class="mz-hint">Automatically divided across sources with an outstanding balance. Any extra stays as general ahead credit.</p>' : mode === 'unassigned' ? '<p class="mz-hint">Reduces the overall balance without assigning this gift to any source.</p>' : '';
+          return;
+        }
         singleField.style.display = 'none';
         const total = parseDollarsToCents(amountInput.value) || 0;
         const sum = rows.reduce((s, r) => s + (parseDollarsToCents(r.amount) || 0), 0);
@@ -875,12 +892,13 @@
             Split total: ${money(sum)} of ${money(total)} ${sum === total && total > 0 ? '(matches)' : '(must match the amount above)'}
           </div>`;
       }
-      splitToggle.addEventListener('click', () => {
-        splitMode = !splitMode;
-        splitToggle.textContent = splitMode ? 'Use a single source instead' : 'Split across sources (advanced)';
+      modeSelect.addEventListener('change', () => {
+        mode = modeSelect.value;
+        splitMode = mode === 'split';
         if (splitMode && rows.length < 2) rows.push({ sourceId: sources[Math.min(1, sources.length - 1)].id, amount: '' });
         renderSplit();
       });
+      renderSplit();
       splitArea.addEventListener('input', (e) => {
         const si = e.target.dataset.splitAmount;
         if (si != null) { rows[si].amount = e.target.value; renderSplit(); preserveFocus(splitArea, `[data-split-amount="${si}"]`); }
@@ -924,7 +942,7 @@
               date: el.querySelector('#give-date').value || todayIso(),
               recipient: el.querySelector('#give-recipient').value,
               note: el.querySelector('#give-note').value,
-              ...(splitMode ? { allocations } : { sourceId: el.querySelector('#give-source').value }),
+              ...(mode === 'general' || mode === 'unassigned' ? { mode } : splitMode ? { allocations } : { sourceId: el.querySelector('#give-source').value }),
             }),
           });
           await refreshState();
@@ -1118,7 +1136,21 @@
     openSheet(`
       <div class="mz-sheet-head"><h2>Settings</h2><button class="mz-icon-btn" data-action="close-sheet">&times;</button></div>
 
-      <div class="mz-section-title" style="margin-top:0">PIN Protection</div>
+      <div class="mz-section-title" style="margin-top:0">Default Giving</div>
+      <p>Choose how Add Giving starts. You can change it for each gift.</p>
+      <form data-form="giving-default">
+        <div class="mz-field"><label for="giving-default-mode">Default choice</label>
+          <select id="giving-default-mode" class="mz-select">
+            <option value="unassigned" ${data.givingDefaultMode === 'unassigned' ? 'selected' : ''}>Generally, not toward any source</option>
+            <option value="general" ${data.givingDefaultMode === 'general' ? 'selected' : ''}>Across outstanding source balances</option>
+            <option value="source" ${!data.givingDefaultMode || data.givingDefaultMode === 'source' ? 'selected' : ''}>One income source</option>
+          </select>
+        </div>
+        <button class="mz-btn mz-btn-primary mz-btn-block" type="submit">Save Default</button>
+        <div class="mz-hint" id="giving-default-status"></div>
+      </form>
+
+      <div class="mz-section-title">PIN Protection</div>
       <p>${pinEnabled ? 'A PIN is currently required, in addition to the private link.' : 'No PIN is set. Anyone with your private link can open and change this tracker.'}</p>
       <form data-form="pin-settings">
         ${managed ? `<div class="mz-notice mz-notice-info">Ask the admin if you need your PIN or link reset.</div>` : !pinEnabled ? `
@@ -1135,6 +1167,16 @@
 
       <div class="mz-section-title">Export</div>
       <button class="mz-btn mz-btn-block" data-action="export-csv">Export CSV</button>`, (el) => {
+      el.querySelector('[data-form="giving-default"]').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = el.querySelector('#giving-default-status');
+        status.textContent = 'Saving...';
+        try {
+          await api('/api/settings/giving-default', { method: 'POST', body: JSON.stringify({ mode: el.querySelector('#giving-default-mode').value }) });
+          await refreshState();
+          status.textContent = 'Saved. This default will apply on any device.';
+        } catch (err) { status.textContent = err.message; }
+      });
       if (managed) return;
       el.querySelector('[data-form="pin-settings"]').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1178,6 +1220,8 @@
       for (const a of allocs) {
         lines.push(['giving', g.entry_date, sourceName(a.source_id), (a.amount_cents / 100).toFixed(2), '', '', g.recipient || '', '', g.note || '']);
       }
+      const unassigned = g.amount_cents - allocs.reduce((sum, a) => sum + a.amount_cents, 0);
+      if (unassigned > 0) lines.push(['giving', g.entry_date, 'Unassigned', (unassigned / 100).toFixed(2), '', '', g.recipient || '', '', g.note || '']);
     }
     for (const o of data.opening) lines.push(['opening_balance', o.entry_date, sourceName(o.source_id), (o.amount_cents / 100).toFixed(2), '', '', '', o.balance_type, o.note || '']);
     const csv = lines.map((row) => row.map(csvEscape).join(',')).join('\r\n');
