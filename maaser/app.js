@@ -169,7 +169,7 @@
   let view = { screen: 'loading' };
   let data = null; // raw state from /api/state once loaded
   let dashboardTab = 'overview'; // 'overview' | 'sources' | 'history'
-  let period = 'month';
+  let period = 'all';
   let customFrom = todayIso();
   let customTo = todayIso();
   let historyTab = 'all';
@@ -494,6 +494,7 @@
 
     document.getElementById('custom-from')?.addEventListener('change', (e) => { customFrom = e.target.value; render(); });
     document.getElementById('custom-to')?.addEventListener('change', (e) => { customTo = e.target.value; render(); });
+    document.getElementById('overview-period')?.addEventListener('change', (e) => { period = e.target.value; render(); });
   }
 
   function renderOverviewTab() {
@@ -501,15 +502,18 @@
     const totals = overallTotals(data, range);
     const allTime = overallTotals(data, null);
     return `
-      <div class="mz-filter-row" role="tablist" aria-label="Time period">
-        ${['month', 'year', 'all', 'custom'].map((p) => `
-          <button class="mz-pill ${period === p ? 'is-active' : ''}" data-action="set-period" data-period="${p}">
-            ${{ month: 'This Month', year: 'This Year', all: 'All Time', custom: 'Custom' }[p]}
-          </button>`).join('')}
+      <div class="mz-field mz-period-field">
+        <label for="overview-period">Show totals for</label>
+        <select class="mz-select" id="overview-period">
+          <option value="all" ${period === 'all' ? 'selected' : ''}>All Time</option>
+          <option value="year" ${period === 'year' ? 'selected' : ''}>This Year</option>
+          <option value="month" ${period === 'month' ? 'selected' : ''}>This Month</option>
+          <option value="custom" ${period === 'custom' ? 'selected' : ''}>Custom Dates</option>
+        </select>
       </div>
       <div class="mz-custom-range ${period === 'custom' ? 'is-open' : ''}">
-        <input type="date" class="mz-input" id="custom-from" value="${customFrom}">
-        <input type="date" class="mz-input" id="custom-to" value="${customTo}">
+        <div class="mz-field"><label for="custom-from">From</label><input type="date" class="mz-input" id="custom-from" value="${customFrom}"></div>
+        <div class="mz-field"><label for="custom-to">To</label><input type="date" class="mz-input" id="custom-to" value="${customTo}"></div>
       </div>
 
       <div class="mz-summary-grid">
@@ -1294,7 +1298,6 @@
       await api(`/api/sources/${btn.dataset.id}`, { method: 'PATCH', body: JSON.stringify({ archived: false }) });
       await refreshState(); render(); return;
     }
-    if (action === 'set-period') { period = btn.dataset.period; render(); return; }
     if (action === 'set-dash-tab') { dashboardTab = btn.dataset.tab; window.scrollTo(0, 0); render(); return; }
     if (action === 'set-history-tab') { historyTab = btn.dataset.tab; render(); return; }
     if (action === 'export-csv') { exportCsv(); return; }
