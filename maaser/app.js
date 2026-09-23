@@ -11,6 +11,8 @@
   const MAASER_API = (typeof window !== 'undefined' && window.__MAASER_API_OVERRIDE__) || 'https://maaser-tracker.cheskyshain.workers.dev';
 
   const STORAGE_KEY = 'zmanim-maaser-trackers';
+  const PIN_SESSION_PREFIX = 'zmanim-maaser-pin:';
+  const PIN_SESSION_MS = 60 * 60 * 1000;
   const root = document.getElementById('root');
 
   // ---------------------------------------------------------------------------------------
@@ -94,7 +96,55 @@
   // API client
   // ---------------------------------------------------------------------------------------
 
-  let session = { token: null, pin: null }; // pin held in memory only for this page load
+  let session = { token: null, pin: null, pinExpiresAt: null };
+  let pinExpiryTimer = null;
+
+  function pinSessionKey(token) { return PIN_SESSION_PREFIX + token; }
+
+  function clearSavedPin(token) {
+    try { sessionStorage.removeItem(pinSessionKey(token)); } catch { /* storage may be unavailable */ }
+  }
+
+  function savedPin(token) {
+    try {
+      const entry = JSON.parse(sessionStorage.getItem(pinSessionKey(token)) || 'null');
+      if (entry && typeof entry.pin === 'string' && /^\d{4,10}$/.test(entry.pin) &&
+          Number.isFinite(entry.expiresAt) && entry.expiresAt > Date.now()) return entry;
+    } catch { /* storage may be unavailable or invalid */ }
+    clearSavedPin(token);
+    return null;
+  }
+
+  function savePin(token, pin) {
+    const expiresAt = Date.now() + PIN_SESSION_MS;
+    try { sessionStorage.setItem(pinSessionKey(token), JSON.stringify({ pin, expiresAt })); }
+    catch { /* the current page still works if storage is unavailable */ }
+    return expiresAt;
+  }
+
+  function expirePinIfNeeded() {
+    if (!session.pin || !session.pinExpiresAt || Date.now() < session.pinExpiresAt) return false;
+    clearSavedPin(session.token);
+    session.pin = null;
+    session.pinExpiresAt = null;
+    if (view.screen === 'dashboard') {
+      closeSheet();
+      setView({ screen: 'pin', token: session.token });
+    }
+    return true;
+  }
+
+  function schedulePinExpiry() {
+    if (pinExpiryTimer) clearTimeout(pinExpiryTimer);
+    pinExpiryTimer = null;
+    if (!session.pinExpiresAt) return;
+    const remaining = session.pinExpiresAt - Date.now();
+    if (remaining <= 0) { expirePinIfNeeded(); return; }
+    pinExpiryTimer = setTimeout(() => {
+      pinExpiryTimer = null;
+      if (!expirePinIfNeeded()) schedulePinExpiry();
+    }, remaining);
+  }
 
   class ApiError extends Error {
     constructor(status, code, message) { super(message); this.status = status; this.code = code; }
@@ -102,6 +152,7 @@
 
   async function api(path, opts = {}) {
     if (!MAASER_API) throw new ApiError(0, 'not_configured', 'The tracker backend has not been deployed yet.');
+    if (expirePinIfNeeded()) throw new ApiError(401, 'pin_required', 'Your one-hour PIN unlock expired. Enter the PIN again.');
     const headers = { 'content-type': 'application/json', ...(opts.headers || {}) };
     if (session.token) headers.authorization = `Bearer ${session.token}`;
     if (session.pin) headers['x-tracker-pin'] = session.pin;
@@ -204,20 +255,35 @@
   // ---------------------------------------------------------------------------------------
 
   async function openTracker(token, { pin } = {}) {
-    session = { token, pin: pin || null };
+    if (pinExpiryTimer) clearTimeout(pinExpiryTimer);
+    pinExpiryTimer = null;
+    const rememberedPin = pin ? null : savedPin(token);
+    session = { token, pin: pin || rememberedPin?.pin || null, pinExpiresAt: rememberedPin?.expiresAt || null };
     setView({ screen: 'loading' });
     try {
       const state = await api('/api/state');
+      if (state.pinEnabled) {
+        if (pin) session.pinExpiresAt = savePin(token, pin);
+      } else {
+        clearSavedPin(token);
+        session.pin = null;
+        session.pinExpiresAt = null;
+      }
       data = state;
       rememberTracker(token);
       history.replaceState(null, '', `#t=${token}`);
       setView({ screen: 'dashboard' });
+      schedulePinExpiry();
     } catch (err) {
       if (err.code === 'pin_required' || err.code === 'wrong_pin') {
+        clearSavedPin(token);
+        session.pin = null;
+        session.pinExpiresAt = null;
         setView({ screen: 'pin', token, wrong: err.code === 'wrong_pin' });
         return;
       }
-      if (err.code === 'pin_setup_required') { setView({ screen: 'pin-setup', token }); return; }
+      if (err.code === 'pin_setup_required') { clearSavedPin(token); setView({ screen: 'pin-setup', token }); return; }
+      if (err.code === 'invalid_token') clearSavedPin(token);
       if (err.code === 'not_configured') {
         setView({ screen: 'not-configured' });
         return;
@@ -333,7 +399,7 @@
         <a class="mz-back-link" href="#" data-action="back-to-landing">&larr; Back</a>
         <div class="mz-card">
           <h1>Enter PIN</h1>
-          <p>This tracker is protected with a PIN in addition to its private link.</p>
+          <p>This tracker is protected with a PIN in addition to its private link. After you unlock it, this tab stays unlocked for one hour, including refreshes.</p>
           ${view.wrong ? '<div class="mz-notice mz-notice-danger">Wrong PIN. Try again.</div>' : ''}
           <form data-form="pin">
             <div class="mz-field">
@@ -349,7 +415,7 @@
   function renderPinSetup() {
     root.innerHTML = `<div class="mz-page"><div class="mz-card">
       <h1>Create your PIN</h1>
-      <p>This is the first use of your invitation. Choose a 6 to 10 digit PIN. You will need both this link and PIN on any device. If you lose either, ask the admin for a new link.</p>
+      <p>This is the first use of your invitation. Choose a 6 to 10 digit PIN. You will need both this link and PIN on any device. This tab stays unlocked for one hour, including refreshes. If you lose either, ask the admin for a new link.</p>
       <form data-form="pin-setup">
         <div class="mz-field"><label for="setup-pin">New PIN</label><input id="setup-pin" class="mz-input" type="password" inputmode="numeric" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required autocomplete="new-password"></div>
         <div class="mz-field"><label for="setup-confirm">Confirm PIN</label><input id="setup-confirm" class="mz-input" type="password" inputmode="numeric" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required autocomplete="new-password"></div>
@@ -1189,12 +1255,17 @@
           if (pinEnabled) {
             if (!confirm('Turn off the PIN? Anyone with the private link will then be able to open this tracker.')) { setSaveState(el, ''); return; }
             await api('/api/settings/pin', { method: 'POST', body: JSON.stringify({ pin: null }) });
+            clearSavedPin(session.token);
             session.pin = null;
+            session.pinExpiresAt = null;
+            schedulePinExpiry();
           } else {
             const pin = el.querySelector('#new-pin').value;
             if (!/^\d{4,10}$/.test(pin)) { setSaveState(el, 'error', 'PIN must be 4 to 10 digits.'); return; }
             await api('/api/settings/pin', { method: 'POST', body: JSON.stringify({ pin }) });
             session.pin = pin;
+            session.pinExpiresAt = savePin(session.token, pin);
+            schedulePinExpiry();
           }
           await refreshState();
           setSaveState(el, 'ok');
@@ -1440,6 +1511,10 @@
     if (location.hash === '#recover') { setView({ screen: 'recover' }); return; }
     setView({ screen: 'landing' });
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) expirePinIfNeeded();
+  });
 
   window.addEventListener('hashchange', () => {
     if (view.screen === 'dashboard' || view.screen === 'created' || view.screen === 'recovered') return;
