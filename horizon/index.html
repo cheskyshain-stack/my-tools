@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Netz and shkia anywhere, three ways: at sea level, corrected for your elevation, and against the real skyline the sun actually sets behind. Part of CJ Portal.">
+<title>Netz &amp; Shkia | CJ Portal</title>
+<link rel="apple-touch-icon" href="/horizon/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Netz &amp; Shkia">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;overscroll-behavior-y:none}
+  body{
+    background:var(--cj-bg,#050A18);
+    color:var(--cj-text,#EDF2FF);
+    font-family:var(--cj-body,"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+    line-height:1.45;
+    padding:10px 12px calc(34px + env(safe-area-inset-bottom));
+    max-width:940px;margin:0 auto;
+  }
+  body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
+  h2{font-family:var(--cj-display,Georgia,serif);font-weight:600;font-size:1.05rem;margin:0 0 10px;letter-spacing:-.2px}
+  p.hint{margin:0;color:var(--cj-muted,#93A3C7);font-size:12.5px}
+
+  .card{
+    background:var(--cj-card,#121D38);border:1px solid var(--cj-line,rgba(255,255,255,.08));
+    border-radius:var(--cj-r-lg,20px);box-shadow:var(--cj-shadow,0 18px 44px rgba(0,0,0,.45));
+    padding:14px;margin-bottom:13px;
+  }
+
+  /* ===== Where you are ===== */
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+  .field{flex:1 1 130px;min-width:0}
+  .field label{display:block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;
+    color:var(--cj-muted,#93A3C7);margin-bottom:5px;font-weight:700}
+  .field input,.field select{
+    width:100%;height:40px;padding:0 10px;border-radius:12px;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
+    color:var(--cj-text,#EDF2FF);font:600 14px/1 inherit;
+  }
+  .field input:focus,.field select:focus{outline:2px solid #2583F7;outline-offset:1px}
+  .btn{
+    height:40px;padding:0 15px;border-radius:12px;cursor:pointer;flex:none;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
+    color:var(--cj-text,#EDF2FF);font:700 13px/1 inherit;
+  }
+  .btn.go{background:linear-gradient(140deg,#2583F7,#1763CF);border-color:transparent;color:#fff}
+  .btn:disabled{opacity:.45;cursor:default}
+  .spots{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .spot{height:32px;padding:0 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.04);
+    color:var(--cj-muted,#93A3C7);font:700 12px/1 inherit}
+
+  /* ===== The date ===== */
+  .datebar{display:flex;gap:8px;align-items:center}
+  .datebar .nav{width:40px;height:40px;flex:none;border-radius:12px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
+    color:var(--cj-text,#EDF2FF);font:700 17px/1 inherit}
+  .datebar input{flex:1 1 auto;min-width:0}
+
+  /* ===== The answers ===== */
+  /* Three horizons side by side, because the whole point is the difference
+     between them. Each row says what it assumes before it says a time. */
+  .ans{display:grid;grid-template-columns:minmax(96px,1fr) auto auto;gap:2px 10px;align-items:center}
+  .ans .head{font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;
+    color:var(--cj-muted,#93A3C7);font-weight:800;padding-bottom:6px}
+  .ans .head.t{text-align:right}
+  .ans .lbl{padding:9px 0;border-top:1px solid var(--cj-line-soft,rgba(255,255,255,.055))}
+  .ans .lbl b{display:block;font-size:13.5px;font-weight:700}
+  .ans .lbl span{display:block;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
+  .ans .t{padding:9px 0;border-top:1px solid var(--cj-line-soft,rgba(255,255,255,.055));
+    text-align:right;font:700 17px/1.2 var(--cj-mono,ui-monospace,SFMono-Regular,Menlo,monospace);
+    font-variant-numeric:tabular-nums}
+  .ans .t small{display:block;font:600 11px/1.3 inherit;color:var(--cj-muted,#93A3C7)}
+  .ans .t.base small{visibility:hidden}
+  .up{color:#6ee7b7}.down{color:#F26D6D}
+
+  .zone{margin-top:11px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
+
+  /* ===== The skyline ===== */
+  .who{display:flex;gap:4px;padding:4px;margin-bottom:11px;border-radius:14px;
+    background:rgba(255,255,255,.045);border:1px solid var(--cj-line,rgba(255,255,255,.08))}
+  .who button{flex:1 1 0;min-width:0;height:34px;border:0;border-radius:10px;cursor:pointer;
+    background:transparent;color:var(--cj-muted,#93A3C7);font:700 12.5px/1 inherit;white-space:nowrap}
+  .who button.on{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff}
+  .sky{width:100%;height:auto;display:block;border-radius:14px;background:#0A1226;
+    border:1px solid var(--cj-line,rgba(255,255,255,.07))}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
+  .legend i{width:16px;height:3px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:5px}
+
+  .state{padding:16px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13px}
+  .bad{color:#F7A7A7}
+  .warn{border-left:3px solid var(--cj-gold,#F5B301);padding-left:11px;margin:11px 0 0;
+    font-size:12.5px;color:var(--cj-muted,#93A3C7)}
+  .warn b{color:var(--cj-text,#EDF2FF)}
+  .note li{font-size:12.5px;margin-bottom:8px;color:var(--cj-muted,#93A3C7)}
+  .note li b{color:var(--cj-text,#EDF2FF)}
+  .note ul{margin:0;padding-left:18px}
+
+  @media(max-width:430px){
+    .ans{grid-template-columns:1fr auto auto;gap:2px 7px}
+    .ans .t{font-size:15.5px}
+  }
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+
+<header class="cj-page-header">
+  <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/horizon/icon.png" alt="Netz and Shkia"></a>
+  <h1>Netz &amp; Shkia</h1>
+</header>
+
+<div class="card">
+  <h2>Where you are standing</h2>
+  <div class="row">
+    <div class="field"><label for="lat">Latitude</label><input id="lat" type="number" step="0.00001" inputmode="decimal" value="40.09590"></div>
+    <div class="field"><label for="lon">Longitude</label><input id="lon" type="number" step="0.00001" inputmode="decimal" value="-74.21760"></div>
+    <button class="btn" id="gps" type="button">Use my location</button>
+  </div>
+  <div class="row" style="margin-top:9px">
+    <div class="field"><label for="elev">Ground elevation (m)</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="from the map"></div>
+    <div class="field"><label for="eye">You are above it by (m)</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
+    <div class="field" style="flex:2 1 220px"><label for="tz">Show times in</label><select id="tz"></select></div>
+  </div>
+  <div class="spots" id="spots"></div>
+</div>
+
+<div class="card">
+  <h2>Which day</h2>
+  <div class="datebar">
+    <button class="nav" id="dprev" type="button" aria-label="Previous day">&lsaquo;</button>
+    <div class="field" style="margin:0"><input id="date" type="date"></div>
+    <button class="nav" id="dnext" type="button" aria-label="Next day">&rsaquo;</button>
+    <button class="btn" id="today" type="button">Today</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn go" id="run" type="button" style="flex:1 1 auto">Read the skyline</button>
+  </div>
+  <p class="hint" style="margin-top:9px">The first two rows need no map data and appear at once. The third downloads a
+    patch of terrain around you, about a megabyte the first time.</p>
+</div>
+
+<div class="card">
+  <h2>Sunrise</h2>
+  <div id="riseBox"><div class="state">Waiting for a location.</div></div>
+</div>
+
+<div class="card">
+  <h2>Sunset</h2>
+  <div id="setBox"><div class="state">Waiting for a location.</div></div>
+</div>
+
+<div class="card" id="skyCard" style="display:none">
+  <h2>The skyline</h2>
+  <div class="who no-print" id="skyWho">
+    <button type="button" data-sky="rise">Sunrise, east</button>
+    <button type="button" data-sky="set">Sunset, west</button>
+  </div>
+  <svg class="sky" id="sky" viewBox="0 0 700 260" role="img" aria-label="Horizon profile against the sun's track"></svg>
+  <div class="legend">
+    <span><i style="background:#5A6B8C"></i>The ground you can see</span>
+    <span><i style="background:#F5B301"></i>The sun's track</span>
+    <span><i style="background:rgba(255,255,255,.35)"></i>Level with your eye</span>
+  </div>
+  <p class="hint" id="skyNote" style="margin-top:9px"></p>
+</div>
+
+<div class="card note">
+  <h2>What this is, and what it is not</h2>
+  <ul>
+    <li><b>Row one is the ordinary number.</b> Sea level, sun's centre 50 minutes of arc below the
+      geometric horizon, which is 16 for the sun's own radius and 34 for refraction. This is what a
+      printed luach gives and what every zmanim library gives by default.</li>
+    <li><b>Row two adds your height.</b> Standing higher lets you see over the curve of the earth, so
+      the sun sets later. This is the same adjustment KosherJava makes when a location carries an
+      elevation.</li>
+    <li><b>Row three is the one you asked for.</b> It walks the ground outward along every bearing the
+      sun could set on, allows for the curve of the earth and for refraction along that ray, and takes
+      the highest thing in the way. The sun disappears behind that, not behind the sea.</li>
+    <li><b>Whether any of this should move a zman is a question for a posek</b>, not for a calculator.
+      Whether shkia follows the visible horizon or mishor is a real machlokes, and almost every printed
+      luach uses sea level. This tool shows you the sky; it does not tell you which one counts.</li>
+    <li><b>The air is the limit, not the map.</b> The 34 minutes of arc of refraction is a convention:
+      real temperature and pressure move sunset by minutes, which is more than most terrain corrections.
+      The elevation map is bare earth at roughly 30 to 90 metres, so trees, buildings and anything close
+      to you are not in it, and a near obstruction is exactly what it resolves worst.</li>
+  </ul>
+</div>
+
+<script src="/assets/cj-refresh.js" defer></script>
+<script>
+(function () {
+  "use strict";
+
+  var el = function (id) { return document.getElementById(id); };
+  var D2R = Math.PI / 180, R2D = 180 / Math.PI;
+  var sind = function (d) { return Math.sin(d * D2R); };
+  var cosd = function (d) { return Math.cos(d * D2R); };
+  var tand = function (d) { return Math.tan(d * D2R); };
+  var asind = function (x) { return Math.asin(Math.max(-1, Math.min(1, x))) * R2D; };
+  var acosd = function (x) { return Math.acos(Math.max(-1, Math.min(1, x))) * R2D; };
+  var mod360 = function (x) { return ((x % 360) + 360) % 360; };
+
+  var R_EARTH = 6371008.8;      // metres, mean radius
+  var K_REFRACT = 7 / 6;        // the standard effective-radius trick for a near-horizontal ray
+  var SEMIDIAMETER = 0.2667;    // the sun's own radius, in degrees
+
+  /* ===================== The sun =====================
+     NOAA's own solar position, the same arithmetic the shul's workbook uses.
+     Everything here is in true (geometric) altitude; refraction is added where a
+     horizon is being compared against, not baked in. */
+
+  function julian(date) { return date.getTime() / 86400000 + 2440587.5; }
+
+  function sunAt(date, lat, lon) {
+    var jd = julian(date);
+    var T = (jd - 2451545) / 36525;
+    var L0 = mod360(280.46646 + T * (36000.76983 + T * 0.0003032));
+    var M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
+    var e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
+    var C = sind(M) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+            sind(2 * M) * (0.019993 - 0.000101 * T) +
+            sind(3 * M) * 0.000289;
+    var trueLong = L0 + C;
+    var omega = 125.04 - 1934.136 * T;
+    var appLong = trueLong - 0.00569 - 0.00478 * sind(omega);
+    var e0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60;
+    var eps = e0 + 0.00256 * cosd(omega);
+    var decl = asind(sind(eps) * sind(appLong));
+
+    var y = tand(eps / 2) * tand(eps / 2);
+    var eqTime = 4 * R2D * (y * Math.sin(2 * L0 * D2R) - 2 * e * Math.sin(M * D2R) +
+                 4 * e * y * Math.sin(M * D2R) * Math.cos(2 * L0 * D2R) -
+                 0.5 * y * y * Math.sin(4 * L0 * D2R) - 1.25 * e * e * Math.sin(2 * M * D2R));
+
+    var minutesUTC = (jd + 0.5 - Math.floor(jd + 0.5)) * 1440;
+    var tst = ((minutesUTC + eqTime + 4 * lon) % 1440 + 1440) % 1440;
+    var ha = tst / 4 - 180;
+    var zen = acosd(sind(lat) * sind(decl) + cosd(lat) * cosd(decl) * cosd(ha));
+    var alt = 90 - zen;
+
+    var az, denom = cosd(lat) * sind(zen);
+    if (Math.abs(denom) > 1e-9) {
+      az = acosd((sind(lat) * cosd(zen) - sind(decl)) / denom);
+      az = ha > 0 ? mod360(az + 180) : mod360(540 - az);
+    } else { az = lat >= 0 ? 180 : 0; }
+    return { alt: alt, az: az, decl: decl, eqTime: eqTime };
+  }
+
+  // Solar noon as a UTC instant, which is the hinge every solve hangs off.
+  function solarNoon(dayUTC, lat, lon) {
+    var probe = new Date(dayUTC.getTime() + 43200000);
+    for (var i = 0; i < 2; i++) {
+      var eq = sunAt(probe, lat, lon).eqTime;
+      probe = new Date(dayUTC.getTime() + (720 - 4 * lon - eq) * 60000);
+    }
+    return probe;
+  }
+
+  /* Astronomical refraction, anchored so that a ray arriving level carries exactly
+     the conventional 34 minutes of arc. Bennett's formula above that, which falls
+     away fast: a ridge 27 degrees up is bent by about 2 minutes, not 34. */
+  var BENNETT0 = 1 / tand(7.31 / 4.4);
+  function refractionAt(hDeg) {
+    var x = Math.max(hDeg, 0);
+    return (1 / tand(x + 7.31 / (x + 4.4))) * (34 / BENNETT0) / 60;
+  }
+
+  /* The sun's centre has to sit this far down in true altitude for the upper limb to
+     touch a horizon standing hDeg above level. hDeg of 0 gives -0.8333, which is the
+     number every luach is built on. */
+  function targetAlt(hDeg) { return hDeg - SEMIDIAMETER - refractionAt(hDeg); }
+
+  /* One bisection on the whole question, rather than guessing a bearing, solving a
+     time, and hoping the two agree. g(t) is how far the sun is above the horizon it
+     would be setting into at that instant, bearing and all, so the instant this
+     returns has the time and the skyline consistent by construction. Iterating the
+     two separately looked fine on flat ground and put the marker off the ridge in
+     Chamonix, where the skyline climbs five degrees for every degree of bearing. */
+  function crossing(dayUTC, lat, lon, rising, horizonFor) {
+    var noon = solarNoon(dayUTC, lat, lon).getTime();
+    var a = rising ? noon - 12 * 3600000 : noon;
+    var b = rising ? noon : noon + 12 * 3600000;
+    var g = function (t) {
+      var p = sunAt(new Date(t), lat, lon);
+      return p.alt - targetAlt(horizonFor(p.az));
+    };
+    var ga = g(a), gb = g(b);
+    // No sign change means the sun never gets down to that skyline today, which
+    // happens behind a big enough mountain and inside the arctic circle alike.
+    if (ga === 0) { ga = 1e-9; }
+    if (ga * gb > 0) { return null; }
+    for (var i = 0; i < 46; i++) {
+      var mid = (a + b) / 2, gm = g(mid);
+      if ((gm < 0) === (ga < 0)) { a = mid; ga = gm; } else { b = mid; }
+    }
+    var t = (a + b) / 2;
+    var end = sunAt(new Date(t), lat, lon);
+    return { when: new Date(t), az: end.az, horizon: horizonFor(end.az) };
+  }
+
+  /* ===================== The ground =====================
+     AWS publishes open Terrarium tiles: ordinary PNGs with the elevation packed into
+     the colour, metres = R * 256 + G + B / 256 - 32768. One tile is 65536 sample
+     points, which is why this can run in a browser with no key and no server behind
+     it. They are served with Access-Control-Allow-Origin, so the canvas can read them. */
+
+  var TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/";
+  var tiles = new Map();
+
+  function tileKey(z, x, y) { return z + "/" + x + "/" + y; }
+
+  function getTile(z, x, y) {
+    var key = tileKey(z, x, y);
+    if (tiles.has(key)) { return tiles.get(key); }
+    var job = fetch(TILES + key + ".png", { mode: "cors" }).then(function (res) {
+      if (!res.ok) { return null; }             // off the edge of the pyramid
+      return res.blob().then(createImageBitmap).then(function (bmp) {
+        var cv = document.createElement("canvas");
+        cv.width = 256; cv.height = 256;
+        var ctx = cv.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(bmp, 0, 0);
+        var px = ctx.getImageData(0, 0, 256, 256).data;
+        var out = new Float32Array(65536);
+        for (var i = 0, j = 0; i < 65536; i++, j += 4) {
+          out[i] = px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768;
+        }
+        if (bmp.close) { bmp.close(); }
+        return out;
+      });
+    }).catch(function () { return null; });
+    tiles.set(key, job);
+    return job;
+  }
+
+  function worldXY(lat, lon, z) {
+    var n = Math.pow(2, z);
+    return {
+      x: (lon + 180) / 360 * n,
+      y: (1 - Math.asinh(tand(Math.max(-85, Math.min(85, lat)))) / Math.PI) / 2 * n
+    };
+  }
+
+  function sampleTile(grid, sx, sy) {
+    if (!grid) { return 0; }                    // no tile means open water
+    var px = Math.min(255, Math.max(0, Math.floor((sx - Math.floor(sx)) * 256)));
+    var py = Math.min(255, Math.max(0, Math.floor((sy - Math.floor(sy)) * 256)));
+    return grid[py * 256 + px];
+  }
+
+  // Far ridges need reach, near ones need detail, and paying for detail at 60km
+  // would be thousands of tiles for ground that is three pixels wide on screen.
+  function zoomFor(metres) { return metres < 3000 ? 13 : metres < 15000 ? 11 : 9; }
+
+  function along(lat, lon, bearing, metres) {
+    var ad = metres / R_EARTH, br = bearing * D2R, la = lat * D2R;
+    var la2 = Math.asin(sind(lat) * Math.cos(ad) + cosd(lat) * Math.sin(ad) * Math.cos(br));
+    var lo2 = lon * D2R + Math.atan2(Math.sin(br) * Math.sin(ad) * cosd(lat),
+                                     Math.cos(ad) - sind(lat) * Math.sin(la2));
+    return { lat: la2 * R2D, lon: ((lo2 * R2D + 540) % 360) - 180 };
+  }
+
+  var MAX_KM = 65, NEAR_M = 60, GROW = 1.055;
+
+  function rayPoints(lat, lon, bearing) {
+    var pts = [], d = NEAR_M;
+    while (d <= MAX_KM * 1000) {
+      var p = along(lat, lon, bearing, d);
+      pts.push({ d: d, lat: p.lat, lon: p.lon, z: zoomFor(d) });
+      d *= GROW;
+    }
+    return pts;
+  }
+
+  /* The highest apparent altitude along one bearing. Negative means the ground falls
+     away and you can see past the curve, which is what standing on a hill buys. */
+  function ridgeOf(pts, grids, obsH) {
+    var best = -90, at = null;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      var w = worldXY(p.lat, p.lon, p.z);
+      var h = sampleTile(grids.get(tileKey(p.z, Math.floor(w.x), Math.floor(w.y))), w.x, w.y);
+      var drop = p.d * p.d / (2 * K_REFRACT * R_EARTH);   // curvature, refraction folded in
+      var ang = Math.atan2(h - obsH - drop, p.d) * R2D;
+      if (ang > best) { best = ang; at = { km: p.d / 1000, h: h }; }
+    }
+    return { deg: best, at: at };
+  }
+
+  function gridsFor(rays) {
+    var need = new Map();
+    rays.forEach(function (r) {
+      r.pts.forEach(function (p) {
+        var w = worldXY(p.lat, p.lon, p.z);
+        var k = tileKey(p.z, Math.floor(w.x), Math.floor(w.y));
+        if (!need.has(k)) { need.set(k, [p.z, Math.floor(w.x), Math.floor(w.y)]); }
+      });
+    });
+    var keys = [...need.keys()];
+    return Promise.all(keys.map(function (k) {
+      var t = need.get(k);
+      return getTile(t[0], t[1], t[2]).then(function (g) { return [k, g]; });
+    })).then(function (pairs) { return { grids: new Map(pairs), count: keys.length }; });
+  }
+
+  /* ===================== The screen ===================== */
+
+  var SPOTS = [
+    { name: "Lakewood NJ", lat: 40.0959, lon: -74.2176 },
+    { name: "Jerusalem", lat: 31.7780, lon: 35.2354 },
+    { name: "Tzfas", lat: 32.9646, lon: 35.4960 },
+    { name: "Denver", lat: 39.7392, lon: -104.9903 },
+    { name: "Chamonix", lat: 45.9237, lon: 6.8694 }
+  ];
+  var KEY = "cjHorizonV1";
+  var state = { lat: 40.0959, lon: -74.2176, elev: null, eye: 1.7, tz: null, date: null };
+  var profile = null;      // { east, west }, once the ground has been read
+  var skyWhich = "set";    // which half of the sky the picture is showing
+
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && typeof saved.lat === "number") { Object.assign(state, saved); }
+  } catch (err) {}
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, tz: state.tz
+      }));
+    } catch (err) {}
+  }
+
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  var deviceTz = (Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || "UTC";
+  (function fillZones() {
+    var list = [];
+    try { list = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : []; } catch (err) {}
+    if (list.indexOf(deviceTz) < 0) { list.unshift(deviceTz); }
+    if (!list.length) { list = [deviceTz, "UTC"]; }
+    el("tz").innerHTML = list.map(function (z) {
+      return '<option value="' + esc(z) + '">' + esc(z.replace(/_/g, " ")) + "</option>";
+    }).join("");
+    el("tz").value = (state.tz && list.indexOf(state.tz) >= 0) ? state.tz : deviceTz;
+    state.tz = el("tz").value;
+  }());
+
+  function clock(date) {
+    try {
+      return new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false, timeZone: state.tz
+      }).format(date);
+    } catch (err) { return date.toISOString().slice(11, 19); }
+  }
+
+  function gap(a, b) {
+    var m = (a.getTime() - b.getTime()) / 60000;
+    var sign = m >= 0 ? "+" : "−";
+    var av = Math.abs(m);
+    var txt = av < 10 ? av.toFixed(1) : Math.round(av);
+    return '<small class="' + (m >= 0 ? "up" : "down") + '">' + sign + txt + " min</small>";
+  }
+
+  function dayUTC() {
+    var p = el("date").value.split("-");
+    return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+  }
+
+  function obsHeight() {
+    var ground = state.elev === null || isNaN(state.elev) ? 0 : state.elev;
+    var eye = isNaN(state.eye) ? 0 : state.eye;
+    return ground + eye;
+  }
+
+  // Standing h above a smooth earth, the sea horizon sits this far BELOW level.
+  function dipOf(h) { return h <= 0 ? 0 : acosd(R_EARTH / (R_EARTH + h)); }
+
+  function paint() {
+    var day = dayUTC();
+    if (isNaN(day.getTime())) { return; }
+    var lat = state.lat, lon = state.lon;
+    var h = obsHeight();
+    var dip = dipOf(h);
+
+    [["riseBox", true], ["setBox", false]].forEach(function (pair) {
+      var box = el(pair[0]), rising = pair[1];
+      var flat = crossing(day, lat, lon, rising, function () { return 0; });
+      var high = crossing(day, lat, lon, rising, function () { return -dip; });
+      /* The solver sweeps the whole half day, so it asks about bearings far outside
+         the patch that was measured. There the smooth earth is the honest answer. */
+      var side = profile ? (rising ? profile.east : profile.west) : null;
+      var look = side ? function (az) { var v = side.lookup(az); return v === null ? -dip : v; } : null;
+      var real = look ? crossing(day, lat, lon, rising, look) : null;
+
+      if (!flat) {
+        box.innerHTML = '<div class="state">The sun does not cross the horizon here on this date.</div>';
+        return;
+      }
+      var rows =
+        '<div class="ans">' +
+          '<div class="head">Horizon</div><div class="head t">Time</div><div class="head t">Shift</div>' +
+          '<div class="lbl"><b>Sea level</b><span>What a luach prints</span></div>' +
+            '<div class="t base">' + clock(flat.when) + "<small>0</small></div>" +
+            '<div class="t base">–<small>0</small></div>' +
+          '<div class="lbl"><b>Your height</b><span>' + h.toFixed(0) + " m up, horizon dips " +
+            dip.toFixed(3) + "°</span></div>" +
+            '<div class="t">' + clock(high.when) + "</div>" +
+            '<div class="t">' + gap(high.when, flat.when) + "</div>" +
+          (real
+            ? '<div class="lbl"><b>Real skyline</b><span>' +
+                (side.covers(real.az) ? "" : "beyond the patch read, ") +
+                (real.horizon >= 0 ? "ground " + real.horizon.toFixed(2) + "° up"
+                                   : "ground " + Math.abs(real.horizon).toFixed(2) + "° down") +
+                " at " + Math.round(real.az) + "°</span></div>" +
+              '<div class="t">' + clock(real.when) + "</div>" +
+              '<div class="t">' + gap(real.when, flat.when) + "</div>"
+            : '<div class="lbl"><b>Real skyline</b><span>not read yet</span></div>' +
+              '<div class="t">–</div><div class="t">–</div>') +
+        "</div>";
+      box.innerHTML = rows;
+      var z = document.createElement("div");
+      z.className = "zone";
+      z.textContent = "Times in " + state.tz.replace(/_/g, " ") + ". Sea level sunrise and sunset use the " +
+        "usual 50 minutes of arc, so row one matches an ordinary luach.";
+      box.appendChild(z);
+    });
+    drawSky();
+  }
+
+  /* The picture is the argument: ground along the bottom, the sun's track across it,
+     and the crossing where one meets the other. */
+  function drawSky() {
+    if (!profile) { el("skyCard").style.display = "none"; return; }
+    var day = dayUTC(), lat = state.lat, lon = state.lon;
+    var rising = skyWhich === "rise";
+    var side = rising ? profile.east : profile.west;
+    var dip = dipOf(obsHeight());
+    var set = crossing(day, lat, lon, rising, function (az) {
+      var v = side.lookup(az);
+      return v === null ? -dip : v;
+    });
+    if (!set) { el("skyCard").style.display = "none"; return; }
+    [].forEach.call(el("skyWho").children, function (btn) {
+      btn.classList.toggle("on", btn.getAttribute("data-sky") === skyWhich);
+    });
+    el("skyCard").style.display = "";
+
+    var W = 700, H = 260, padL = 40, padR = 12, padT = 14, padB = 26;
+    var az0 = side.from, az1 = side.to;
+    var hs = side.samples.map(function (s) { return s.deg; });
+    var top = Math.max(2, Math.ceil(Math.max.apply(null, hs) + 1));
+    var bot = Math.min(-1.5, Math.floor(Math.min.apply(null, hs) - 0.5));
+
+    var X = function (az) { return padL + (az - az0) / (az1 - az0) * (W - padL - padR); };
+    var Y = function (a) { return padT + (top - a) / (top - bot) * (H - padT - padB); };
+
+    var ground = side.samples.map(function (s, i) {
+      return (i ? "L" : "M") + X(s.az).toFixed(1) + " " + Y(s.deg).toFixed(1);
+    }).join(" ") + " L" + X(az1).toFixed(1) + " " + Y(bot) + " L" + X(az0).toFixed(1) + " " + Y(bot) + " Z";
+
+    // The sun's own track through the window, sampled by time and drawn by bearing.
+    var track = [], t0 = set.when.getTime();
+    for (var m = rising ? -100 : -170; m <= (rising ? 170 : 100); m += 4) {
+      var p = sunAt(new Date(t0 + m * 60000), lat, lon);
+      if (p.az >= az0 && p.az <= az1) { track.push([X(p.az), Y(p.alt)]); }
+    }
+    var trackD = track.map(function (p, i) {
+      return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+    }).join(" ");
+
+    var ticks = "";
+    for (var a = Math.ceil(bot); a <= top; a++) {
+      if ((top - bot) > 12 && a % 5 !== 0) { continue; }
+      ticks += '<line x1="' + padL + '" y1="' + Y(a).toFixed(1) + '" x2="' + (W - padR) +
+               '" y2="' + Y(a).toFixed(1) + '" stroke="rgba(255,255,255,.06)"/>' +
+               '<text x="' + (padL - 6) + '" y="' + (Y(a) + 4).toFixed(1) +
+               '" fill="#93A3C7" font-size="10" text-anchor="end">' + a + "°</text>";
+    }
+    var az = "";
+    for (var b = Math.ceil(az0 / 10) * 10; b <= az1; b += 10) {
+      az += '<text x="' + X(b).toFixed(1) + '" y="' + (H - 8) +
+            '" fill="#93A3C7" font-size="10" text-anchor="middle">' + b + "°</text>";
+    }
+
+    el("sky").innerHTML =
+      ticks + az +
+      '<line x1="' + padL + '" y1="' + Y(0).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + Y(0).toFixed(1) +
+        '" stroke="rgba(255,255,255,.35)" stroke-dasharray="4 4"/>' +
+      '<path d="' + ground + '" fill="rgba(90,107,140,.5)" stroke="#5A6B8C" stroke-width="1.5"/>' +
+      '<path d="' + trackD + '" fill="none" stroke="#F5B301" stroke-width="2"/>' +
+      '<circle cx="' + X(set.az).toFixed(1) + '" cy="' + Y(set.horizon).toFixed(1) +
+        '" r="5.5" fill="#F5B301" stroke="#0A1226" stroke-width="2"/>';
+
+    el("skyNote").textContent =
+      "Bearings " + Math.round(az0) + " to " + Math.round(az1) + " degrees from north. The sun " +
+      (rising ? "clears" : "goes behind") + " the ground at " + Math.round(set.az) +
+      " degrees, where it stands " + set.horizon.toFixed(2) + " degrees " +
+      (set.horizon >= 0 ? "above" : "below") + " your eye" +
+      (side.peak ? ", the highest point being " + Math.round(side.peak.h) + " m at " +
+        side.peak.km.toFixed(1) + " km" : "") + ".";
+  }
+
+  /* ===================== Reading the ground ===================== */
+
+  /* Sunrise happens in the east and sunset in the west, so one profile cannot answer
+     both. Reading only the sunset window and clamping the lookup put a western ridge
+     on the eastern sunrise and moved netz by 24 minutes the wrong way. Both windows
+     are read, in one pass, sharing one round of tile fetches. */
+  /* Wide enough on purpose. The window has to hold not the bearing the sun would set
+     on over flat ground, but the bearing it is on when it meets the actual skyline,
+     and behind a big mountain those are far apart: at Chamonix the sun clears the
+     eastern wall more than fifty degrees round from where netz would otherwise be.
+     A narrow window does not fail loudly, it pins the answer to its own edge. */
+  var HALF_WIDTH = 56, AZ_STEP = 2;
+
+  function windowAround(lat, lon, mid) {
+    var from = mid - HALF_WIDTH, to = mid + HALF_WIDTH, rays = [];
+    for (var a = from; a <= to + 0.01; a += AZ_STEP) {
+      rays.push({ az: a, pts: rayPoints(lat, lon, a) });
+    }
+    return { from: from, to: to, rays: rays };
+  }
+
+  function finish(win, grids, obsH) {
+    var samples = win.rays.map(function (r) {
+      var got = ridgeOf(r.pts, grids, obsH);
+      return { az: r.az, deg: got.deg, at: got.at };
+    });
+    var peak = samples.reduce(function (best, s) { return (!best || s.deg > best.deg) ? s : best; }, null);
+    return {
+      from: win.from, to: win.to, samples: samples,
+      peak: peak && peak.at ? peak.at : null,
+      covers: function (azimuth) { return azimuth >= win.from && azimuth <= win.to; },
+      lookup: function (azimuth) {
+        // Outside the window nothing was measured, so it answers null and the caller
+        // falls back to the smooth earth. Clamping to the nearest edge instead is
+        // what put a ridge behind the observer onto the far side of the sky.
+        if (azimuth < win.from || azimuth > win.to) { return null; }
+        var i = Math.min(samples.length - 2, Math.max(0, Math.floor((azimuth - win.from) / AZ_STEP)));
+        var a = samples[i], b = samples[i + 1] || a;
+        return a.deg + (b.deg - a.deg) * ((azimuth - a.az) / AZ_STEP);
+      }
+    };
+  }
+
+  function readTerrain() {
+    var day = dayUTC(), lat = state.lat, lon = state.lon;
+    var flatSet = crossing(day, lat, lon, false, function () { return 0; });
+    var flatRise = crossing(day, lat, lon, true, function () { return 0; });
+    if (!flatSet || !flatRise) { return Promise.reject(new Error("the sun does not rise and set here on this date")); }
+
+    var west = windowAround(lat, lon, flatSet.az);
+    var east = windowAround(lat, lon, flatRise.az);
+
+    // The observer is read the same way as everything else, so the difference between
+    // the two is a difference in the ground and not in how it was measured.
+    var me = worldXY(lat, lon, 13);
+    return getTile(13, Math.floor(me.x), Math.floor(me.y)).then(function (g) {
+      var ground = sampleTile(g, me.x, me.y);
+      if (state.elev === null || el("elev").value === "") {
+        state.elev = Math.round(ground * 10) / 10;
+        el("elev").value = state.elev;
+      }
+      return gridsFor(west.rays.concat(east.rays)).then(function (got) {
+        var obsH = ground + (isNaN(state.eye) ? 0 : state.eye);
+        return {
+          tiles: got.count,
+          west: finish(west, got.grids, obsH),
+          east: finish(east, got.grids, obsH)
+        };
+      });
+    });
+  }
+
+  /* ===================== Wiring ===================== */
+
+  function readFields() {
+    state.lat = parseFloat(el("lat").value);
+    state.lon = parseFloat(el("lon").value);
+    state.elev = el("elev").value === "" ? null : parseFloat(el("elev").value);
+    state.eye = parseFloat(el("eye").value);
+    state.tz = el("tz").value;
+    save();
+  }
+
+  el("spots").innerHTML = SPOTS.map(function (s, i) {
+    return '<button class="spot" type="button" data-spot="' + i + '">' + esc(s.name) + "</button>";
+  }).join("");
+  el("spots").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-spot]");
+    if (!b) { return; }
+    var s = SPOTS[+b.getAttribute("data-spot")];
+    el("lat").value = s.lat.toFixed(5);
+    el("lon").value = s.lon.toFixed(5);
+    el("elev").value = "";
+    profile = null;
+    readFields();
+    paint();
+  });
+
+  ["lat", "lon", "elev", "eye", "tz"].forEach(function (id) {
+    el(id).addEventListener("change", function () {
+      if (id === "lat" || id === "lon") { profile = null; }
+      readFields();
+      paint();
+    });
+  });
+
+  el("date").addEventListener("change", paint);
+  el("dprev").addEventListener("click", function () { stepDay(-1); });
+  el("dnext").addEventListener("click", function () { stepDay(1); });
+  el("today").addEventListener("click", function () { el("date").value = todayStr(); paint(); });
+
+  function todayStr() {
+    var n = new Date();
+    return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-" +
+           String(n.getDate()).padStart(2, "0");
+  }
+  function stepDay(n) {
+    var d = dayUTC();
+    d.setUTCDate(d.getUTCDate() + n);
+    el("date").value = d.toISOString().slice(0, 10);
+    paint();
+  }
+
+  el("gps").addEventListener("click", function () {
+    if (!navigator.geolocation) { alert("This browser will not give a location."); return; }
+    el("gps").disabled = true;
+    el("gps").textContent = "Finding you";
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      el("lat").value = pos.coords.latitude.toFixed(5);
+      el("lon").value = pos.coords.longitude.toFixed(5);
+      el("elev").value = "";
+      profile = null;
+      readFields();
+      paint();
+      el("gps").disabled = false;
+      el("gps").textContent = "Use my location";
+    }, function (err) {
+      alert("Could not get a location: " + err.message);
+      el("gps").disabled = false;
+      el("gps").textContent = "Use my location";
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  });
+
+  el("skyWho").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-sky]");
+    if (!btn) { return; }
+    skyWhich = btn.getAttribute("data-sky");
+    drawSky();
+  });
+
+  el("run").addEventListener("click", function () {
+    readFields();
+    var btn = el("run");
+    btn.disabled = true;
+    btn.textContent = "Reading the ground";
+    readTerrain().then(function (p) {
+      profile = p;
+      btn.textContent = "Read again";
+      btn.disabled = false;
+      paint();
+    }).catch(function (err) {
+      btn.textContent = "Read the skyline";
+      btn.disabled = false;
+      el("skyNote").textContent = "";
+      alert("Could not read the ground here: " + err.message);
+    });
+  });
+
+  el("lat").value = state.lat.toFixed(5);
+  el("lon").value = state.lon.toFixed(5);
+  if (state.elev !== null && !isNaN(state.elev)) { el("elev").value = state.elev; }
+  el("eye").value = state.eye;
+  el("date").value = todayStr();
+  paint();
+}());
+</script>
+</body>
+</html>

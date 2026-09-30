@@ -199,6 +199,62 @@ them distinguishable rather than blended:
   otherwise left to right, and the tests measure that the day number stays at the top
   left and that nothing spills past the cell edge.
 
+## Netz and shkia against the real skyline
+
+`horizon/` answers sunrise and sunset three ways for anywhere on earth: at sea level,
+corrected for how high you are standing, and against the ground that is actually in the
+way. The third is the one it was built for, and it is worth knowing where it helps:
+**in Lakewood it is worth about a minute and a half**, because the worst thing west of
+the town is a 45 m rise 3 km out. At Chamonix the same code takes 73 minutes off sunset
+and puts sunrise back three hours. Flat country is where this feature does nothing.
+
+- **Elevation data is a PNG.** AWS publishes open Terrarium tiles, ordinary images with
+  the height packed into the colour, `metres = R * 256 + G + B / 256 - 32768`. One tile
+  is 65536 sample points, which is why this runs in a browser with no key, no server and
+  no per-point API. They carry `Access-Control-Allow-Origin: *`, so the canvas can read
+  their pixels. Zoom is picked by distance (13 under 3 km, 11 under 15, 9 beyond), since
+  paying for 19 m detail at 60 km would be thousands of tiles for a ridge three pixels
+  wide. A reading costs about 24 tiles.
+- **There is one equation, not two.** `crossing()` bisects `g(t) = sun altitude minus the
+  horizon it would be setting into at that instant, bearing and all`. Solving the bearing
+  and the time separately and iterating looked right on flat ground and was wrong in the
+  mountains: the marker sat off the ridge, and Chamonix read 97 minutes where the
+  consistent answer is 73. If a change here ever tempts you back to a fixed point loop,
+  the test that catches it measures the marker against the drawn ground in SVG pixels.
+- **East and west are read separately.** Reading only the sunset window and clamping the
+  lookup to its nearest edge put a western ridge onto sunrise and moved netz 24 minutes
+  the wrong way. Outside a measured window the lookup returns null and the caller falls
+  back to the smooth earth, which is the honest answer where nothing was measured.
+- **The window is plus or minus 56 degrees, and that is not generous, it is necessary.**
+  It has to hold the bearing the sun is on when it meets the real skyline, not the one it
+  would set on over flat ground, and behind a mountain those are far apart: at Chamonix
+  the sun clears the eastern wall 36 degrees round from where netz would otherwise be. A
+  narrow window does not fail loudly, it pins the answer to its own edge, so the row says
+  "beyond the patch read" when the solution lands outside and the test asserts it does not.
+- **Refraction is applied once, in two different places, on purpose.** The ray from a
+  ridge to your eye is bent by the effective earth radius trick (`K_REFRACT`, 7/6), which
+  is the standard geodetic treatment for a near horizontal ray. The ray from the sun
+  through the whole atmosphere gets astronomical refraction, `refractionAt`, anchored so
+  that a ray arriving level carries exactly the conventional 34 minutes of arc and falling
+  away fast above that (a ridge 27 degrees up bends about 2 minutes, not 34). Those are
+  two different rays and folding either into the other double counts.
+- **Row one is checked against the shul's own engine.** `zmanim-tool/js/zmanim/solar.js`
+  is NOAA ported 1:1 from the workbook the shul prints from, and the test asserts this
+  page agrees with it to under half a second at Lakewood, Jerusalem and Chamonix, in
+  summer and in winter. That is what makes row one trustworthy enough to measure the
+  other two against.
+- **Whether any of this should move a zman is not this repo's question.** Whether shkia
+  follows the visible horizon or mishor is a machlokes and almost every printed luach uses
+  sea level, so the page says so in as many words and looks nothing like the shul's boards.
+  Do not quietly promote the terrain row to the headline.
+- Testing needs real tiles and this container's browser has no route to AWS, so
+  `horizon-test.mjs` intercepts the tile requests and serves bytes fetched with curl,
+  which does get out. Fetch them with **async** `execFile`: a synchronous curl inside a
+  route handler blocks Node's event loop, which is also Playwright's, and the page hangs
+  waiting for a tile that is waiting for the loop. The browser is launched with
+  `executablePath` at `/opt/pw-browsers/chromium-1194`, since the installed Playwright
+  wants a build number this image does not carry.
+
 ## The music catalogue
 
 `music/songs.json` and `music/albums.json` are the catalogue; the MP3s sit beside them
