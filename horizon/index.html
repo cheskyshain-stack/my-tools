@@ -489,13 +489,22 @@
     state.tz = el("tz").value;
   }());
 
+  /* Twelve hour, the way a clock on a wall reads. Seconds stay: the whole point here is
+     a difference of a minute or two, and a reading that rounds that away is no use.
+     Newer ICU puts a narrow no-break space in front of AM, which is invisible and then
+     surprises anything that measures or matches the string, so it is normalised. */
   function clock(date) {
     try {
-      return new Intl.DateTimeFormat("en-GB", {
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
-        hour12: false, timeZone: state.tz
-      }).format(date);
-    } catch (err) { return date.toISOString().slice(11, 19); }
+      return new Intl.DateTimeFormat("en-US", {
+        hour: "numeric", minute: "2-digit", second: "2-digit",
+        hour12: true, timeZone: state.tz
+      }).format(date).replace(/[\u202F\u00A0]/g, " ");
+    } catch (err) {
+      var h = date.getUTCHours(), m = date.getUTCMinutes(), sec = date.getUTCSeconds();
+      var pad2 = function (n) { return (n < 10 ? "0" : "") + n; };
+      return (h % 12 === 0 ? 12 : h % 12) + ":" + pad2(m) + ":" + pad2(sec) +
+             " " + (h < 12 ? "AM" : "PM");
+    }
   }
 
   function gap(a, b) {
