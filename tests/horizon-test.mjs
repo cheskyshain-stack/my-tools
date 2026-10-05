@@ -81,7 +81,7 @@ const mins = txt => {
 await setAt(40.0959, -74.2176, "2026-09-30");
 let set = await times("setBox"), rise = await times("riseBox");
 check("three rows on each", [rise.length, set.length], [3, 3]);
-check("the rows are labelled", await labels("setBox"), ["Sea level", "Height correction", "Terrain adjusted"]);
+check("the rows are labelled", await labels("setBox"), ["Sea level", "Height correction", "Adjusted for the ground"]);
 if (sunEvent) near("Lakewood sea level sunset matches solar.js", mins(set[0]), ref(40.0959, -74.2176, 2026, 9, 30, false), 0.25);
 if (sunEvent) near("Lakewood sea level sunrise matches solar.js", mins(rise[0]), ref(40.0959, -74.2176, 2026, 9, 30, true), 0.25);
 

@@ -39,6 +39,7 @@
   .settings summary{cursor:pointer;font-size:13px;font-weight:700;min-height:28px}
   .settings-row{margin-top:12px}
   #heightHelp{margin-top:12px;line-height:1.6}
+  #terrainSource{margin-top:12px}
   .time-controls{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px}
   #zoneHelp{margin-top:8px;font-size:11.5px}
   .results-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:22px}
@@ -253,7 +254,7 @@
 </section>
 
 <section class="card" aria-labelledby="resultsTitle">
-  <div class="section-heading"><h2 id="resultsTitle">Skyline times</h2><span class="hint" id="resultPlace"></span></div>
+  <div class="section-heading"><h2 id="resultsTitle">Adjusted for the ground</h2><span class="hint" id="resultPlace"></span></div>
   <div class="time-controls">
     <div class="field"><label for="date">Date at this location</label>
       <div class="datebar">
@@ -268,7 +269,8 @@
   <p class="hint" id="zoneHelp">Time zone selected from your location. Daylight saving is applied automatically.</p>
   <button class="zone-auto" id="zoneAuto" type="button" hidden>Use location time zone</button>
   <p class="input-error" id="inputError" role="status" aria-live="polite" hidden></p>
-  <div class="skyline-summary" aria-label="Terrain adjusted sunrise and sunset">
+  <p class="hint" id="terrainSource">Based on your ground level and the ground that can block the sun.</p>
+  <div class="skyline-summary" aria-label="Sunrise and sunset adjusted for the ground">
     <section class="main-time"><h2>Sunrise <span>Netz</span></h2><div id="riseMain" class="terrain-time unavailable">Reading terrain</div><p id="riseChange" class="hint"></p></section>
     <section class="main-time"><h2>Sunset <span>Shkiya</span></h2><div id="setMain" class="terrain-time unavailable">Reading terrain</div><p id="setChange" class="hint"></p></section>
   </div>
@@ -286,7 +288,6 @@
     </div>
     <p class="hint compare-help">The change column compares each time with sea level. A plus means later; a minus means earlier.</p>
   </details>
-  <p class="hint" id="terrainSource">The main times use the surrounding ground, its distance and Earth's curvature.</p>
   <div class="reading-row">
     <p class="hint" id="readState" role="status" aria-live="polite">Reading the ground around this location.</p>
     <button class="btn" id="run" type="button">Read the skyline</button>
@@ -322,7 +323,7 @@
     <li><b>Height correction adds your elevation.</b> Standing higher lets you see over the curve of the earth, so
       the sun sets later. This is the same adjustment KosherJava makes when a location carries an
       elevation.</li>
-    <li><b>Terrain adjusted is the main result.</b> It walks the ground outward along every bearing the
+    <li><b>Adjusted for the ground is the main result.</b> It walks the ground outward along every bearing the
       sun could set on, allows for the curve of the earth and for refraction along that ray, and takes
       the highest thing in the way. The sun disappears behind that, not behind the sea.</li>
     <li><b>Whether any of this should move a zman is a question for a posek</b>, not for a calculator.
@@ -905,14 +906,14 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
             '<div class="t">' + (high ? clock(high.when) : '<small>No crossing</small>') + "</div>" +
             '<div class="t">' + (high && flat ? gap(high.when, flat.when) : "–") + "</div>" +
           (real
-            ? '<div class="lbl"><b>Terrain adjusted</b><span>' +
+            ? '<div class="lbl"><b>Adjusted for the ground</b><span>' +
                 (covered ? "" : "beyond the patch read, ") +
                 (real.horizon >= 0 ? "ground " + real.horizon.toFixed(2) + "° up"
                                    : "ground " + Math.abs(real.horizon).toFixed(2) + "° down") +
                 " at " + Math.round(real.az) + "°</span></div>" +
               '<div class="t">' + clock(real.when) + "</div>" +
               '<div class="t">' + (flat ? gap(real.when, flat.when) : "–") + "</div>"
-            : '<div class="lbl"><b>Terrain adjusted</b><span>' + (side ? "No crossing of this skyline" : "not read yet") + '</span></div>' +
+            : '<div class="lbl"><b>Adjusted for the ground</b><span>' + (side ? "No crossing of this skyline" : "not read yet") + '</span></div>' +
               '<div class="t">' + (side ? '<small>No crossing</small>' : "–") + '</div><div class="t">–</div>') +
         "</div>";
       box.innerHTML = rows;
@@ -923,9 +924,12 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
         : profile && profile.cached ? "Terrain time is an estimate from the saved profile until the map is checked." : "";
       box.appendChild(z);
     });
-    el("terrainSource").textContent = profile && profile.cached ? "Saved terrain estimate until the map is checked." :
-      state.eye === 0 ? "Ground level at your location compared with the surrounding ground, including distance and Earth's curvature." :
-      "Ground level plus " + heightText(state.eye, 1) + " above ground. Distance and Earth's curvature are included.";
+    var terrainExplanation = state.eye === 0
+      ? "Based on your ground level and the ground that can block the sun."
+      : "Based on your ground level plus " + heightText(state.eye, 1) +
+        " above it, and the ground that can block the sun.";
+    if (profile && profile.cached) { terrainExplanation += " Using a saved ground reading until the map is checked again."; }
+    el("terrainSource").textContent = terrainExplanation;
     drawSky();
   }
 
