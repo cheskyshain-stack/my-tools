@@ -19,11 +19,39 @@
     font-family:var(--cj-body,"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
     line-height:1.45;
     padding:10px 12px calc(34px + env(safe-area-inset-bottom));
-    max-width:940px;margin:0 auto;
+    max-width:1080px;margin:0 auto;
   }
   body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
   h2{font-family:var(--cj-display,Georgia,serif);font-weight:600;font-size:1.05rem;margin:0 0 10px;letter-spacing:-.2px}
   p.hint{margin:0;color:var(--cj-muted,#93A3C7);font-size:12.5px}
+  .intro{margin:0 0 16px;color:var(--cj-muted,#93A3C7);font-size:13px;max-width:680px}
+  .section-heading{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:12px}
+  .section-heading h2{margin:0}
+  #resultPlace{overflow-wrap:anywhere}
+  .location-chooser>summary{display:flex;gap:12px;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;min-height:44px}
+  .location-chooser>summary::-webkit-details-marker{display:none}
+  .location-chooser>summary strong{display:block;font-size:14px;overflow-wrap:anywhere}
+  .location-chooser>summary .change-location{flex:none;color:var(--cj-text,#EDF2FF);font-size:12px;border:1px solid var(--cj-line,rgba(255,255,255,.09));border-radius:10px;padding:9px 12px}
+  .location-chooser[open]>summary{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--cj-line,rgba(255,255,255,.09))}
+  .address-row{flex-wrap:nowrap}
+  .quick-locations{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .settings{margin-top:14px;border-top:1px solid var(--cj-line,rgba(255,255,255,.09));padding-top:12px}
+  .settings summary{cursor:pointer;font-size:13px;font-weight:700;min-height:28px}
+  .settings-row{margin-top:12px}
+  #heightHelp{margin-top:12px;line-height:1.6}
+  .time-controls{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px}
+  #zoneHelp{margin-top:8px;font-size:11.5px}
+  .results-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:22px}
+  .time-panel{min-width:0}
+  .time-panel h2{display:flex;gap:8px;align-items:center;font-size:1.15rem}
+  .time-panel h2 .hint{margin-left:auto;font:600 12px var(--cj-body,system-ui,sans-serif)}
+  .sun-icon{color:var(--cj-gold,#F5B301);font-family:system-ui,sans-serif}
+  .compare-help{margin-top:14px!important}
+  .reading-row{display:flex;gap:12px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--cj-line,rgba(255,255,255,.09))}
+  .reading-row .hint{flex:1;min-width:0}
+  .sky-intro{margin-bottom:12px!important}
+  .input-error{font-size:13px;color:#F7A7A7}
+  button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #2583F7;outline-offset:3px}
 
   .card{
     background:var(--cj-card,#121D38);border:1px solid var(--cj-line,rgba(255,255,255,.08));
@@ -37,26 +65,26 @@
   .field label{display:block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;
     color:var(--cj-muted,#93A3C7);margin-bottom:5px;font-weight:700}
   .field input,.field select{
-    width:100%;height:40px;padding:0 10px;border-radius:12px;
+    width:100%;height:44px;padding:0 10px;border-radius:12px;
     border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
     color:var(--cj-text,#EDF2FF);font:600 14px/1 inherit;
   }
   .field input:focus,.field select:focus{outline:2px solid #2583F7;outline-offset:1px}
   .btn{
-    height:40px;padding:0 15px;border-radius:12px;cursor:pointer;flex:none;
+    height:44px;padding:0 15px;border-radius:12px;cursor:pointer;flex:none;
     border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
     color:var(--cj-text,#EDF2FF);font:700 13px/1 inherit;
   }
   .btn.go{background:linear-gradient(140deg,#2583F7,#1763CF);border-color:transparent;color:#fff}
   .btn:disabled{opacity:.45;cursor:default}
   .spots{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .spot{height:32px;padding:0 12px;border-radius:999px;cursor:pointer;
+  .spot{min-height:44px;padding:0 12px;border-radius:999px;cursor:pointer;
     border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.04);
     color:var(--cj-muted,#93A3C7);font:700 12px/1 inherit}
 
   /* ===== The date ===== */
   .datebar{display:flex;gap:8px;align-items:center}
-  .datebar .nav{width:40px;height:40px;flex:none;border-radius:12px;cursor:pointer;
+  .datebar .nav{width:36px;height:44px;flex:none;border-radius:12px;cursor:pointer;
     border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.05);
     color:var(--cj-text,#EDF2FF);font:700 17px/1 inherit}
   .datebar input{flex:1 1 auto;min-width:0}
@@ -72,10 +100,14 @@
   .ans .lbl b{display:block;font-size:13.5px;font-weight:700}
   .ans .lbl span{display:block;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
   .ans .t{padding:9px 0;border-top:1px solid var(--cj-line-soft,rgba(255,255,255,.055));
-    text-align:right;font:700 17px/1.2 var(--cj-mono,ui-monospace,SFMono-Regular,Menlo,monospace);
+    text-align:right;white-space:nowrap;font:700 16px/1.2 var(--cj-mono,ui-monospace,SFMono-Regular,Menlo,monospace);
     font-variant-numeric:tabular-nums}
   .ans .t small{display:block;font:600 11px/1.3 inherit;color:var(--cj-muted,#93A3C7)}
-  .ans .t.base small{visibility:hidden}
+  .ans .t.base small{display:none}
+  .ans .t.base{color:var(--cj-gold,#F5B301)}
+  .ans .head.t{font:800 10.5px var(--cj-body,system-ui,sans-serif);border-top:0;padding:0 0 6px}
+  .no-crossing{font:600 11px var(--cj-body,system-ui,sans-serif);color:var(--cj-muted,#93A3C7)}
+  .zone:empty{display:none}
   .up{color:#6ee7b7}.down{color:#F26D6D}
 
   .zone{margin-top:11px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
@@ -83,7 +115,7 @@
   /* ===== The skyline ===== */
   .who{display:flex;gap:4px;padding:4px;margin-bottom:11px;border-radius:14px;
     background:rgba(255,255,255,.045);border:1px solid var(--cj-line,rgba(255,255,255,.08))}
-  .who button{flex:1 1 0;min-width:0;height:34px;border:0;border-radius:10px;cursor:pointer;
+  .who button{flex:1 1 0;min-width:0;height:44px;border:0;border-radius:10px;cursor:pointer;
     background:transparent;color:var(--cj-muted,#93A3C7);font:700 12.5px/1 inherit;white-space:nowrap}
   .who button.on{background:linear-gradient(140deg,#2583F7,#1763CF);color:#fff}
   .sky{width:100%;height:auto;display:block;border-radius:14px;background:#0A1226;
@@ -121,9 +153,21 @@
   .note li b{color:var(--cj-text,#EDF2FF)}
   .note ul{margin:0;padding-left:18px}
 
+  @media(max-width:760px){
+    .results-grid,.time-controls{grid-template-columns:minmax(0,1fr)}
+    .time-controls{gap:10px}
+    .results-grid{gap:22px}
+    .time-panel+ .time-panel{border-top:1px solid var(--cj-line,rgba(255,255,255,.09));padding-top:18px}
+  }
   @media(max-width:430px){
     .ans{grid-template-columns:1fr auto auto;gap:2px 7px}
-    .ans .t{font-size:15.5px}
+    .ans .t{font-size:14px}
+    .ans .lbl b{font-size:12.5px}
+    .ans .lbl span{font-size:11px}
+    .ans .head{font-size:10px}
+    .reading-row{flex-wrap:wrap}
+    .reading-row .hint{flex-basis:100%}
+    .quick-locations .hint{font-size:11px}
   }
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
@@ -139,64 +183,82 @@
   <h1>Netz &amp; Shkiya</h1>
 </header>
 
-<div class="card">
-  <h2>Where you are standing</h2>
-  <div class="row">
-    <div class="field"><label for="lat">Latitude</label><input id="lat" type="number" step="0.00001" inputmode="decimal" value="40.09590"></div>
-    <div class="field"><label for="lon">Longitude</label><input id="lon" type="number" step="0.00001" inputmode="decimal" value="-74.21760"></div>
-    <button class="btn" id="gps" type="button">Use my location</button>
-  </div>
-  <div class="row" style="margin-top:9px">
-    <div class="field" style="flex:3 1 220px"><label for="addr">Or look up an address</label>
+<main>
+<p class="intro">Sunrise and sunset for your location, with a comparison of sea level, your height and the surrounding terrain.</p>
+
+<section class="card" aria-labelledby="locationTitle">
+  <details id="locationControls" class="location-chooser">
+  <summary><span><span class="hint" id="locationTitle">Location</span><strong id="locationName">Lakewood NJ</strong></span><span class="change-location">Change location &#9662;</span></summary>
+  <div class="row address-row">
+    <div class="field"><label for="addr">Search an address or town</label>
       <input id="addr" type="search" placeholder="123 Main Street, Lakewood NJ" autocomplete="off"></div>
-    <button class="btn" id="find" type="button">Find</button>
+    <button class="btn go" id="find" type="button">Find</button>
   </div>
-  <div id="hits"></div>
-  <div class="row" style="margin-top:9px">
-    <div class="field"><label for="elev">Height of the ground, in metres</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="read from the map"></div>
-    <div class="field"><label for="eye">How far above it you are, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="0"></div>
-    <div class="field" style="flex:2 1 220px"><label for="tz">Show times in</label><select id="tz"></select></div>
+  <div id="hits" role="status" aria-live="polite"></div>
+  <div class="quick-locations">
+    <button class="btn" id="gps" type="button">Use my location</button>
+    <span class="hint">Or choose a place below</span>
   </div>
-  <p class="hint" style="margin-top:9px">The first is how high the land itself is where you are, which
-    the map fills in. The second is how far above that land you are: 0 standing on it, and raise it only
-    at an upstairs window or on a roof. Both are in metres, and 1 metre is about 3 feet 3. Added together
-    they are the height you are watching from, which is what sets how far you can see over the curve of
-    the earth. The second one is small, which is why it starts at nothing: a 10 metre window is worth
-    about 30 seconds.</p>
-  <div class="spots" id="spots"></div>
-</div>
+  <div class="spots" id="spots" aria-label="Example locations"></div>
+  <details id="settings" class="settings">
+    <summary>Coordinates &amp; viewing height</summary>
+    <div class="row settings-row">
+      <div class="field"><label for="lat">Latitude</label><input id="lat" type="number" min="-90" max="90" step="0.00001" inputmode="decimal" value="40.09590"></div>
+      <div class="field"><label for="lon">Longitude</label><input id="lon" type="number" min="-180" max="180" step="0.00001" inputmode="decimal" value="-74.21760"></div>
+    </div>
+    <div class="row settings-row">
+      <div class="field"><label for="elev">Height of the ground, in metres</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="read from the map" aria-describedby="heightHelp"></div>
+      <div class="field"><label for="eye">How far above it you are, in metres</label><input id="eye" type="number" min="0" step="0.5" inputmode="decimal" value="0" aria-describedby="heightHelp"></div>
+    </div>
+    <p class="hint" id="heightHelp">The first is how high the land itself is where you are, which
+      the map fills in. The second is how far above that land you are: 0 standing on it, and raise it only
+      at an upstairs window or on a roof. Both are in metres, and 1 metre is about 3 feet 3. Added together
+      they are the height you are watching from, which is what sets how far you can see over the curve of
+      the earth. The second one is small, which is why it starts at nothing: a 10 metre window is worth
+      about 30 seconds.</p>
+  </details>
+  </details>
+</section>
 
-<div class="card">
-  <h2>Which day</h2>
-  <div class="datebar">
-    <button class="nav" id="dprev" type="button" aria-label="Previous day">&lsaquo;</button>
-    <div class="field" style="margin:0"><input id="date" type="date"></div>
-    <button class="nav" id="dnext" type="button" aria-label="Next day">&rsaquo;</button>
-    <button class="btn" id="today" type="button">Today</button>
+<section class="card" aria-labelledby="resultsTitle">
+  <div class="section-heading"><h2 id="resultsTitle">Your times</h2><span class="hint" id="resultPlace"></span></div>
+  <div class="time-controls">
+    <div class="field"><label for="date">Date at this location</label>
+      <div class="datebar">
+        <button class="nav" id="dprev" type="button" aria-label="Previous day">&lsaquo;</button>
+        <input id="date" type="date">
+        <button class="nav" id="dnext" type="button" aria-label="Next day">&rsaquo;</button>
+        <button class="btn" id="today" type="button">Today</button>
+      </div>
+    </div>
+    <div class="field"><label for="tz">Display time zone</label><select id="tz" aria-describedby="zoneHelp"></select></div>
   </div>
-  <div class="row" style="margin-top:10px">
-    <button class="btn go" id="run" type="button" style="flex:1 1 auto">Read the skyline</button>
+  <p class="hint" id="zoneHelp">Choose the location's time zone for its local times. Daylight saving is applied automatically.</p>
+  <p class="input-error" id="inputError" role="status" aria-live="polite" hidden></p>
+  <div class="results-grid">
+    <section class="time-panel" aria-labelledby="riseTitle">
+      <h2 id="riseTitle"><span class="sun-icon" aria-hidden="true">&#9728;</span> Sunrise <span class="hint">Netz</span></h2>
+      <div id="riseBox"><div class="state">Waiting for a location.</div></div>
+    </section>
+    <section class="time-panel" aria-labelledby="setTitle">
+      <h2 id="setTitle"><span class="sun-icon" aria-hidden="true">&#9728;</span> Sunset <span class="hint">Shkiya</span></h2>
+      <div id="setBox"><div class="state">Waiting for a location.</div></div>
+    </section>
   </div>
-  <p class="hint" id="readState" style="margin-top:9px">The first two rows need no map data and appear at
-    once. The third reads a patch of terrain around you, which it does by itself whenever the location
-    changes.</p>
-</div>
-
-<div class="card">
-  <h2>Sunrise</h2>
-  <div id="riseBox"><div class="state">Waiting for a location.</div></div>
-</div>
-
-<div class="card">
-  <h2>Sunset</h2>
-  <div id="setBox"><div class="state">Waiting for a location.</div></div>
-</div>
+  <p class="hint compare-help">The change column compares each time with sea level. A plus means later; a minus means earlier.</p>
+  <div class="reading-row">
+    <p class="hint" id="readState" role="status" aria-live="polite">Sea level and height times appear immediately. The terrain is read automatically.</p>
+    <button class="btn" id="run" type="button">Read the skyline</button>
+  </div>
+  <p class="warn"><b>For zmanim:</b> most printed luachim use sea level. Ask your posek which horizon to follow.</p>
+</section>
 
 <div class="card" id="skyCard" style="display:none">
-  <h2>The skyline</h2>
+  <h2>The surrounding skyline</h2>
+  <p class="hint sky-intro">See where the sun meets the terrain, then open the blocking spot on a map.</p>
   <div class="who no-print" id="skyWho">
-    <button type="button" data-sky="rise">Sunrise, east</button>
-    <button type="button" data-sky="set">Sunset, west</button>
+    <button type="button" data-sky="rise" aria-pressed="false">Sunrise, east</button>
+    <button type="button" data-sky="set" aria-pressed="false">Sunset, west</button>
   </div>
   <svg class="sky" id="sky" viewBox="0 0 700 260" role="img" aria-label="Horizon profile against the sun's track"></svg>
   <div class="legend">
@@ -244,6 +306,8 @@
   </ul>
   </details>
 </div>
+
+</main>
 
 <script src="/assets/cj-refresh.js" defer></script>
 <script>
@@ -506,7 +570,7 @@
       /* This box used to ship at 1.7 and now ships at 0. A stored 1.7 is almost
          certainly the old default nobody touched rather than a figure somebody meant,
          so it is carried forward once. Anything else that was typed is left alone. */
-      if (state.eye === 1.7) { state.eye = 0; }
+      if (!saved.eyeDefaultVersion && state.eye === 1.7) { state.eye = 0; }
     }
   } catch (err) {}
 
@@ -515,9 +579,11 @@
      numbers are stored, never the map tiles: the samples are a few kilobytes and the
      tiles are megabytes. */
   function save() {
+    // An incomplete edit must not replace the last usable location on a refresh.
+    if (!validInputs()) { return; }
     try {
       localStorage.setItem(KEY, JSON.stringify({
-        lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, tz: state.tz,
+        lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, eyeDefaultVersion: 1, tz: state.tz,
         // What was typed and what was picked: a coordinate that survives a refresh
         // while the address box empties looks like the page forgot where you were.
         addr: el("addr") ? el("addr").value : "",
@@ -621,9 +687,32 @@
   // Standing h above a smooth earth, the sea horizon sits this far BELOW level.
   function dipOf(h) { return h <= 0 ? 0 : acosd(R_EARTH / (R_EARTH + h)); }
 
+  function validInputs() {
+    return Number.isFinite(state.lat) && Math.abs(state.lat) <= 90 &&
+      Number.isFinite(state.lon) && Math.abs(state.lon) <= 180 &&
+      (state.elev === null || Number.isFinite(state.elev)) &&
+      Number.isFinite(state.eye) && state.eye >= 0 && !isNaN(dayUTC().getTime());
+  }
+
   function paint() {
+    var valid = validInputs();
+    var fields = { lat: Number.isFinite(state.lat) && Math.abs(state.lat) <= 90,
+      lon: Number.isFinite(state.lon) && Math.abs(state.lon) <= 180,
+      elev: state.elev === null || Number.isFinite(state.elev),
+      eye: Number.isFinite(state.eye) && state.eye >= 0,
+      date: !isNaN(dayUTC().getTime()) };
+    Object.keys(fields).forEach(function (id) { el(id).setAttribute("aria-invalid", String(!fields[id])); });
+    el("inputError").hidden = valid;
+    el("run").disabled = !valid || el("run").textContent === "Reading the ground";
+    if (!valid) {
+      el("inputError").textContent = "Enter a latitude from -90 to 90, a longitude from -180 to 180, a valid date and a height above ground of 0 or more.";
+      ["riseBox", "setBox"].forEach(function (id) {
+        el(id).innerHTML = '<div class="state">Complete the location and date to see times.</div>';
+      });
+      el("skyCard").style.display = "none";
+      return;
+    }
     var day = dayUTC();
-    if (isNaN(day.getTime())) { return; }
     var lat = state.lat, lon = state.lon;
     var h = obsHeight();
     var dip = dipOf(h);
@@ -644,20 +733,16 @@
       var covered = real ? side.covers(real.az) : true;
       if (!covered) { patchMissed = true; }
 
-      if (!flat) {
-        box.innerHTML = '<div class="state">The sun does not cross the horizon here on this date.</div>';
-        return;
-      }
       var rows =
         '<div class="ans">' +
-          '<div class="head">Horizon</div><div class="head t">Time</div><div class="head t">Shift</div>' +
+          '<div class="head">Horizon</div><div class="head t">Time</div><div class="head t">Change</div>' +
           '<div class="lbl"><b>Sea level</b><span>What a luach prints</span></div>' +
-            '<div class="t base">' + clock(flat.when) + "<small>0</small></div>" +
+            '<div class="t base">' + (flat ? clock(flat.when) : '<span class="no-crossing">No crossing</span>') + "<small>0</small></div>" +
             '<div class="t base">–<small>0</small></div>' +
           '<div class="lbl"><b>Your height</b><span>' + h.toFixed(0) + " m up, horizon dips " +
             dip.toFixed(3) + "°</span></div>" +
-            '<div class="t">' + clock(high.when) + "</div>" +
-            '<div class="t">' + gap(high.when, flat.when) + "</div>" +
+            '<div class="t">' + (high ? clock(high.when) : '<small>No crossing</small>') + "</div>" +
+            '<div class="t">' + (high && flat ? gap(high.when, flat.when) : "–") + "</div>" +
           (real
             ? '<div class="lbl"><b>Real skyline</b><span>' +
                 (covered ? "" : "beyond the patch read, ") +
@@ -665,15 +750,16 @@
                                    : "ground " + Math.abs(real.horizon).toFixed(2) + "° down") +
                 " at " + Math.round(real.az) + "°</span></div>" +
               '<div class="t">' + clock(real.when) + "</div>" +
-              '<div class="t">' + gap(real.when, flat.when) + "</div>"
-            : '<div class="lbl"><b>Real skyline</b><span>not read yet</span></div>' +
-              '<div class="t">–</div><div class="t">–</div>') +
+              '<div class="t">' + (flat ? gap(real.when, flat.when) : "–") + "</div>"
+            : '<div class="lbl"><b>Real skyline</b><span>' + (side ? "No crossing of this skyline" : "not read yet") + '</span></div>' +
+              '<div class="t">' + (side ? '<small>No crossing</small>' : "–") + '</div><div class="t">–</div>') +
         "</div>";
       box.innerHTML = rows;
       var z = document.createElement("div");
       z.className = "zone";
-      z.textContent = "Times in " + state.tz.replace(/_/g, " ") + ". Sea level sunrise and sunset use the " +
-        "usual 50 minutes of arc, so row one matches an ordinary luach.";
+      z.textContent = !flat || !high
+        ? "No crossing means the sun stays above or below that horizon throughout this solar half-day."
+        : profile && profile.cached ? "Terrain time is an estimate from the saved profile until the map is checked." : "";
       box.appendChild(z);
     });
     drawSky();
@@ -693,7 +779,9 @@
     });
     if (!set) { el("skyCard").style.display = "none"; return; }
     [].forEach.call(el("skyWho").children, function (btn) {
-      btn.classList.toggle("on", btn.getAttribute("data-sky") === skyWhich);
+      var active = btn.getAttribute("data-sky") === skyWhich;
+      btn.classList.toggle("on", active);
+      btn.setAttribute("aria-pressed", String(active));
     });
     el("skyCard").style.display = "";
 
@@ -881,6 +969,7 @@
     // the two is a difference in the ground and not in how it was measured.
     var me = worldXY(lat, lon, 13);
     return getTile(13, Math.floor(me.x), Math.floor(me.y)).then(function (g) {
+      if (g === FETCH_FAILED) { throw new Error("the map patch at your location would not load"); }
       var ground = sampleTile(g, me.x, me.y);
       /* A height you typed is the height every row is measured from, this one too.
          It used to read the map's figure here whatever the box said, so a typed
@@ -911,7 +1000,7 @@
   var readTimer = null;
 
   function placeKey() {
-    if (!isFinite(state.lat) || !isFinite(state.lon)) { return null; }
+    if (!validInputs()) { return null; }
     // The elevation box is filled in by the reading itself, so keying on its value
     // would make every reading look like a change and ask for another one.
     return state.lat.toFixed(5) + "|" + state.lon.toFixed(5) + "|" +
@@ -981,6 +1070,17 @@
     readTimer = setTimeout(function () { autoRead(force, note); }, 280);
   }
 
+  function invalidateTerrain() {
+    // Cancel the old answer immediately, including the debounce before a new read.
+    clearTimeout(readTimer);
+    ++readSeq;
+    profile = null;
+    lastRead = null;
+    el("run").disabled = false;
+    el("run").textContent = "Read the skyline";
+    say("The terrain will be read for the updated location and viewing height.");
+  }
+
   function readFields() {
     state.lat = parseFloat(el("lat").value);
     state.lon = parseFloat(el("lon").value);
@@ -1001,7 +1101,7 @@
     el("lon").value = s.lon.toFixed(5);
     el("elev").value = "";
     elevAuto = true;
-    profile = null;
+    invalidateTerrain();
     state.place = s.name;
     el("addr").value = "";
     readFields();
@@ -1013,18 +1113,18 @@
   ["lat", "lon", "elev", "eye", "tz"].forEach(function (id) {
     el(id).addEventListener("change", function () {
       if (id === "lat" || id === "lon") {
-        profile = null;
         el("elev").value = "";
         elevAuto = true;
         // Typed coordinates are a different place from the one that was looked up, so
         // the line naming that one would now be a lie.
         state.place = "";
-        showPlace();
       }
       // A height you typed is yours: the next reading must not quietly overwrite it,
       // and changing it does move every angle, so it earns a fresh reading too.
       if (id === "elev") { elevAuto = el("elev").value === ""; }
+      if (id !== "tz") { invalidateTerrain(); }
       readFields();
+      showPlace();
       paint();
       if (id !== "tz") { askRead(); }
     });
@@ -1045,11 +1145,20 @@
 
   function todayStr() {
     var n = new Date();
+    try {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: state.tz, year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(n);
+      var values = {};
+      parts.forEach(function (part) { values[part.type] = part.value; });
+      return values.year + "-" + values.month + "-" + values.day;
+    } catch (err) {}
     return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0") + "-" +
            String(n.getDate()).padStart(2, "0");
   }
   function stepDay(n) {
     var d = dayUTC();
+    if (isNaN(d.getTime())) { el("date").value = todayStr(); afterDate(); return; }
     d.setUTCDate(d.getUTCDate() + n);
     el("date").value = d.toISOString().slice(0, 10);
     afterDate();
@@ -1106,6 +1215,15 @@
     el("hits").innerHTML = state.place
       ? '<p class="hint" style="margin-top:9px">Showing ' + esc(state.place) + "</p>"
       : "";
+    el("resultPlace").textContent = state.place ||
+      (Number.isFinite(state.lat) && Number.isFinite(state.lon)
+        ? state.lat.toFixed(4) + ", " + state.lon.toFixed(4) : "");
+    el("locationName").textContent = state.place ||
+      (state.lat === 40.0959 && state.lon === -74.2176 ? "Lakewood NJ" : el("resultPlace").textContent || "Choose a location");
+    [].forEach.call(el("spots").children, function (button) {
+      var spot = SPOTS[+button.getAttribute("data-spot")];
+      button.setAttribute("aria-pressed", String(state.lat === spot.lat && state.lon === spot.lon));
+    });
   }
 
   /* The page owns the elevation box only until somebody types in it, and that is the
@@ -1130,7 +1248,7 @@
     el("lon").value = Number(r.lon).toFixed(5);
     el("elev").value = "";
     elevAuto = true;
-    profile = null;
+    invalidateTerrain();
     state.place = String(r.display_name || "").split(", ").slice(0, 3).join(", ");
     readFields();
     showPlace();
@@ -1147,7 +1265,7 @@
       el("lon").value = pos.coords.longitude.toFixed(5);
       el("elev").value = "";
       elevAuto = true;
-      profile = null;
+      invalidateTerrain();
       state.place = "Where you are now";
       el("addr").value = "";
       readFields();

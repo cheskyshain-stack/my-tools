@@ -1,21 +1,12 @@
-import { launch } from "./pw.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import fs from "node:fs";
-const run = promisify(execFile);
-const APP = "http://127.0.0.1:8099/horizon/";
+import { tileBytes } from "./tiles.mjs";
+import { launch, BASE } from "./pw.mjs";
+const APP = `${BASE}/horizon/`;
 let pass=0,fail=0;
 const check=(n,g,w)=>{const ok=JSON.stringify(g)===JSON.stringify(w);ok?pass++:fail++;
   console.log(`${ok?"  ok ":"FAIL "} ${n}`+(ok?"":`\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`));};
 
-fs.mkdirSync("tiles",{recursive:true});
 let tileHits = 0;
-async function tileBytes(url){
-  const m=/terrarium\/(\d+)\/(\d+)\/(\d+)\.png/.exec(url);
-  const p=`tiles/${m[1]}_${m[2]}_${m[3]}.png`;
-  if(!fs.existsSync(p)){try{await run("curl",["-s","-f","-m","60","-o",p,url]);}catch(e){fs.writeFileSync(p,"");}}
-  const b=fs.readFileSync(p); return b.length?b:null;
-}
+
 const b=await launch();
 const ctx=await b.newContext({viewport:{width:393,height:852}});
 await ctx.route("**/elevation-tiles-prod/**", async route=>{
@@ -42,6 +33,8 @@ const thirdRow = box => pg.$$eval(`#${box} .ans .lbl span`, n=>n[2].textContent)
    without anything being clicked. */
 const fresh = tileHits;
 await pg.goto(APP,{waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await settled();
 await pg.waitForTimeout(400);
 check("it fetched ground without being asked", tileHits > fresh, true);

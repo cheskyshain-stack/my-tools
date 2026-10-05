@@ -1,27 +1,14 @@
-import { launch } from "./pw.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import fs from "node:fs";
-const run = promisify(execFile);
+import { tileBytes } from "./tiles.mjs";
+import { launch, BASE } from "./pw.mjs";
 
-const APP = "http://127.0.0.1:8099/horizon/";
+const APP = `${BASE}/horizon/`;
 let pass = 0, fail = 0;
 const check = (n, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w); ok ? pass++ : fail++;
   console.log(`${ok ? "  ok " : "FAIL "} ${n}` + (ok ? "" : `\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`)); };
 const near = (n, g, w, tol) => { const ok = Math.abs(g - w) <= tol; ok ? pass++ : fail++;
   console.log(`${ok ? "  ok " : "FAIL "} ${n}` + (ok ? ` (${g})` : `\n        got  ${g}\n        want ${w} +- ${tol}`)); };
 
-fs.mkdirSync("tiles", { recursive: true });
-async function tileBytes(url) {
-  const m = /terrarium\/(\d+)\/(\d+)\/(\d+)\.png/.exec(url);
-  const p = `tiles/${m[1]}_${m[2]}_${m[3]}.png`;
-  if (!fs.existsSync(p)) {
-    try { await run("curl", ["-s", "-f", "-m", "60", "-o", p, url]); }
-    catch (e) { fs.writeFileSync(p, ""); }
-  }
-  const b = fs.readFileSync(p);
-  return b.length ? b : null;
-}
+
 
 /* The real Nominatim is blocked from this container, so its ANSWER is stubbed with a
    real response body. That tests the parsing, the list and the pick, and does not test
@@ -51,6 +38,8 @@ const pg = await ctx.newPage();
 const errs = []; pg.on("pageerror", e => errs.push(String(e)));
 pg.on("console", m => { if (m.type() === "error" && !/favicon|fonts\.g|ERR_/.test(m.text())) errs.push(m.text()); });
 await pg.goto(APP, { waitUntil: "domcontentloaded" });
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(400);
 await pg.selectOption("#tz", "UTC");
 await pg.waitForTimeout(200);

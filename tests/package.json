@@ -4,7 +4,7 @@
   "description": "",
   "main": "horizon-check.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node horizon-test.mjs && node feat-test.mjs && node auto-test.mjs && node keep-test.mjs && node addr-test.mjs && node icon-check.mjs && node accuracy-test.mjs && node layout-test.mjs"
   },
   "keywords": [],
   "author": "",

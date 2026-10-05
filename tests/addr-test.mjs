@@ -1,20 +1,11 @@
-import { launch } from "./pw.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import fs from "node:fs";
-const run = promisify(execFile);
-const APP="http://127.0.0.1:8099/horizon/";
+import { tileBytes } from "./tiles.mjs";
+import { launch, BASE } from "./pw.mjs";
+const APP=`${BASE}/horizon/`;
 let pass=0,fail=0;
 const check=(n,g,w)=>{const ok=JSON.stringify(g)===JSON.stringify(w);ok?pass++:fail++;
   console.log(`${ok?"  ok ":"FAIL "} ${n}`+(ok?"":`\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`));};
 
-fs.mkdirSync("tiles",{recursive:true});
-async function tileBytes(url){
-  const m=/terrarium\/(\d+)\/(\d+)\/(\d+)\.png/.exec(url);
-  const p=`tiles/${m[1]}_${m[2]}_${m[3]}.png`;
-  if(!fs.existsSync(p)){try{await run("curl",["-s","-f","-m","60","-o",p,url]);}catch(e){fs.writeFileSync(p,"");}}
-  const b=fs.readFileSync(p); return b.length?b:null;
-}
+
 const b=await launch();
 const ctx=await b.newContext({viewport:{width:393,height:852}});
 await ctx.route("**/elevation-tiles-prod/**", async route=>{
@@ -33,6 +24,8 @@ const shown=()=>pg.$eval("#hits",n=>n.textContent.trim());
 
 /* ---------- the example is nobody's house ---------- */
 await pg.goto(APP,{waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await settled();
 check("the example address is a made up one",
   await pg.$eval("#addr", n=>n.getAttribute("placeholder")), "123 Main Street, Lakewood NJ");
@@ -49,6 +42,8 @@ check("it says which place it took", await shown(), "Showing Chamonix-Mont-Blanc
 check("and the box still holds what was typed", await pg.inputValue("#addr"), "Chamonix");
 
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(400);
 check("the typed address survives a refresh", await pg.inputValue("#addr"), "Chamonix");
 check("and so does the place it found", await shown(), "Showing Chamonix-Mont-Blanc, Haute-Savoie, Auvergne");
@@ -70,6 +65,8 @@ await pg.waitForTimeout(500); await settled(); await pg.waitForTimeout(300);
 check("a preset names itself", await shown(), "Showing Jerusalem");
 check("and clears the address box", await pg.inputValue("#addr"), "");
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(400);
 check("which also survives a refresh", await shown(), "Showing Jerusalem");
 
@@ -79,6 +76,8 @@ await pg.waitForTimeout(500);
 check("typing coordinates stops claiming the old place", await shown(), "");
 await settled();
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(400);
 check("and it stays cleared after a refresh", await shown(), "");
 

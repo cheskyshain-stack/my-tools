@@ -1,25 +1,17 @@
-import { launch } from "./pw.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import fs from "node:fs";
-const run = promisify(execFile);
-const APP="http://127.0.0.1:8099/horizon/";
+import { tileBytes } from "./tiles.mjs";
+import { launch, BASE } from "./pw.mjs";
+const APP=`${BASE}/horizon/`;
 let pass=0,fail=0;
 const check=(n,g,w)=>{const ok=JSON.stringify(g)===JSON.stringify(w);ok?pass++:fail++;
   console.log(`${ok?"  ok ":"FAIL "} ${n}`+(ok?"":`\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`));};
 
-fs.mkdirSync("tiles",{recursive:true});
-let hits=0, block=false;
-async function tileBytes(url){
-  const m=/terrarium\/(\d+)\/(\d+)\/(\d+)\.png/.exec(url);
-  const p=`tiles/${m[1]}_${m[2]}_${m[3]}.png`;
-  if(!fs.existsSync(p)){try{await run("curl",["-s","-f","-m","60","-o",p,url]);}catch(e){fs.writeFileSync(p,"");}}
-  const b=fs.readFileSync(p); return b.length?b:null;
-}
+let hits=0, block=false, tileGate=null;
+
 const b=await launch();
 const ctx=await b.newContext({viewport:{width:393,height:852}});
 await ctx.route("**/elevation-tiles-prod/**", async route=>{
   if(block) return route.abort();
+  if(tileGate) await tileGate;
   hits++;
   const body=await tileBytes(route.request().url());
   route.fulfill(body?{status:200,contentType:"image/png",body,headers:{"Access-Control-Allow-Origin":"*"}}:{status:404,body:""});
@@ -35,6 +27,8 @@ const times=box=>pg.$$eval(`#${box} .ans .t:not(.head)`,n=>n.map(x=>x.childNodes
 
 /* ---------- set something up worth keeping ---------- */
 await pg.goto(APP,{waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await settled();
 for(const [id,v] of [["lat","45.9237"],["lon","6.8694"]]){await pg.fill("#"+id,v);await pg.dispatchEvent("#"+id,"change");}
 await pg.waitForTimeout(600); await settled(); await pg.waitForTimeout(400);
@@ -48,6 +42,8 @@ console.log("   before refresh:", wantRow, "|", JSON.stringify(wantTimes));
 /* ---------- refresh with the map unreachable: nothing may be lost ---------- */
 await offline(true);
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(900);
 /* A restored reading is rebuilt by interpolating the stored rays, where a live one
    walks the exact bearing, so it is close rather than identical until the quiet
@@ -74,7 +70,11 @@ check("the button stays a refresh", await pg.$eval("#run",n=>n.textContent), "Re
 /* ---------- refresh with the map reachable: the pin becomes exact again ---------- */
 await offline(false);
 const before = hits;
+let releaseTiles;
+tileGate = new Promise(resolve => { releaseTiles = resolve; });
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(120);
 check("it shows the stored reading straight away", Math.abs(deg(await row("setBox")) - deg(wantRow)) < 0.12, true);
 // the wording only stands while the check runs, so it is waited for rather than sampled
@@ -84,6 +84,8 @@ try {
     document.getElementById("readState").textContent), null, {timeout: 8000});
 } catch (e) { saidChecking = false; }
 check("and says it is checking", saidChecking, true);
+releaseTiles();
+tileGate = null;
 await settled();
 await pg.waitForTimeout(500);
 check("the quiet re-check did fetch", hits > before, true);
@@ -100,6 +102,8 @@ check("and pin and solver agree again", Math.abs(agree.pin-agree.solver) < 0.05,
 await pg.evaluate(()=>{const s=JSON.parse(localStorage.getItem("cjHorizonV1"));s.date="2020-01-01";
   localStorage.setItem("cjHorizonV1",JSON.stringify(s));});
 await pg.reload({waitUntil:"domcontentloaded"});
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(600);
 const today = new Date();
 const iso = today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
@@ -118,6 +122,18 @@ check("and that it starts at nothing",
   /0 standing on it/.test(await pg.evaluate(()=>document.body.innerText)), true);
 check("with metres put in feet for anyone who wants it",
   /1 metre is about 3 feet 3/.test(await pg.evaluate(()=>document.body.innerText)), true);
+
+/* The migration from the old 1.7m default is once only. A 1.7m height deliberately
+   entered now must survive a refresh, or the terrain time changes without consent. */
+await pg.fill("#eye", "1.7"); await pg.dispatchEvent("#eye", "change");
+await pg.waitForTimeout(450); await settled();
+const heightRow = await pg.$$eval("#riseBox .lbl span", n => n[1].textContent);
+check("new saves mark the height-default migration complete",
+  await pg.evaluate(()=>JSON.parse(localStorage.getItem("cjHorizonV1")).eyeDefaultVersion), 1);
+await pg.reload({waitUntil:"domcontentloaded"});
+check("a deliberately entered 1.7m survives a refresh", await pg.inputValue("#eye"), "1.7");
+check("and the height row remains the same",
+  await pg.$$eval("#riseBox .lbl span", n => n[1].textContent), heightRow);
 
 check("no console errors", errs, []);
 await b.close();

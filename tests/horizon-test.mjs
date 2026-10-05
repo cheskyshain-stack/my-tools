@@ -1,8 +1,5 @@
-import { launch } from "./pw.mjs";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-const run = promisify(execFile);
-import fs from "node:fs";
+import { tileBytes } from "./tiles.mjs";
+import { launch, BASE } from "./pw.mjs";
 /* The sea level row is cross-checked against the shul's own NOAA engine, which is
    ported 1:1 from the workbook the boards are printed from. That repo sits beside this
    one when it is checked out; without it those four assertions are skipped rather than
@@ -11,7 +8,7 @@ let sunEvent = null;
 try { ({ sunEvent } = await import("../../zmanim-tool/js/zmanim/solar.js")); }
 catch { console.log("   (zmanim-tool not beside this repo: skipping the solar cross-check)"); }
 
-const APP = "http://127.0.0.1:8099/horizon/";
+const APP = `${BASE}/horizon/`;
 let pass = 0, fail = 0;
 const check = (n, g, w) => { const ok = JSON.stringify(g) === JSON.stringify(w); ok ? pass++ : fail++;
   console.log(`${ok ? "  ok " : "FAIL "} ${n}` + (ok ? "" : `\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`)); };
@@ -20,30 +17,18 @@ const near = (n, g, w, tol) => { const ok = Math.abs(g - w) <= tol; ok ? pass++ 
 
 /* Real tiles, fetched with curl because only curl gets out of this container.
    The page itself is untouched: it asks AWS exactly as it would in a browser. */
-fs.mkdirSync("tiles", { recursive: true });
-let fetched = 0, served = 0;
+let served = 0;
 /* async, not execFileSync: a synchronous curl inside a route handler blocks Node's
    own event loop, which is also Playwright's, and the page hangs waiting for a tile
    that is waiting for the loop. */
-async function tileBytes(z, x, y) {
-  const p = `tiles/${z}_${x}_${y}.png`;
-  if (!fs.existsSync(p)) {
-    try {
-      await run("curl", ["-s", "-f", "-m", "60", "-o", p,
-        `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`]);
-      fetched++;
-    } catch (e) { fs.writeFileSync(p, ""); }
-  }
-  const b = fs.readFileSync(p);
-  return b.length ? b : null;
-}
+
 
 const b = await launch();
 const ctx = await b.newContext({ viewport: { width: 393, height: 852 } });
 await ctx.route("**/elevation-tiles-prod/**", async route => {
   const m = /terrarium\/(\d+)\/(\d+)\/(\d+)\.png/.exec(route.request().url());
   if (!m) return route.abort();
-  const body = await tileBytes(+m[1], +m[2], +m[3]);
+  const body = await tileBytes(route.request().url());
   served++;
   if (!body) return route.fulfill({ status: 404, body: "" });
   route.fulfill({ status: 200, contentType: "image/png", body,
@@ -54,6 +39,8 @@ const errs = []; pg.on("pageerror", e => errs.push(String(e)));
 pg.on("console", m => { if (m.type() === "error" && !/favicon|fonts\.g|ERR_/.test(m.text())) errs.push(m.text()); });
 
 await pg.goto(APP, { waitUntil: "domcontentloaded" });
+await pg.locator("#locationControls").evaluate(n => { n.open = true; });
+await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(400);
 await pg.selectOption("#tz", "UTC");
 await pg.waitForTimeout(250);
@@ -157,7 +144,7 @@ console.log("   marker vs ground, in svg px:", JSON.stringify(onRidge));
 check("the marker sits on the skyline it set behind", onRidge.apart < 3, true);
 check("the skyline card is showing", await pg.$eval("#skyCard", n => getComputedStyle(n).display !== "none"), true);
 check("the skyline is drawn", await pg.$$eval("#sky path", n => n.length), 2);
-console.log("   tiles served to the page:", served, "| downloaded:", fetched);
+console.log("   tiles served to the page:", served);
 console.log("   Chamonix sunset note:", await pg.$eval("#skyNote", n => n.textContent));
 
 /* sunrise must use the EASTERN ground. Reading the western window and clamping put a

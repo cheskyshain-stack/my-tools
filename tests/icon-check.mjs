@@ -1,4 +1,4 @@
-import { launch } from "./pw.mjs";
+import { launch, BASE } from "./pw.mjs";
 let pass=0,fail=0;
 const check=(n,g,w)=>{const ok=JSON.stringify(g)===JSON.stringify(w);ok?pass++:fail++;
   console.log(`${ok?"  ok ":"FAIL "} ${n}`+(ok?"":`\n        got  ${JSON.stringify(g)}\n        want ${JSON.stringify(w)}`));};
@@ -7,7 +7,7 @@ const ctx=await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:
 const pg=await ctx.newPage();
 const bad=[]; // 304 means the browser already had it, which is a hit, not a failure
 pg.on("response",r=>{const c=r.status();if(r.url().includes("icon.png")&&!(c<300||c===304))bad.push(r.url()+" "+c);});
-await pg.goto("http://127.0.0.1:8099/home/",{waitUntil:"networkidle"});
+await pg.goto(`${BASE}/home/`,{waitUntil:"networkidle"});
 await pg.evaluate(()=>{try{localStorage.setItem("cjAppsHiddenToolsVisible","1")}catch(e){}});
 await pg.reload({waitUntil:"networkidle"});
 await pg.waitForTimeout(600);
@@ -25,7 +25,7 @@ check("it is a square 512", r.nat, [512,512]);
 check("no icon failed to load", bad, []);
 await (await pg.locator('a.tool[href="/horizon/"]')).screenshot({path:"icon-in-portal.png"});
 
-await pg.goto("http://127.0.0.1:8099/horizon/",{waitUntil:"domcontentloaded"});
+await pg.goto(`${BASE}/horizon/`,{waitUntil:"domcontentloaded"});
 await pg.waitForTimeout(400);
 check("the page title matches", await pg.title(), "Netz & Shkiya | CJ Portal");
 check("the heading matches", await pg.$eval("h1", n=>n.textContent), "Netz & Shkiya");
