@@ -113,7 +113,9 @@ check("and neither of them mentions eyes", /eyes/i.test(labels.join(" ")), false
 check("and a line explains them",
   /how far above that land you are/.test(await pg.evaluate(()=>document.body.innerText)), true);
 check("and says how little the second one is worth",
-  /worth about 13 seconds/.test(await pg.evaluate(()=>document.body.innerText)), true);
+  /worth about 30 seconds/.test(await pg.evaluate(()=>document.body.innerText)), true);
+check("and that it starts at nothing",
+  /0 standing on it/.test(await pg.evaluate(()=>document.body.innerText)), true);
 check("with metres put in feet for anyone who wants it",
   /1 metre is about 3 feet 3/.test(await pg.evaluate(()=>document.body.innerText)), true);
 

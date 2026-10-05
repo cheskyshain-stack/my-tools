@@ -194,7 +194,23 @@ await pg.waitForFunction(() => document.getElementById("run").textContent === "R
 await pg.waitForTimeout(400);
 set = await times("setBox");
 const lakewood = mins(set[0]) - mins(set[2]);
-near("Lakewood barely moves", lakewood, 1.5, 2.0);
+/* At 1.7 m the sun sets behind the 44 m rise 3 km out and Lakewood barely moves,
+   which is the flat country claim worth holding on to. At the shipped default of 0
+   the blocker is instead a 1.6 m rise 90 m away and the answer is 6.4 minutes, which
+   is checked below: that sensitivity is real and is why the card warns about it. */
+await pg.fill("#eye", "1.7"); await pg.dispatchEvent("#eye", "change");
+await pg.waitForTimeout(450);
+await pg.waitForFunction(()=>document.getElementById("run").textContent!=="Reading the ground",
+  null, {timeout: 240000});
+await pg.waitForTimeout(250);
+set = await times("setBox");
+const lakewoodUp = mins(set[0]) - mins(set[2]);
+near("Lakewood barely moves once you are standing", lakewoodUp, 1.6, 0.5);
+near("but on the ground itself it is the bump next door", lakewood, 6.4, 1.2);
+const close = await pg.evaluate(()=>{
+  const c = document.querySelector(".spot-card"); return c ? c.textContent : "";
+});
+check("and at 1.7 m nothing is close enough to warn about", /within \d+ m of you/.test(close), false);
 check("Lakewood still moves the right way (earlier)", lakewood > 0, true);
 console.log("   Lakewood note:", await pg.$eval("#skyNote", n => n.textContent));
 await pg.screenshot({ path: "horizon-lakewood.png", fullPage: false });

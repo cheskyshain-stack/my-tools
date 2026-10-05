@@ -101,7 +101,7 @@ check("a typed elevation is not overwritten by the reading",
   await pg.inputValue("#elev"), "2000");
 const second = await pg.$$eval("#setBox .ans .lbl span", n=>n[1].textContent);
 console.log("   second row now reads:", second);
-check("and it moved the second row", /200[12] m up/.test(second), true);
+check("and it moved the second row", /2000 m up/.test(second), true);
 
 /* ---------- a reading in flight must not overwrite what you type ----------
    Deliberate rather than racy: the tiles are held back for a second, the height is
@@ -126,7 +126,7 @@ await settled();
 await pg.waitForTimeout(600);
 check("a height typed mid reading survives it", await pg.inputValue("#elev"), "750");
 check("and the second row is measured from it",
-  /75[12] m up/.test(await pg.$$eval("#setBox .ans .lbl span", n=>n[1].textContent)), true);
+  /750 m up/.test(await pg.$$eval("#setBox .ans .lbl span", n=>n[1].textContent)), true);
 check("and the skyline is measured from it too, not from the map's figure",
   await pg.evaluate(()=>{
     const t=document.querySelector(".spot-card p");

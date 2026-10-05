@@ -248,6 +248,16 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   where you were. A preset names itself, the GPS button names itself, and typing
   coordinates clears the name, since it is no longer the place that was looked up. The
   example in the box is a made-up street, not anybody's house.
+- **The height above ground ships at 0, and that is a sharper knob than it looks.**
+  Measured at Lakewood on 30 September: at 0 the sun sets behind a 1.6 m rise **90 m
+  away** and shkia is 6.4 minutes early; at 1.7 m the blocker jumps to the 44 m hill 3.15
+  km out and it is 1.6 minutes. Both are arithmetically right. The first is not
+  trustworthy: a tile pixel is about 19 m across with several metres of vertical error,
+  and the model is bare earth with no buildings and no trees, so a small rise just down
+  the road is the least knowable thing it holds. The spot card therefore says so whenever
+  the blocking ground is within 300 m. The old shipped default of 1.7 is carried forward
+  to 0 once on load, the way `LEGACY_*` works in the zmanim repo: a stored 1.7 is almost
+  certainly the default nobody touched, and anything else typed is left alone.
 - **The page never writes into a field while it has the focus.** The elevation box is
   filled in from the map, and a reading landing while somebody was typing in it destroyed
   the selection, so their keystrokes landed after the page's figure rather than replacing

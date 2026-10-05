@@ -154,15 +154,15 @@
   <div id="hits"></div>
   <div class="row" style="margin-top:9px">
     <div class="field"><label for="elev">Height of the ground, in metres</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="read from the map"></div>
-    <div class="field"><label for="eye">How far above it you are, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
+    <div class="field"><label for="eye">How far above it you are, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="0"></div>
     <div class="field" style="flex:2 1 220px"><label for="tz">Show times in</label><select id="tz"></select></div>
   </div>
   <p class="hint" style="margin-top:9px">The first is how high the land itself is where you are, which
-    the map fills in. The second is how far above that land you are: leave it at 1.7 if you are standing
-    on the ground, raise it at an upstairs window or on a roof. Both are in metres, and 1 metre is about
-    3 feet 3. Added together they are the height you are watching from, which is what sets how far you
-    can see over the curve of the earth. The second one is small: standing rather than lying on the
-    ground is worth about 13 seconds.</p>
+    the map fills in. The second is how far above that land you are: 0 standing on it, and raise it only
+    at an upstairs window or on a roof. Both are in metres, and 1 metre is about 3 feet 3. Added together
+    they are the height you are watching from, which is what sets how far you can see over the curve of
+    the earth. The second one is small, which is why it starts at nothing: a 10 metre window is worth
+    about 30 seconds.</p>
   <div class="spots" id="spots"></div>
 </div>
 
@@ -495,13 +495,19 @@
     { name: "Chamonix", lat: 45.9237, lon: 6.8694 }
   ];
   var KEY = "cjHorizonV1";
-  var state = { lat: 40.0959, lon: -74.2176, elev: null, eye: 1.7, tz: null, date: null };
+  var state = { lat: 40.0959, lon: -74.2176, elev: null, eye: 0, tz: null, date: null };
   var profile = null;      // { east, west }, once the ground has been read
   var skyWhich = "set";    // which half of the sky the picture is showing
 
   try {
     var saved = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (saved && typeof saved.lat === "number") { Object.assign(state, saved); }
+    if (saved && typeof saved.lat === "number") {
+      Object.assign(state, saved);
+      /* This box used to ship at 1.7 and now ships at 0. A stored 1.7 is almost
+         certainly the old default nobody touched rather than a figure somebody meant,
+         so it is carried forward once. Anything else that was typed is left alone. */
+      if (state.eye === 1.7) { state.eye = 0; }
+    }
   } catch (err) {}
 
   /* A refresh used to come back to an empty third row and a few seconds of fetching.
@@ -762,6 +768,18 @@
         "<p><b>" + Math.round(spot.h) + " m</b> above sea level, <b>" + spot.km.toFixed(2) +
           " km</b> away on a bearing of <b>" + Math.round(set.az) + "\u00B0</b>, standing <b>" +
           spot.deg.toFixed(2) + "\u00B0</b> above your eye.<br>" + esc(coords) + "</p>" +
+        /* Ground this close is where the map is least able to help: a tile pixel is
+           about 19 m across with several metres of vertical error, and a bare earth
+           model has no houses and no trees in it. At a low eye height a rise of a
+           metre or two just down the road wins over a real hill miles out, so the
+           card says so rather than presenting it with the same confidence. */
+        (spot.km < 0.3
+          ? '<p style="margin-top:2px">This is ground within ' + Math.round(spot.km * 1000) +
+            " m of you. The map reads about 19 m to a pixel and holds bare earth only, " +
+            "with no buildings and no trees, so a small rise this close is the least " +
+            "trustworthy thing it can tell you. Raising the height above ground moves " +
+            "the answer out to the real skyline.</p>"
+          : "") +
         '<a href="https://www.google.com/maps/search/?api=1&query=' +
           spot.lat.toFixed(6) + "," + spot.lon.toFixed(6) +
           '" target="_blank" rel="noopener">Open this spot in Google Maps</a></div>';

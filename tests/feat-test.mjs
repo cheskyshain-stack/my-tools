@@ -161,6 +161,22 @@ check("skyline is explained in it",
 check("no sideways overflow at 393px",
   await pg.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0);
 check("no em dash on the page", await pg.evaluate(() => document.body.innerText.indexOf("—")), -1);
+/* ground right at your feet is flagged, since that is where the map is weakest */
+await pg.fill("#lat","40.0959"); await pg.dispatchEvent("#lat","change");
+await pg.fill("#lon","-74.2176"); await pg.dispatchEvent("#lon","change");
+await pg.fill("#eye","0"); await pg.dispatchEvent("#eye","change");
+await pg.waitForTimeout(500);
+await pg.waitForFunction(()=>document.getElementById("run").textContent!=="Reading the ground",
+  null,{timeout:240000});
+await pg.waitForTimeout(400);
+await pg.click('#skyWho [data-sky="set"]');     // the card follows this switch
+await pg.waitForTimeout(300);
+const near0 = await pg.$eval(".spot-card", n=>n.textContent);
+console.log("   card:", near0.replace(/\s+/g," ").slice(0,150));
+check("ground within 300 m is flagged as the map's weakest answer",
+  /within \d+ m of you/.test(near0), true);
+check("and it says why", /no buildings and no trees/.test(near0), true);
+
 check("no console errors", errs, []);
 
 /* ---------- 5. the clock reads am and pm ---------- */
