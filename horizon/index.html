@@ -132,7 +132,7 @@
     font-variant-numeric:tabular-nums}
   .ans .t small{display:block;font:600 11px/1.3 inherit;color:var(--cj-muted,#93A3C7)}
   .ans .t.base small{display:none}
-  .ans .t.base{color:var(--cj-gold,#F5B301)}
+  .ans .t.ground{color:var(--cj-gold,#F5B301)}
   .ans .head.t{font:800 10.5px var(--cj-body,system-ui,sans-serif);border-top:0;padding:0 0 6px}
   .no-crossing{font:600 11px var(--cj-body,system-ui,sans-serif);color:var(--cj-muted,#93A3C7)}
   .zone:empty{display:none}
@@ -911,7 +911,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
                 (real.horizon >= 0 ? "ground " + real.horizon.toFixed(2) + "° up"
                                    : "ground " + Math.abs(real.horizon).toFixed(2) + "° down") +
                 " at " + Math.round(real.az) + "°</span></div>" +
-              '<div class="t">' + clock(real.when) + "</div>" +
+              '<div class="t ground">' + clock(real.when) + "</div>" +
               '<div class="t">' + (flat ? gap(real.when, flat.when) : "–") + "</div>"
             : '<div class="lbl"><b>Adjusted for the ground</b><span>' + (side ? "No crossing of this skyline" : "not read yet") + '</span></div>' +
               '<div class="t">' + (side ? '<small>No crossing</small>' : "–") + '</div><div class="t">–</div>') +
