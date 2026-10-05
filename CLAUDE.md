@@ -243,6 +243,19 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   page agrees with it to under half a second at Lakewood, Jerusalem and Chamonix, in
   summer and in winter. That is what makes row one trustworthy enough to measure the
   other two against.
+- **The address box and the name of the place it found are kept too.** Coordinates that
+  survive a refresh while the address box empties reads as the page having forgotten
+  where you were. A preset names itself, the GPS button names itself, and typing
+  coordinates clears the name, since it is no longer the place that was looked up. The
+  example in the box is a made-up street, not anybody's house.
+- **The page never writes into a field while it has the focus.** The elevation box is
+  filled in from the map, and a reading landing while somebody was typing in it destroyed
+  the selection, so their keystrokes landed after the page's figure rather than replacing
+  it: a typed 1000 came out as 27.41000. It went wrong about one attempt in seven and was
+  only found by tracing every write to that box. Two guards now: `elevAuto` goes false on
+  the first **keystroke** rather than on blur, and the auto-fill also refuses while
+  `document.activeElement` is the box. `auto-test` holds the tiles back and types into the
+  box mid-reading on purpose, rather than leaving it to whoever wins a race.
 - **A refresh keeps what was on screen.** The measured samples go into `localStorage`
   (about 20KB, never the tiles, which are megabytes), along with the day and which half
   of the sky was showing, and `reviveSide` puts the closures back. The page then paints

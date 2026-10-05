@@ -148,7 +148,7 @@
   </div>
   <div class="row" style="margin-top:9px">
     <div class="field" style="flex:3 1 220px"><label for="addr">Or look up an address</label>
-      <input id="addr" type="search" placeholder="44 Coles Way, Lakewood NJ" autocomplete="off"></div>
+      <input id="addr" type="search" placeholder="123 Main Street, Lakewood NJ" autocomplete="off"></div>
     <button class="btn" id="find" type="button">Find</button>
   </div>
   <div id="hits"></div>
@@ -510,6 +510,10 @@
     try {
       localStorage.setItem(KEY, JSON.stringify({
         lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, tz: state.tz,
+        // What was typed and what was picked: a coordinate that survives a refresh
+        // while the address box empties looks like the page forgot where you were.
+        addr: el("addr") ? el("addr").value : "",
+        place: state.place || "",
         date: el("date") ? el("date").value : null,
         sky: skyWhich,
         read: profile ? { at: lastRead, tiles: profile.tiles, when: Date.now(),
@@ -858,14 +862,15 @@
     var me = worldXY(lat, lon, 13);
     return getTile(13, Math.floor(me.x), Math.floor(me.y)).then(function (g) {
       var ground = sampleTile(g, me.x, me.y);
-      if (state.elev === null || el("elev").value === "") {
-        state.elev = Math.round(ground * 10) / 10;
-        el("elev").value = state.elev;
-      }
+      /* A height you typed is the height every row is measured from, this one too.
+         It used to read the map's figure here whatever the box said, so a typed
+         elevation moved the second row and left the skyline standing somewhere else. */
+      var base = (!elevAuto && isFinite(state.elev)) ? state.elev : ground;
       return gridsFor(west.rays.concat(east.rays)).then(function (got) {
-        var obsH = ground + (isNaN(state.eye) ? 0 : state.eye);
+        var obsH = base + (isNaN(state.eye) ? 0 : state.eye);
         return {
           tiles: got.count,
+          ground: Math.round(ground * 10) / 10,
           west: finish(west, got.grids, obsH, lat, lon),
           east: finish(east, got.grids, obsH, lat, lon)
         };
@@ -908,6 +913,18 @@
     say(note || "Reading the ground around this spot.");
     readTerrain().then(function (p) {
       if (mine !== readSeq) { return; }          // a newer place is already on its way
+      /* Filled in here rather than inside the reading. A reading that started while the
+         box was empty used to write the map's figure into it when it landed, wiping a
+         height typed while it was in flight. Measured: that lost a typed 1000 about one
+         time in three. */
+      /* Never while the box has the focus. Writing into a field somebody is typing in
+         destroys the selection, so the text they are entering lands after what the page
+         just put there instead of replacing it: a reading landing mid-keystroke turned
+         a typed 1000 into 27.41000. Caught about one attempt in seven. */
+      if (elevAuto && el("elev").value === "" && document.activeElement !== el("elev")) {
+        state.elev = p.ground;
+        el("elev").value = p.ground;
+      }
       profile = p;
       lastRead = key;
       patchMissed = false;
@@ -965,7 +982,10 @@
     el("elev").value = "";
     elevAuto = true;
     profile = null;
+    state.place = s.name;
+    el("addr").value = "";
     readFields();
+    showPlace();
     paint();
     askRead();
   });
@@ -976,6 +996,10 @@
         profile = null;
         el("elev").value = "";
         elevAuto = true;
+        // Typed coordinates are a different place from the one that was looked up, so
+        // the line naming that one would now be a lie.
+        state.place = "";
+        showPlace();
       }
       // A height you typed is yours: the next reading must not quietly overwrite it,
       // and changing it does move every angle, so it earns a fresh reading too.
@@ -1056,7 +1080,25 @@
       });
   }
 
+  // The line under the box saying which answer was taken, drawn in one place so a
+  // restored page says exactly what the page said before it was reloaded.
+  function showPlace() {
+    el("hits").innerHTML = state.place
+      ? '<p class="hint" style="margin-top:9px">Showing ' + esc(state.place) + "</p>"
+      : "";
+  }
+
+  /* The page owns the elevation box only until somebody types in it, and that is the
+     keystroke, not the blur. A reading landing in the gap between the two used to write
+     the map's figure over a half-typed height, which is a race a person can lose as
+     easily as a test: measured, it went wrong about one attempt in six. */
+  el("elev").addEventListener("input", function () {
+    elevAuto = el("elev").value === "";
+  });
+
   el("find").addEventListener("click", findAddress);
+  // Typing in the box is part of what the page is showing, so it is kept too.
+  el("addr").addEventListener("change", function () { save(); });
   el("addr").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); findAddress(); }
   });
@@ -1069,9 +1111,9 @@
     el("elev").value = "";
     elevAuto = true;
     profile = null;
+    state.place = String(r.display_name || "").split(", ").slice(0, 3).join(", ");
     readFields();
-    el("hits").innerHTML = '<p class="hint" style="margin-top:9px">Showing ' +
-      esc(String(r.display_name || "").split(", ").slice(0, 3).join(", ")) + "</p>";
+    showPlace();
     paint();
     askRead();
   });
@@ -1086,7 +1128,10 @@
       el("elev").value = "";
       elevAuto = true;
       profile = null;
+      state.place = "Where you are now";
+      el("addr").value = "";
       readFields();
+      showPlace();
       paint();
       askRead();
       el("gps").disabled = false;
@@ -1116,6 +1161,8 @@
   el("lon").value = state.lon.toFixed(5);
   if (state.elev !== null && !isNaN(state.elev)) { el("elev").value = state.elev; elevAuto = false; }
   el("eye").value = state.eye;
+  if (state.addr) { el("addr").value = state.addr; }
+  showPlace();
 
   /* The day you were reading survives a refresh, but a day already gone does not: a
      stale yesterday on a zmanim page is worse than landing on today. */
