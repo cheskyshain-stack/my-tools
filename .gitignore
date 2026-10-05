@@ -3,3 +3,8 @@
 
 # Editor and OS litter
 .DS_Store
+
+# test scratch
+tests/node_modules
+tests/tiles
+tests/*.png
