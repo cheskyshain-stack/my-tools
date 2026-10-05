@@ -106,6 +106,7 @@
   .spot-card a{display:inline-block;padding:8px 13px;border-radius:11px;text-decoration:none;
     border:1px solid rgba(245,179,1,.35);color:#F7D08A;font:700 12.5px/1 inherit}
 
+  .hint.bad{color:#F7A7A7}
   .state{padding:16px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13px}
   .bad{color:#F7A7A7}
   .warn{border-left:3px solid var(--cj-gold,#F5B301);padding-left:11px;margin:11px 0 0;
@@ -170,8 +171,9 @@
   <div class="row" style="margin-top:10px">
     <button class="btn go" id="run" type="button" style="flex:1 1 auto">Read the skyline</button>
   </div>
-  <p class="hint" style="margin-top:9px">The first two rows need no map data and appear at once. The third downloads a
-    patch of terrain around you, about a megabyte the first time.</p>
+  <p class="hint" id="readState" style="margin-top:9px">The first two rows need no map data and appear at
+    once. The third reads a patch of terrain around you, which it does by itself whenever the location
+    changes.</p>
 </div>
 
 <div class="card">
@@ -547,6 +549,7 @@
     var lat = state.lat, lon = state.lon;
     var h = obsHeight();
     var dip = dipOf(h);
+    patchMissed = false;
 
     [["riseBox", true], ["setBox", false]].forEach(function (pair) {
       var box = el(pair[0]), rising = pair[1];
@@ -557,6 +560,11 @@
       var side = profile ? (rising ? profile.east : profile.west) : null;
       var look = side ? function (az) { var v = side.lookup(az); return v === null ? -dip : v; } : null;
       var real = look ? crossing(day, lat, lon, rising, look) : null;
+      /* Noted rather than only printed: a date far enough round the year swings the
+         sun off the edge of the ground that was read, and that is the one case where
+         changing the date has to send for more of it. */
+      var covered = real ? side.covers(real.az) : true;
+      if (!covered) { patchMissed = true; }
 
       if (!flat) {
         box.innerHTML = '<div class="state">The sun does not cross the horizon here on this date.</div>';
@@ -574,7 +582,7 @@
             '<div class="t">' + gap(high.when, flat.when) + "</div>" +
           (real
             ? '<div class="lbl"><b>Real skyline</b><span>' +
-                (side.covers(real.az) ? "" : "beyond the patch read, ") +
+                (covered ? "" : "beyond the patch read, ") +
                 (real.horizon >= 0 ? "ground " + real.horizon.toFixed(2) + "° up"
                                    : "ground " + Math.abs(real.horizon).toFixed(2) + "° down") +
                 " at " + Math.round(real.az) + "°</span></div>" +
@@ -774,6 +782,68 @@
 
   /* ===================== Wiring ===================== */
 
+  /* ===================== Reading by itself =====================
+     Every way of moving goes through here: the address list, the GPS button, a preset,
+     typed coordinates, a corrected height. Pressing a button for it was a step that
+     only ever had one right answer. */
+  var readSeq = 0;         // a slow read for a place you have already left must not land
+  var lastRead = null;     // the place the profile in hand was read for
+  var elevAuto = true;     // whether the elevation box holds the map's figure or yours
+  var patchMissed = false; // the date moved the sun outside the ground that was read
+  var readTimer = null;
+
+  function placeKey() {
+    if (!isFinite(state.lat) || !isFinite(state.lon)) { return null; }
+    // The elevation box is filled in by the reading itself, so keying on its value
+    // would make every reading look like a change and ask for another one.
+    return state.lat.toFixed(5) + "|" + state.lon.toFixed(5) + "|" +
+           (elevAuto ? "auto" : String(state.elev)) + "|" + String(state.eye);
+  }
+
+  function say(msg, bad) {
+    el("readState").textContent = msg;
+    el("readState").className = bad ? "hint bad" : "hint";
+  }
+
+  function autoRead(force) {
+    var key = placeKey();
+    if (!key) { return; }
+    if (!force && profile && lastRead === key) { return; }
+    var mine = ++readSeq;
+    el("run").disabled = true;
+    el("run").textContent = "Reading the ground";
+    say("Reading the ground around this spot.");
+    readTerrain().then(function (p) {
+      if (mine !== readSeq) { return; }          // a newer place is already on its way
+      profile = p;
+      lastRead = key;
+      patchMissed = false;
+      el("run").disabled = false;
+      el("run").textContent = "Read again";
+      say("Read " + p.tiles + " patches of map around this spot. It reads again by itself " +
+          "whenever the location changes.");
+      paint();
+    }).catch(function (err) {
+      if (mine !== readSeq) { return; }
+      profile = null;
+      lastRead = null;
+      el("run").disabled = false;
+      el("run").textContent = "Read the skyline";
+      // Said here rather than in an alert: this runs on its own now, and a box you have
+      // to dismiss every time you move is worse than the thing it is reporting.
+      say("Could not read the ground here (" + err.message + "). The first two rows are " +
+          "unaffected.", true);
+      paint();
+    });
+  }
+
+  function askRead(force) {
+    // Typing a latitude and then a longitude is two changes and one move, so they are
+    // allowed to settle before anything is fetched.
+    clearTimeout(readTimer);
+    readTimer = setTimeout(function () { autoRead(force); }, 280);
+  }
+
   function readFields() {
     state.lat = parseFloat(el("lat").value);
     state.lon = parseFloat(el("lon").value);
@@ -793,23 +863,40 @@
     el("lat").value = s.lat.toFixed(5);
     el("lon").value = s.lon.toFixed(5);
     el("elev").value = "";
+    elevAuto = true;
     profile = null;
     readFields();
     paint();
+    askRead();
   });
 
   ["lat", "lon", "elev", "eye", "tz"].forEach(function (id) {
     el(id).addEventListener("change", function () {
-      if (id === "lat" || id === "lon") { profile = null; }
+      if (id === "lat" || id === "lon") {
+        profile = null;
+        el("elev").value = "";
+        elevAuto = true;
+      }
+      // A height you typed is yours: the next reading must not quietly overwrite it,
+      // and changing it does move every angle, so it earns a fresh reading too.
+      if (id === "elev") { elevAuto = el("elev").value === ""; }
       readFields();
       paint();
+      if (id !== "tz") { askRead(); }
     });
   });
 
-  el("date").addEventListener("change", paint);
+  /* A new date does not move the ground, so the patch already read still answers,
+     unless the sun has swung far enough round the year to leave it. Then, and only
+     then, it is read again. */
+  function afterDate() {
+    paint();
+    if (profile && patchMissed) { askRead(true); }
+  }
+  el("date").addEventListener("change", afterDate);
   el("dprev").addEventListener("click", function () { stepDay(-1); });
   el("dnext").addEventListener("click", function () { stepDay(1); });
-  el("today").addEventListener("click", function () { el("date").value = todayStr(); paint(); });
+  el("today").addEventListener("click", function () { el("date").value = todayStr(); afterDate(); });
 
   function todayStr() {
     var n = new Date();
@@ -820,7 +907,7 @@
     var d = dayUTC();
     d.setUTCDate(d.getUTCDate() + n);
     el("date").value = d.toISOString().slice(0, 10);
-    paint();
+    afterDate();
   }
 
   /* ===================== Looking up an address =====================
@@ -879,11 +966,13 @@
     el("lat").value = Number(r.lat).toFixed(5);
     el("lon").value = Number(r.lon).toFixed(5);
     el("elev").value = "";
+    elevAuto = true;
     profile = null;
     readFields();
     el("hits").innerHTML = '<p class="hint" style="margin-top:9px">Showing ' +
       esc(String(r.display_name || "").split(", ").slice(0, 3).join(", ")) + "</p>";
     paint();
+    askRead();
   });
 
   el("gps").addEventListener("click", function () {
@@ -894,9 +983,11 @@
       el("lat").value = pos.coords.latitude.toFixed(5);
       el("lon").value = pos.coords.longitude.toFixed(5);
       el("elev").value = "";
+      elevAuto = true;
       profile = null;
       readFields();
       paint();
+      askRead();
       el("gps").disabled = false;
       el("gps").textContent = "Use my location";
     }, function (err) {
@@ -913,22 +1004,10 @@
     drawSky();
   });
 
+  // Still here, but as a refresh rather than the only way in.
   el("run").addEventListener("click", function () {
     readFields();
-    var btn = el("run");
-    btn.disabled = true;
-    btn.textContent = "Reading the ground";
-    readTerrain().then(function (p) {
-      profile = p;
-      btn.textContent = "Read again";
-      btn.disabled = false;
-      paint();
-    }).catch(function (err) {
-      btn.textContent = "Read the skyline";
-      btn.disabled = false;
-      el("skyNote").textContent = "";
-      alert("Could not read the ground here: " + err.message);
-    });
+    autoRead(true);
   });
 
   el("lat").value = state.lat.toFixed(5);
@@ -937,6 +1016,9 @@
   el("eye").value = state.eye;
   el("date").value = todayStr();
   paint();
+  // The location it opens on counts as a location, so the third row is there without
+  // anyone pressing for it.
+  askRead();
 }());
 </script>
 </body>

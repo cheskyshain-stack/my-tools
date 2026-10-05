@@ -243,6 +243,19 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   page agrees with it to under half a second at Lakewood, Jerusalem and Chamonix, in
   summer and in winter. That is what makes row one trustworthy enough to measure the
   other two against.
+- **The reading happens by itself**, on anything that moves the observer: a preset, the
+  GPS button, a picked address, typed coordinates, a corrected height, and the location
+  the page opens on. `askRead` debounces 280ms, because typing a latitude and then a
+  longitude is two change events and one move. Three guards keep it from being wasteful
+  or wrong: `placeKey` skips a reading for a place already in hand, and deliberately does
+  not key on the elevation box, which the reading itself fills in (keying on it made every
+  reading look like a change and ask for another); `readSeq` drops the answer for a place
+  already left, so a slow read cannot overwrite a newer one; and a new **date** sends for
+  nothing, since the ground has not moved, unless the sun has swung far enough round the
+  year to leave the patch that was read, which `patchMissed` notices in `paint`. The
+  button stays as a forced refresh. Failures are said in the status line under it rather
+  than in an `alert`: this runs on its own now, and a box you must dismiss every time you
+  move is worse than what it reports.
 - **An address is looked up through Nominatim**, OpenStreetMap's own geocoder: free, no
   key, and it answers a browser directly. Its terms ask for no more than a request a
   second and no bulk use, so the lookup only ever runs on a deliberate press or an Enter,
