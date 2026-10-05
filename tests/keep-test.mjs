@@ -106,9 +106,17 @@ await pg.reload({waitUntil:"domcontentloaded"});
 await pg.locator("#locationControls").evaluate(n => { n.open = true; });
 await pg.locator("#settings").evaluate(n => { n.open = true; });
 await pg.waitForTimeout(600);
-const today = new Date();
-const iso = today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
-check("a stale past date lands on today instead", await pg.inputValue("#date"), iso);
+/* "Today" is today where the location is, not where this process is running. Looking
+   at Chamonix from a container on UTC at 23:25 it is already tomorrow there, and the
+   page is right to say so. Ask the page's own time zone rather than the clock here. */
+const iso = await pg.evaluate(() => {
+  const tz = document.getElementById("tz").value;
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" })
+    .formatToParts(new Date());
+  const v = {}; p.forEach(x => { v[x.type] = x.value; });
+  return v.year + "-" + v.month + "-" + v.day;
+});
+check("a stale past date lands on today where the location is", await pg.inputValue("#date"), iso);
 
 /* ---------- the labels say what they mean ---------- */
 const labels = await pg.$$eval("label[for='elev'], label[for='eye']", n=>n.map(x=>x.textContent));

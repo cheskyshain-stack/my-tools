@@ -449,32 +449,95 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
      number every luach is built on. */
   function targetAlt(hDeg) { return hDeg - SEMIDIAMETER - refractionAt(hDeg); }
 
-  /* One bisection on the whole question, rather than guessing a bearing, solving a
-     time, and hoping the two agree. g(t) is how far the sun is above the horizon it
-     would be setting into at that instant, bearing and all, so the instant this
-     returns has the time and the skyline consistent by construction. Iterating the
-     two separately looked fine on flat ground and put the marker off the ridge in
-     Chamonix, where the skyline climbs five degrees for every degree of bearing. */
-  function crossing(dayUTC, lat, lon, rising, horizonFor) {
+  /* Finding the moment the sun meets the ground it is setting into.
+     
+     g(t) is how far the sun is above that ground at that instant, bearing and all, so
+     an answer from here has the time and the skyline consistent by construction.
+     Solving the bearing and the time separately looked fine on flat ground and put the
+     marker off the ridge in Chamonix.
+
+     But g is NOT monotonic, and a plain bisection over the whole half day was wrong in
+     a way nobody would notice from one answer: where the skyline has a notch, the sun
+     goes behind a ridge, comes back out through the gap and sets again later, and a
+     bisection lands on whichever of those crossings it happens to bracket. Measured
+     over a year of sun paths: Chamonix reaches 15 crossings in a day, Grindelwald 13,
+     Zermatt 7, Keene Valley 5. Reported by a user who worked it out from first
+     principles before any of this code did.
+
+     So the crossings are found in order. The sun's altitude IS monotonic within a half
+     day, and no crossing can happen while the sun is above everything in the window or
+     below all of it, so the search is bounded to the band of altitudes the skyline
+     actually occupies and then stepped through in time. `span` carries that band; with
+     no span the horizon is a constant, g is monotonic, and one bisection is exact. */
+  var SCAN_STEP = 30000;        // 30s, about 0.12 deg of bearing, near the data's own
+
+  function crossing(dayUTC, lat, lon, rising, horizonFor, span) {
     var noon = solarNoon(dayUTC, lat, lon).getTime();
     var a = rising ? noon - 12 * 3600000 : noon;
     var b = rising ? noon : noon + 12 * 3600000;
+    var alt = function (t) { return sunAt(new Date(t), lat, lon).alt; };
     var g = function (t) {
       var p = sunAt(new Date(t), lat, lon);
       return p.alt - targetAlt(horizonFor(p.az));
     };
-    var ga = g(a), gb = g(b);
-    // No sign change means the sun never gets down to that skyline today, which
-    // happens behind a big enough mountain and inside the arctic circle alike.
-    if (ga === 0) { ga = 1e-9; }
-    if (ga * gb > 0) { return null; }
-    for (var i = 0; i < 46; i++) {
-      var mid = (a + b) / 2, gm = g(mid);
-      if ((gm < 0) === (ga < 0)) { a = mid; ga = gm; } else { b = mid; }
-    }
-    var t = (a + b) / 2;
+
+    var all = crossingsIn(a, b, g, alt, rising, span);
+    if (!all.length) { return null; }
+    var t = all[0];
     var end = sunAt(new Date(t), lat, lon);
-    return { when: new Date(t), az: end.az, horizon: horizonFor(end.az) };
+    return {
+      when: new Date(t), az: end.az, horizon: horizonFor(end.az),
+      // Every later crossing, so a caller can say the sun came back out.
+      again: all.slice(1).map(function (x) { return new Date(x); })
+    };
+  }
+
+  // The instant the sun's altitude passes a given value, by bisection, which is safe
+  // because altitude only falls after solar noon and only rises before it.
+  function whenAlt(a, b, alt, want) {
+    var fa = alt(a) - want, fb = alt(b) - want;
+    if (fa === 0) { return a; }
+    if (fa * fb > 0) { return null; }
+    for (var i = 0; i < 40; i++) {
+      var mid = (a + b) / 2;
+      if ((alt(mid) - want < 0) === (fa < 0)) { a = mid; fa = alt(mid) - want; } else { b = mid; }
+    }
+    return (a + b) / 2;
+  }
+
+  function crossingsIn(a, b, g, alt, rising, span) {
+    var lo = a, hi = b;
+    if (span) {
+      /* Above the whole skyline g is positive and below all of it g is negative, so
+         every crossing lives in that band and the stepping only has to cover it. A
+         little margin, since the solver walks exact bearings that the sampled rays
+         either side of them do not quite reach. */
+      var tTop = whenAlt(a, b, alt, targetAlt(span.hi + 0.6));
+      var tBot = whenAlt(a, b, alt, targetAlt(span.lo - 0.6));
+      var ends = [tTop === null ? a : tTop, tBot === null ? b : tBot].sort(function (x, y) { return x - y; });
+      lo = Math.max(a, ends[0]); hi = Math.min(b, ends[1]);
+      if (!(hi > lo)) { lo = a; hi = b; }
+    }
+    var found = [], prevT = lo, prevG = g(lo);
+    // The very start of the half day counts: at solar noon the sun can already be
+    // behind something, and that is a crossing that happened before this window.
+    if (lo > a && (prevG < 0) !== (g(a) < 0)) { found.push(refine(a, lo, g)); }
+    for (var t = lo + SCAN_STEP; t <= hi; t += SCAN_STEP) {
+      var gt = g(t);
+      if ((gt < 0) !== (prevG < 0)) { found.push(refine(prevT, t, g)); }
+      prevT = t; prevG = gt;
+    }
+    if (hi < b && (g(b) < 0) !== (prevG < 0)) { found.push(refine(prevT, b, g)); }
+    return found;
+  }
+
+  function refine(a, b, g) {
+    var fa = g(a);
+    for (var i = 0; i < 34; i++) {
+      var mid = (a + b) / 2;
+      if ((g(mid) < 0) === (fa < 0)) { a = mid; fa = g(mid); } else { b = mid; }
+    }
+    return (a + b) / 2;
   }
 
   /* ===================== The ground =====================
@@ -706,11 +769,23 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
      thing that cannot is the exact-bearing walk, which needs the tiles. So a restored
      blocker answers with the nearest bearing that WAS walked, at most one step out, and
      the quiet reading that follows a restore replaces it with the exact one. */
+  // The highest and lowest the skyline gets in a window. No crossing can happen while
+  // the sun is above all of it or below all of it, which is what bounds the search.
+  function spanOf(samples) {
+    var lo = 90, hi = -90;
+    for (var i = 0; i < samples.length; i++) {
+      if (samples[i].deg < lo) { lo = samples[i].deg; }
+      if (samples[i].deg > hi) { hi = samples[i].deg; }
+    }
+    return { lo: lo, hi: hi };
+  }
+
   function reviveSide(b) {
     if (!b || !b.samples || b.samples.length < 2) { return null; }
     var samples = b.samples;
     return {
       from: b.from, to: b.to, samples: samples, peak: b.peak, cached: true,
+      span: b.span || spanOf(samples),
       covers: function (az) { return az >= b.from && az <= b.to; },
       lookup: function (az) {
         if (az < b.from || az > b.to) { return null; }
@@ -878,7 +953,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
          the patch that was measured. There the smooth earth is the honest answer. */
       var side = profile ? (rising ? profile.east : profile.west) : null;
       var look = side ? function (az) { var v = side.lookup(az); return v === null ? -dip : v; } : null;
-      var real = look ? crossing(day, lat, lon, rising, look) : null;
+      var real = look ? crossing(day, lat, lon, rising, look, side.span) : null;
       /* Noted rather than only printed: a date far enough round the year swings the
          sun off the edge of the ground that was read, and that is the one case where
          changing the date has to send for more of it. */
@@ -923,6 +998,26 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
         ? "No crossing means the sun stays above or below that horizon throughout this solar half-day."
         : profile && profile.cached ? "Terrain time is an estimate from the saved profile until the map is checked." : "";
       box.appendChild(z);
+
+      /* Where the skyline has a notch the sun does not simply go and stay gone: it
+         drops behind a ridge, comes back out through the gap, and sets again later.
+         The row above is the FIRST crossing, which is the honest answer to "when did
+         it disappear", but a reader not told about the gap would be watching a sun
+         that is plainly still up. Measured over a year of sun paths, Chamonix reaches
+         15 crossings in a day and Grindelwald 13. */
+      if (real && real.again && real.again.length) {
+        var n = document.createElement("div");
+        n.className = "zone bad";
+        n.textContent = (rising ? "The sun is not clear of the ground in one go here. " :
+                                  "The sun does not set in one go here. ") +
+          "It " + (rising ? "first clears" : "first goes behind") + " the ground at " +
+          clock(real.when) + ", then crosses it " + real.again.length +
+          (real.again.length === 1 ? " more time" : " more times") + ", the last at " +
+          clock(real.again[real.again.length - 1]) +
+          ". The time above is that first crossing. A notched skyline is where this tool " +
+          "is least able to tell you which one counts.";
+        box.appendChild(n);
+      }
     });
     var terrainExplanation = state.eye === 0
       ? "Based on your ground level and the ground that can block the sun."
@@ -944,7 +1039,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     var set = crossing(day, lat, lon, rising, function (az) {
       var v = side.lookup(az);
       return v === null ? -dip : v;
-    });
+    }, side.span);
     if (!set) { el("skyCard").style.display = "none"; return; }
     [].forEach.call(el("skyWho").children, function (btn) {
       var active = btn.getAttribute("data-sky") === skyWhich;
@@ -1107,6 +1202,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     return {
       from: win.from, to: win.to, samples: samples,
       peak: peak && peak.at ? peak.at : null,
+      span: spanOf(samples),
       /* The sun sets on one exact bearing, which is almost never one of the bearings
          that were sampled. Rather than hand back the nearest ray's answer and call it
          the spot, the exact bearing is walked again over tiles already in hand, so the

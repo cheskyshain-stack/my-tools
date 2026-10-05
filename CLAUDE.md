@@ -277,6 +277,20 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   the reading was rebuilt from the saved profile and can be a few seconds out, rather
   than presenting it as freshly measured. A day already past is not restored, because a
   stale yesterday on a zmanim page is worse than landing on today.
+- **g(t) is not monotonic, so the crossings are found in order rather than bisected
+  for.** A user asked whether the tool checks that open sky was not available a minute
+  earlier at a slightly different bearing, and the answer was no. Where the skyline has a
+  notch the sun drops behind a ridge, comes back out through the gap and sets again, and
+  a plain bisection over the half day lands on whichever crossing it happens to bracket.
+  Measured over a year of sun paths: Chamonix reaches 15 crossings in a day, Grindelwald
+  13, Zermatt 7, Keene Valley 5. On 11 December at Chamonix the old solver returned
+  4:04:08 PM, the **last** crossing, where the first is 4:02:27 PM: 1 minute 41 seconds
+  out, with nothing on screen to suggest doubt. `crossingsIn` now steps through time and
+  takes the first, and the extra crossings are reported to the reader rather than hidden.
+  The search is bounded to the band of altitudes the skyline occupies (`span`), since no
+  crossing can happen while the sun is above all of it or below all of it, and the sun's
+  altitude **is** monotonic within a half day so those two bounds are safe to bisect for.
+  With no `span` the horizon is constant, g is monotonic, and one bisection is still exact.
 - **The solver and the pin are one walk.** `lookup` and `blocker` both call `exactAt`,
   which walks the exact bearing and is memoised by twentieths of a degree. Reading the
   time off an interpolation between the two nearest rays while putting the pin on the
