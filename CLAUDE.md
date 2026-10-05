@@ -243,6 +243,22 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   page agrees with it to under half a second at Lakewood, Jerusalem and Chamonix, in
   summer and in winter. That is what makes row one trustworthy enough to measure the
   other two against.
+- **An address is looked up through Nominatim**, OpenStreetMap's own geocoder: free, no
+  key, and it answers a browser directly. Its terms ask for no more than a request a
+  second and no bulk use, so the lookup only ever runs on a deliberate press or an Enter,
+  never on a keystroke. It is a convenience sitting above the real input: when it cannot
+  be reached the message points back at the latitude and longitude rather than reading as
+  a dead end, and a test covers that path. **It is not reachable from this container**, so
+  it is tested against a stubbed response that exercises the parsing, the list and the
+  pick, and nothing here has ever confirmed the live service answers. Only a real browser
+  can say that.
+- **The blocking ground is a place, so it gets a pin.** Each ray's winning sample keeps its
+  own latitude and longitude, and `blocker(azimuth)` walks the exact solved bearing again
+  over tiles already in hand rather than handing back the nearest sampled ray's answer: the
+  sun sets on one bearing and that is almost never one of the ones sampled. The card gives
+  height, distance, bearing and degrees above eye, and links to Google Maps. A test asserts
+  the pin's own angle matches the horizon the solver used, which is what stops the picture
+  and the pin drifting apart.
 - **Whether any of this should move a zman is not this repo's question.** Whether shkia
   follows the visible horizon or mishor is a machlokes and almost every printed luach uses
   sea level, so the page says so in as many words and looks nothing like the shul's boards.

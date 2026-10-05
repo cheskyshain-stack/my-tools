@@ -91,11 +91,31 @@
   .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--cj-muted,#93A3C7)}
   .legend i{width:16px;height:3px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:5px}
 
+  /* ===== Address hits and the blocking spot ===== */
+  .hits{margin-top:9px;display:flex;flex-direction:column;gap:5px}
+  .hit{text-align:left;padding:9px 11px;border-radius:12px;cursor:pointer;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.04);
+    color:var(--cj-text,#EDF2FF);font:600 12.5px/1.35 inherit}
+  .hit small{display:block;color:var(--cj-muted,#93A3C7);font-weight:500;margin-top:2px}
+  .spot-card{margin-top:11px;padding:11px 12px;border-radius:14px;
+    background:rgba(245,179,1,.07);border:1px solid rgba(245,179,1,.22)}
+  .spot-card h3{margin:0 0 7px;font:800 13px/1.25 inherit;letter-spacing:-.1px;
+    color:var(--cj-gold,#F5B301)}
+  .spot-card p{margin:0 0 8px;font-size:12.5px;color:var(--cj-muted,#93A3C7)}
+  .spot-card b{color:var(--cj-text,#EDF2FF)}
+  .spot-card a{display:inline-block;padding:8px 13px;border-radius:11px;text-decoration:none;
+    border:1px solid rgba(245,179,1,.35);color:#F7D08A;font:700 12.5px/1 inherit}
+
   .state{padding:16px 6px;text-align:center;color:var(--cj-muted,#93A3C7);font-size:13px}
   .bad{color:#F7A7A7}
   .warn{border-left:3px solid var(--cj-gold,#F5B301);padding-left:11px;margin:11px 0 0;
     font-size:12.5px;color:var(--cj-muted,#93A3C7)}
   .warn b{color:var(--cj-text,#EDF2FF)}
+  .note summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+  .note summary::-webkit-details-marker{display:none}
+  .note summary::after{content:"\25BE";color:var(--cj-muted,#93A3C7);font-size:13px;
+    margin-left:auto;transition:transform .18s var(--cj-ease,ease)}
+  .note details[open] summary::after{transform:rotate(180deg)}
   .note li{font-size:12.5px;margin-bottom:8px;color:var(--cj-muted,#93A3C7)}
   .note li b{color:var(--cj-text,#EDF2FF)}
   .note ul{margin:0;padding-left:18px}
@@ -121,6 +141,12 @@
     <div class="field"><label for="lon">Longitude</label><input id="lon" type="number" step="0.00001" inputmode="decimal" value="-74.21760"></div>
     <button class="btn" id="gps" type="button">Use my location</button>
   </div>
+  <div class="row" style="margin-top:9px">
+    <div class="field" style="flex:3 1 220px"><label for="addr">Or look up an address</label>
+      <input id="addr" type="search" placeholder="44 Coles Way, Lakewood NJ" autocomplete="off"></div>
+    <button class="btn" id="find" type="button">Find</button>
+  </div>
+  <div id="hits"></div>
   <div class="row" style="margin-top:9px">
     <div class="field"><label for="elev">Ground elevation (m)</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="from the map"></div>
     <div class="field"><label for="eye">You are above it by (m)</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
@@ -167,11 +193,13 @@
     <span><i style="background:rgba(255,255,255,.35)"></i>Level with your eye</span>
   </div>
   <p class="hint" id="skyNote" style="margin-top:9px"></p>
+  <div id="blocker"></div>
 </div>
 
 <div class="card note">
-  <h2>What this is, and what it is not</h2>
-  <ul>
+  <details id="about">
+    <summary><h2 style="display:inline;margin:0">What this is, and what it is not</h2></summary>
+  <ul style="margin-top:12px">
     <li><b>Row one is the ordinary number.</b> Sea level, sun's centre 50 minutes of arc below the
       geometric horizon, which is 16 for the sun's own radius and 34 for refraction. This is what a
       printed luach gives and what every zmanim library gives by default.</li>
@@ -188,7 +216,13 @@
       real temperature and pressure move sunset by minutes, which is more than most terrain corrections.
       The elevation map is bare earth at roughly 30 to 90 metres, so trees, buildings and anything close
       to you are not in it, and a near obstruction is exactly what it resolves worst.</li>
+    <li><b>Skyline here means the outline of the ground around you</b>, bearing by bearing:
+      for each compass direction, how high the highest land in that direction stands above
+      or below your own eye. Zero is level with you. Three degrees up is a hill the sun has
+      to set into; half a degree down is open ground you can see over. It is the same thing
+      you would trace with your finger along the horizon if you turned slowly on the spot.</li>
   </ul>
+  </details>
 </div>
 
 <script src="/assets/cj-refresh.js" defer></script>
@@ -376,8 +410,11 @@
     return pts;
   }
 
-  /* The highest apparent altitude along one bearing. Negative means the ground falls
-     away and you can see past the curve, which is what standing on a hill buys. */
+  /* The highest apparent altitude along one bearing, and where on the ground that is.
+     Negative means the land falls away and you can see past the curve, which is what
+     standing on a hill buys. The winning point keeps its own latitude and longitude
+     so it can be put on a map: "a ridge 3.5 km out" is not somewhere you can go and
+     look at, and a pin is. */
   function ridgeOf(pts, grids, obsH) {
     var best = -90, at = null;
     for (var i = 0; i < pts.length; i++) {
@@ -386,7 +423,7 @@
       var h = sampleTile(grids.get(tileKey(p.z, Math.floor(w.x), Math.floor(w.y))), w.x, w.y);
       var drop = p.d * p.d / (2 * K_REFRACT * R_EARTH);   // curvature, refraction folded in
       var ang = Math.atan2(h - obsH - drop, p.d) * R2D;
-      if (ang > best) { best = ang; at = { km: p.d / 1000, h: h }; }
+      if (ang > best) { best = ang; at = { km: p.d / 1000, h: h, lat: p.lat, lon: p.lon, deg: ang }; }
     }
     return { deg: best, at: at };
   }
@@ -538,7 +575,7 @@
   /* The picture is the argument: ground along the bottom, the sun's track across it,
      and the crossing where one meets the other. */
   function drawSky() {
-    if (!profile) { el("skyCard").style.display = "none"; return; }
+    if (!profile) { el("skyCard").style.display = "none"; el("blocker").innerHTML = ""; return; }
     var day = dayUTC(), lat = state.lat, lon = state.lon;
     var rising = skyWhich === "rise";
     var side = rising ? profile.east : profile.west;
@@ -599,6 +636,29 @@
       '<circle cx="' + X(set.az).toFixed(1) + '" cy="' + Y(set.horizon).toFixed(1) +
         '" r="5.5" fill="#F5B301" stroke="#0A1226" stroke-width="2"/>';
 
+    /* Where that ground actually is, as a place you could drive to and look at. The
+       bearing is walked again rather than taking the nearest sampled ray's answer, so
+       the pin is the ground that took the sun and not its neighbour. */
+    var spot = side.blocker(set.az);
+    if (spot && spot.deg > -0.5) {
+      var north = spot.lat >= 0 ? "N" : "S", east = spot.lon >= 0 ? "E" : "W";
+      var coords = Math.abs(spot.lat).toFixed(5) + "\u00B0 " + north + ", " +
+                   Math.abs(spot.lon).toFixed(5) + "\u00B0 " + east;
+      el("blocker").innerHTML =
+        '<div class="spot-card"><h3>' +
+          (rising ? "The ground the sun comes over" : "The ground the sun goes behind") + "</h3>" +
+        "<p><b>" + Math.round(spot.h) + " m</b> above sea level, <b>" + spot.km.toFixed(2) +
+          " km</b> away on a bearing of <b>" + Math.round(set.az) + "\u00B0</b>, standing <b>" +
+          spot.deg.toFixed(2) + "\u00B0</b> above your eye.<br>" + esc(coords) + "</p>" +
+        '<a href="https://www.google.com/maps/search/?api=1&query=' +
+          spot.lat.toFixed(6) + "," + spot.lon.toFixed(6) +
+          '" target="_blank" rel="noopener">Open this spot in Google Maps</a></div>';
+    } else {
+      el("blocker").innerHTML =
+        '<div class="spot-card"><h3>Nothing is in the way</h3><p>On this bearing the land ' +
+        "falls away and the sun meets the open horizon, so there is no spot to put on a map.</p></div>";
+    }
+
     el("skyNote").textContent =
       "Bearings " + Math.round(az0) + " to " + Math.round(az1) + " degrees from north. The sun " +
       (rising ? "clears" : "goes behind") + " the ground at " + Math.round(set.az) +
@@ -629,7 +689,7 @@
     return { from: from, to: to, rays: rays };
   }
 
-  function finish(win, grids, obsH) {
+  function finish(win, grids, obsH, lat, lon) {
     var samples = win.rays.map(function (r) {
       var got = ridgeOf(r.pts, grids, obsH);
       return { az: r.az, deg: got.deg, at: got.at };
@@ -638,6 +698,14 @@
     return {
       from: win.from, to: win.to, samples: samples,
       peak: peak && peak.at ? peak.at : null,
+      /* The sun sets on one exact bearing, which is almost never one of the bearings
+         that were sampled. Rather than hand back the nearest ray's answer and call it
+         the spot, the exact bearing is walked again over tiles already in hand, so the
+         pin is the ground that actually took the sun. */
+      blocker: function (azimuth) {
+        if (azimuth < win.from || azimuth > win.to) { return null; }
+        return ridgeOf(rayPoints(lat, lon, azimuth), grids, obsH).at;
+      },
       covers: function (azimuth) { return azimuth >= win.from && azimuth <= win.to; },
       lookup: function (azimuth) {
         // Outside the window nothing was measured, so it answers null and the caller
@@ -673,8 +741,8 @@
         var obsH = ground + (isNaN(state.eye) ? 0 : state.eye);
         return {
           tiles: got.count,
-          west: finish(west, got.grids, obsH),
-          east: finish(east, got.grids, obsH)
+          west: finish(west, got.grids, obsH, lat, lon),
+          east: finish(east, got.grids, obsH, lat, lon)
         };
       });
     });
@@ -730,6 +798,69 @@
     el("date").value = d.toISOString().slice(0, 10);
     paint();
   }
+
+  /* ===================== Looking up an address =====================
+     OpenStreetMap's own geocoder, Nominatim: free, no key, and it answers a browser
+     directly. Its terms ask for no more than a request a second and no bulk use, so
+     this only ever runs on a deliberate press or an Enter, never on a keystroke.
+     Nothing is sent anywhere else: the address goes to Nominatim and the coordinates
+     come back, and the elevation tiles are fetched by position alone. */
+  var GEOCODER = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=";
+
+  function findAddress() {
+    var q = el("addr").value.trim();
+    if (!q) { return; }
+    el("find").disabled = true;
+    el("find").textContent = "Looking";
+    el("hits").innerHTML = '<div class="state">Looking up that address.</div>';
+    fetch(GEOCODER + encodeURIComponent(q), { headers: { Accept: "application/json" } })
+      .then(function (res) {
+        if (!res.ok) { throw new Error("the lookup service answered " + res.status); }
+        return res.json();
+      })
+      .then(function (rows) {
+        if (!rows || !rows.length) {
+          el("hits").innerHTML = '<div class="state">Nothing found for that. Try adding the town, ' +
+            "or type the coordinates in above.</div>";
+          return;
+        }
+        el("hits").innerHTML = '<div class="hits">' + rows.map(function (r, i) {
+          var name = String(r.display_name || "").split(", ");
+          return '<button class="hit" type="button" data-hit="' + i + '">' +
+                 esc(name.slice(0, 3).join(", ")) +
+                 "<small>" + esc(name.slice(3).join(", ")) + "</small></button>";
+        }).join("") + "</div>";
+        el("hits").rows = rows;
+      })
+      .catch(function (err) {
+        // Said plainly: the address box is a convenience and the coordinates above it
+        // are the real input, so a lookup that will not run is not a dead end.
+        el("hits").innerHTML = '<div class="state bad">Could not reach the address lookup (' +
+          esc(err.message) + "). The latitude and longitude above still work.</div>";
+      })
+      .then(function () {
+        el("find").disabled = false;
+        el("find").textContent = "Find";
+      });
+  }
+
+  el("find").addEventListener("click", findAddress);
+  el("addr").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); findAddress(); }
+  });
+  el("hits").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-hit]");
+    if (!b || !el("hits").rows) { return; }
+    var r = el("hits").rows[+b.getAttribute("data-hit")];
+    el("lat").value = Number(r.lat).toFixed(5);
+    el("lon").value = Number(r.lon).toFixed(5);
+    el("elev").value = "";
+    profile = null;
+    readFields();
+    el("hits").innerHTML = '<p class="hint" style="margin-top:9px">Showing ' +
+      esc(String(r.display_name || "").split(", ").slice(0, 3).join(", ")) + "</p>";
+    paint();
+  });
 
   el("gps").addEventListener("click", function () {
     if (!navigator.geolocation) { alert("This browser will not give a location."); return; }
