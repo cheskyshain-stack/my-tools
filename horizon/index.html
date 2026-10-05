@@ -154,13 +154,15 @@
   <div id="hits"></div>
   <div class="row" style="margin-top:9px">
     <div class="field"><label for="elev">Height of the ground, in metres</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="read from the map"></div>
-    <div class="field"><label for="eye">Your eyes above that ground, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
+    <div class="field"><label for="eye">How far above it you are, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
     <div class="field" style="flex:2 1 220px"><label for="tz">Show times in</label><select id="tz"></select></div>
   </div>
-  <p class="hint" style="margin-top:9px">The first is how high the land itself is where you are standing,
-    which the map fills in. The second is how far your eyes are above that same land: about 1.7 standing
-    outside, more at an upstairs window or on a roof. Both are in metres, and 1 metre is about 3 feet 3.
-    Together they are how high you are looking out from, which is what decides how far you can see.</p>
+  <p class="hint" style="margin-top:9px">The first is how high the land itself is where you are, which
+    the map fills in. The second is how far above that land you are: leave it at 1.7 if you are standing
+    on the ground, raise it at an upstairs window or on a roof. Both are in metres, and 1 metre is about
+    3 feet 3. Added together they are the height you are watching from, which is what sets how far you
+    can see over the curve of the earth. The second one is small: standing rather than lying on the
+    ground is worth about 13 seconds.</p>
   <div class="spots" id="spots"></div>
 </div>
 
