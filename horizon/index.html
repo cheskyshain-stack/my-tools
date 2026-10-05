@@ -216,6 +216,14 @@
       real temperature and pressure move sunset by minutes, which is more than most terrain corrections.
       The elevation map is bare earth at roughly 30 to 90 metres, so trees, buildings and anything close
       to you are not in it, and a near obstruction is exactly what it resolves worst.</li>
+    <li><b>The spot that blocks the sun is usually closer than you expect</b>, and that is
+      the earth curving away rather than a mistake. The drop grows as the square of the
+      distance: under a metre at 3 km, 60 m at 30 km, 242 m at 60 km. So from Lakewood a
+      44 m rise 3 km out stands 14 m above eye level, while a 65 m hill 30 km out is
+      already 24 m below it. To beat that near rise, ground 30 km away would have to reach
+      220 m, and at 60 km it would need 533 m. The whole state tops out at 550 m, 130 km
+      off. Checked at three different map resolutions, in case the far ground was simply
+      being sampled too coarsely to show its peaks: the answer did not move.</li>
     <li><b>Skyline here means the outline of the ground around you</b>, bearing by bearing:
       for each compass direction, how high the highest land in that direction stands above
       or below your own eye. Zero is level with you. Three degrees up is a hill the sun has
@@ -673,8 +681,11 @@
       (rising ? "clears" : "goes behind") + " the ground at " + Math.round(set.az) +
       " degrees, where it stands " + set.horizon.toFixed(2) + " degrees " +
       (set.horizon >= 0 ? "above" : "below") + " your eye" +
-      (side.peak ? ", the highest point being " + Math.round(side.peak.h) + " m at " +
-        side.peak.km.toFixed(1) + " km" : "") + ".";
+      (side.peak ? ". The most sky blocked anywhere in this window is by ground " +
+        Math.round(side.peak.h) + " m up at " + side.peak.km.toFixed(1) +
+        " km, which is not the same as the highest ground: the earth curves away as the " +
+        "square of the distance, so near low land often stands taller in your eye than a " +
+        "far hill does" : ".");
   }
 
   /* ===================== Reading the ground ===================== */
