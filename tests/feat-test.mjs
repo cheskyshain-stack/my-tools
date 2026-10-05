@@ -93,7 +93,7 @@ const spot = await pg.evaluate(() => {
   const a = card.querySelector("a");
   const u = new URL(a.href);
   const q = u.searchParams.get("query").split(",").map(Number);
-  return { head: card.querySelector("h3").textContent, text: card.querySelector("p").textContent,
+  return { head: card.querySelector("h3").textContent, text: card.querySelector(".spot-geometry").textContent,
            host: u.host, path: u.pathname, lat: q[0], lon: q[1],
            target: a.target, rel: a.rel };
 });
@@ -106,7 +106,7 @@ near("and west of it, where the sun was setting", spot.lon, 6.84, 0.06);
 
 /* the pin has to be the ground the solver actually used, not a neighbouring ray */
 const agree = await pg.evaluate(() => {
-  const txt = document.querySelector(".spot-card p").textContent;
+  const txt = document.querySelector(".spot-geometry").textContent;
   const up = /standing ([\d.-]+)/.exec(txt);
   const note = document.getElementById("skyNote").textContent;
   const used = /stands (-?[\d.]+) degrees/.exec(note);
@@ -163,12 +163,13 @@ await pg.waitForTimeout(300);
 const near0 = await pg.$eval(".spot-card", n=>n.textContent);
 console.log("   card:", near0.replace(/\s+/g," ").slice(0,150));
 check("ground within 300 m is flagged as the map's weakest answer",
-  /within \d+ m of you/.test(near0), true);
-check("and it says why", /no buildings and no trees/.test(near0), true);
+  /within \d+ ft of you/.test(near0), true);
+check("and it says why", /Small changes in ground elevation/.test(near0), true);
 
 check("no console errors", errs, []);
 
 /* ---------- 5. the clock reads am and pm ---------- */
+await pg.locator("#comparison").evaluate(n => { n.open = true; });
 const reads = await pg.$$eval("#setBox .ans .t:not(.head)",
   n => n.map(x => x.childNodes[0].textContent.trim()).filter((_, i) => i % 2 === 0));
 console.log("   sunset column:", JSON.stringify(reads));

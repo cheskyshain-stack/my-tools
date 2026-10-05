@@ -43,7 +43,8 @@ downloads are cached atomically; failed downloads are never cached as water.
 | `addr-test.mjs` | 34 | address and place persistence, recent search ordering, reuse, removal, empty history and another tab |
 | `icon-check.mjs` | 13 | the icon, the naming, and that the header mark is not a link |
 | `accuracy-test.mjs` | 391 | 11 locations through all 12 months, 1000m height corrections, US/Israel daylight saving, polar conditions, invalid input and Today in the selected time zone |
-| `layout-test.mjs` | 101 | initial phone screen, long recent addresses, keyboard removal, expanded controls, height changes, both skyline views, desktop columns and portal navigation at 375, 393, 412 and 1280px |
+| `layout-test.mjs` | 116 | both main skyline times on the initial phone screen, collapsed comparisons and chart, long recent addresses, keyboard removal, expanded controls, height changes, both skyline views and portal navigation at 375, 393, 412 and 1280px |
+| `usability-test.mjs` | 45 | default feet, physical height preservation when changing units, saved metric height migration, ground elevation differences, skyline headline consistency and location time zones with a persistent manual override |
 
 `horizon-test.mjs` cross-checks the sea level sunrise and sunset against
 `zmanim-tool/js/zmanim/solar.js`, the NOAA engine ported 1:1 from the workbook the shul
@@ -52,7 +53,15 @@ assertions are skipped and the rest still runs.
 
 The expanded `accuracy-test.mjs` requires that reference checkout and fails if it is
 missing. To obtain it, clone `https://github.com/cheskyshain-stack/zmanim-tool.git`
-beside this repository. Run all eight suites for a full Horizon regression check.
+beside this repository. Run all nine suites for a full Horizon regression check.
+
+The page defaults to feet and miles. Stored heights and the terrain engine remain
+in metres. The original physical reference cases explicitly select metres; the
+usability suite checks the feet inputs, conversions and migration separately.
+Map heights retain their unrounded values in storage, so changing display units
+or dates cannot shift the reference elevation through repeated rounding.
+Location time zones use the embedded `tz-lookup` 6.1.25 dataset (CC0-1.0), with
+browser `Intl` applying daylight saving. No time zone API request is needed.
 
 The October 2026 browser check compared 264 sea level times with that engine, with a
 largest displayed difference of 1.003 seconds. The 72 elevated times differed by at

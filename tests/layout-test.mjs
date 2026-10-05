@@ -30,18 +30,21 @@ try {
     await page.waitForFunction(() => document.getElementById("run").textContent === "Read again");
     const measure = async (frame = page) => frame.evaluate(() => ({
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      clippedTimes: [...document.querySelectorAll(".ans .t")].filter(n => n.scrollWidth > n.clientWidth + 1).length,
-      firstTime: document.querySelector("#riseBox .t.base").getBoundingClientRect().bottom,
-      panelTops: [...document.querySelectorAll(".time-panel")].map(n => n.getBoundingClientRect().top)
+      clippedTimes: [...document.querySelectorAll(".terrain-time")].filter(n => n.scrollWidth > n.clientWidth + 1).length,
+      firstTime: Math.max(...[...document.querySelectorAll(".terrain-time")].map(n => n.getBoundingClientRect().bottom)),
+      panelTops: [...document.querySelectorAll(".main-time")].map(n => n.getBoundingClientRect().top)
     }));
     const initial = await measure();
     assert.equal(initial.overflow, 0); checks++;
     assert.equal(initial.clippedTimes, 0); checks++;
-    assert.ok(initial.firstTime < height, `${width}px: sea level time is below the fold`); checks++;
+    assert.ok(initial.firstTime < height, `${width}px: skyline times are below the fold`); checks++;
     assert.equal(await page.locator("#locationControls").getAttribute("open"), null); checks++;
     assert.equal(await page.locator("#settings").getAttribute("open"), null); checks++;
-    if (width > 760) { assert.equal(initial.panelTops[0], initial.panelTops[1]); checks++; }
-    console.log(`  ok ${width}px: first sea level time ends at ${initial.firstTime.toFixed(1)}px, overflow ${initial.overflow}px`);
+    assert.equal(initial.panelTops[0], initial.panelTops[1]); checks++;
+    assert.equal(await page.locator("#comparison").getAttribute("open"), null); checks++;
+    assert.equal(await page.locator("#chartDetails").getAttribute("open"), null); checks++;
+    await page.locator("#comparison > summary").click();
+    console.log(`  ok ${width}px: both skyline times end at ${initial.firstTime.toFixed(1)}px, overflow ${initial.overflow}px`);
     await page.screenshot({ path: `layout-${width}.png`, fullPage: true });
 
     // Exercise both disclosure levels, not just their closed summaries.
@@ -65,6 +68,8 @@ try {
       assert.equal(await page.locator(`#skyWho [data-sky="${side}"]`).getAttribute("aria-pressed"), "true"); checks++;
       assert.equal((await measure()).overflow, 0); checks++;
     }
+    await page.locator("#chartDetails > summary").click();
+    assert.equal((await measure()).overflow, 0); checks++;
     await page.locator("#about summary").click();
     assert.equal((await measure()).overflow, 0); checks++;
     await page.locator("#about summary").click();

@@ -41,6 +41,7 @@ pg.on("console", m => { if (m.type() === "error" && !/favicon|fonts\.g|ERR_/.tes
 await pg.goto(APP, { waitUntil: "domcontentloaded" });
 await pg.locator("#locationControls").evaluate(n => { n.open = true; });
 await pg.locator("#settings").evaluate(n => { n.open = true; });
+await pg.selectOption("#units", "metres");
 await pg.waitForTimeout(400);
 await pg.selectOption("#tz", "UTC");
 await pg.waitForTimeout(250);
@@ -54,6 +55,7 @@ const setAt = async (lat, lon, date) => {
   await pg.dispatchEvent("#elev", "change");
   await pg.fill("#date", date);
   await pg.dispatchEvent("#date", "change");
+  await pg.selectOption("#tz", "UTC");
   await pg.waitForTimeout(250);
 };
 // the grid alternates time cell, shift cell, so the times are the even ones
@@ -79,7 +81,7 @@ const mins = txt => {
 await setAt(40.0959, -74.2176, "2026-09-30");
 let set = await times("setBox"), rise = await times("riseBox");
 check("three rows on each", [rise.length, set.length], [3, 3]);
-check("the rows are labelled", await labels("setBox"), ["Sea level", "Your height", "Real skyline"]);
+check("the rows are labelled", await labels("setBox"), ["Sea level", "Height correction", "Terrain adjusted"]);
 if (sunEvent) near("Lakewood sea level sunset matches solar.js", mins(set[0]), ref(40.0959, -74.2176, 2026, 9, 30, false), 0.25);
 if (sunEvent) near("Lakewood sea level sunrise matches solar.js", mins(rise[0]), ref(40.0959, -74.2176, 2026, 9, 30, true), 0.25);
 
@@ -127,6 +129,8 @@ const chamonix = mins(set[0]) - mins(set[2]);
 near("Chamonix loses an hour and a quarter to the mountains", chamonix, 72.9, 8);
 const sky = await pg.$eval("#skyNote", n => n.textContent);
 check("and it solved at the sunset bearing, not the worst one", /at 2[45][0-9] degrees/.test(sky), true);
+await pg.locator("#comparison").evaluate(n => { n.open = true; });
+await pg.locator("#chartDetails").evaluate(n => { n.open = true; });
 const onRidge = await pg.evaluate(() => {
   // the sun marker and the drawn ground must meet: read both back off the SVG
   const dot = document.querySelector("#sky circle");

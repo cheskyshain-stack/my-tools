@@ -42,12 +42,13 @@ const fresh = tileHits;
 await pg.goto(APP,{waitUntil:"domcontentloaded"});
 await pg.locator("#locationControls").evaluate(n => { n.open = true; });
 await pg.locator("#settings").evaluate(n => { n.open = true; });
+await pg.selectOption("#units", "metres");
 await settled();
 await pg.waitForTimeout(400);
 check("it fetched ground without being asked", tileHits > fresh, true);
 check("and finished with a third row", /ground .* at \d+/.test(await thirdRow("setBox")), true);
 check("the button has become a refresh", await pg.$eval("#run", n=>n.textContent), "Read again");
-check("it says what it did", /reads again by itself/.test(await pg.$eval("#readState", n=>n.textContent)), true);
+check("it says what it did", /updates automatically/.test(await pg.$eval("#readState", n=>n.textContent)), true);
 check("nothing popped up a box", dialogs, []);
 
 /* ---------- a recent search reads again on its own ---------- */
@@ -129,8 +130,8 @@ check("and the second row is measured from it",
   /750 m up/.test(await pg.$$eval("#setBox .ans .lbl span", n=>n[1].textContent)), true);
 check("and the skyline is measured from it too, not from the map's figure",
   await pg.evaluate(()=>{
-    const t=document.querySelector(".spot-card p");
-    return t ? /above your eye/.test(t.textContent) : true;
+    const t=document.querySelector(".spot-geometry");
+    return t ? /above the reference level/.test(t.textContent) : true;
   }), true);
 
 /* ---------- the page must not write into a box you are typing in ----------

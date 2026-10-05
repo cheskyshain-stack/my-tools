@@ -29,6 +29,7 @@ const times=box=>pg.$$eval(`#${box} .ans .t:not(.head)`,n=>n.map(x=>x.childNodes
 await pg.goto(APP,{waitUntil:"domcontentloaded"});
 await pg.locator("#locationControls").evaluate(n => { n.open = true; });
 await pg.locator("#settings").evaluate(n => { n.open = true; });
+await pg.selectOption("#units", "metres");
 await settled();
 for(const [id,v] of [["lat","45.9237"],["lon","6.8694"]]){await pg.fill("#"+id,v);await pg.dispatchEvent("#"+id,"change");}
 await pg.waitForTimeout(600); await settled(); await pg.waitForTimeout(400);
@@ -91,7 +92,7 @@ await pg.waitForTimeout(500);
 check("the quiet re-check did fetch", hits > before, true);
 check("and the pin is back where it was", await pg.$eval(".spot-card a", n=>n.getAttribute("href")), wantPin);
 const agree = await pg.evaluate(()=>{
-  const up=/standing ([\d.-]+)/.exec(document.querySelector(".spot-card p").textContent);
+  const up=/standing ([\d.-]+)/.exec(document.querySelector(".spot-geometry").textContent);
   const used=/stands (-?[\d.]+) degrees/.exec(document.getElementById("skyNote").textContent);
   return {pin:Number(up[1]), solver:Number(used[1])};
 });
@@ -116,12 +117,12 @@ check("the two height boxes name their unit", labels,
 check("and neither of them mentions eyes", /eyes/i.test(labels.join(" ")), false);
 check("and a line explains them",
   /how far above that land you are/.test(await pg.evaluate(()=>document.body.innerText)), true);
-check("and says how little the second one is worth",
-  /worth about 30 seconds/.test(await pg.evaluate(()=>document.body.innerText)), true);
+check("and says when the second height is needed",
+  /upstairs window or on a roof/.test(await pg.evaluate(()=>document.body.innerText)), true);
 check("and that it starts at nothing",
   /0 standing on it/.test(await pg.evaluate(()=>document.body.innerText)), true);
-check("with metres put in feet for anyone who wants it",
-  /1 metre is about 3 feet 3/.test(await pg.evaluate(()=>document.body.innerText)), true);
+check("and says to keep zero for the ground comparison",
+  /Leave the second at 0 for a ground-to-ground comparison/.test(await pg.evaluate(()=>document.body.innerText)), true);
 
 /* The migration from the old 1.7m default is once only. A 1.7m height deliberately
    entered now must survive a refresh, or the terrain time changes without consent. */

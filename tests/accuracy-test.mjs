@@ -19,6 +19,10 @@ const errors = [];
 page.on("pageerror", e => errors.push(e.message));
 await page.route("**/elevation-tiles-prod/**", r => r.abort());
 await page.goto(`${BASE}/horizon/`, { waitUntil: "domcontentloaded" });
+await page.locator("#locationControls").evaluate(n => { n.open = true; });
+await page.locator("#settings").evaluate(n => { n.open = true; });
+await page.selectOption("#units", "metres");
+await page.locator("#comparison").evaluate(n => { n.open = true; });
 let checks = 0, maxSea = 0, maxHeight = 0;
 async function set(lat, lon, date, elevation = "0", zone = "UTC") {
   await page.evaluate(({ lat, lon, date, elevation, zone }) => {
