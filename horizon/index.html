@@ -81,6 +81,14 @@
   .spot{min-height:44px;padding:0 12px;border-radius:999px;cursor:pointer;
     border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.04);
     color:var(--cj-muted,#93A3C7);font:700 12px/1 inherit}
+  .recent-place{display:flex;max-width:100%;min-width:0;border-radius:14px;
+    border:1px solid var(--cj-line,rgba(255,255,255,.09));background:rgba(255,255,255,.04);overflow:hidden}
+  .recent-place .spot{flex:1;min-width:0;border:0;border-radius:0;background:transparent;
+    padding:10px 12px;text-align:left;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+  .remove-recent{flex:none;width:44px;min-height:44px;border:0;border-left:1px solid var(--cj-line,rgba(255,255,255,.09));
+    background:transparent;color:var(--cj-muted,#93A3C7);font-size:20px;cursor:pointer}
+  .remove-recent:hover{background:rgba(255,255,255,.06);color:var(--cj-text,#EDF2FF)}
+  #recentLabel{margin-top:12px}
 
   /* ===== The date ===== */
   .datebar{display:flex;gap:8px;align-items:center}
@@ -197,9 +205,9 @@
   <div id="hits" role="status" aria-live="polite"></div>
   <div class="quick-locations">
     <button class="btn" id="gps" type="button">Use my location</button>
-    <span class="hint">Or choose a place below</span>
   </div>
-  <div class="spots" id="spots" aria-label="Example locations"></div>
+  <p class="hint" id="recentLabel">Recent searches</p>
+  <div class="spots" id="spots" aria-labelledby="recentLabel"></div>
   <details id="settings" class="settings">
     <summary>Coordinates &amp; viewing height</summary>
     <div class="row settings-row">
@@ -551,14 +559,9 @@
 
   /* ===================== The screen ===================== */
 
-  var SPOTS = [
-    { name: "Lakewood NJ", lat: 40.0959, lon: -74.2176 },
-    { name: "Jerusalem", lat: 31.7780, lon: 35.2354 },
-    { name: "Tzfas", lat: 32.9646, lon: 35.4960 },
-    { name: "Denver", lat: 39.7392, lon: -104.9903 },
-    { name: "Chamonix", lat: 45.9237, lon: 6.8694 }
-  ];
   var KEY = "cjHorizonV1";
+  var RECENT_KEY = "cjHorizonRecentSearchesV1";
+  var recentSearches = [];
   var state = { lat: 40.0959, lon: -74.2176, elev: null, eye: 0, tz: null, date: null };
   var profile = null;      // { east, west }, once the ground has been read
   var skyWhich = "set";    // which half of the sky the picture is showing
@@ -573,6 +576,47 @@
       if (!saved.eyeDefaultVersion && state.eye === 1.7) { state.eye = 0; }
     }
   } catch (err) {}
+
+  function validRecent(s) {
+    return s && typeof s.name === "string" && s.name.trim() &&
+      Number.isFinite(s.lat) && Math.abs(s.lat) <= 90 &&
+      Number.isFinite(s.lon) && Math.abs(s.lon) <= 180;
+  }
+  function recentKey(s) { return s.lat.toFixed(5) + "|" + s.lon.toFixed(5); }
+  try {
+    var history = JSON.parse(localStorage.getItem(RECENT_KEY) || "null");
+    if (Array.isArray(history)) {
+      var seen = new Set();
+      recentSearches = history.filter(function (s) {
+        if (!validRecent(s) || seen.has(recentKey(s))) { return false; }
+        seen.add(recentKey(s)); return true;
+      }).slice(0, 10);
+    } else if (history === null && state.place && state.addr && validRecent({ name: state.place, lat: state.lat, lon: state.lon })) {
+      // The old page kept one selected address. Carry it into the new history once.
+      recentSearches = [{ name: state.place, query: state.addr, lat: state.lat, lon: state.lon }];
+      saveRecents();
+    }
+  } catch (err) {}
+
+  function saveRecents() {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentSearches)); } catch (err) {}
+  }
+  function renderRecents() {
+    el("spots").innerHTML = recentSearches.length ? recentSearches.map(function (s, i) {
+      return '<div class="recent-place"><button class="spot" type="button" data-recent="' + i +
+        '" title="' + esc(s.name) + '">' + esc(s.name) + '</button>' +
+        '<button class="remove-recent" type="button" data-remove-recent="' + i +
+        '" aria-label="Remove ' + esc(s.name) + ' from recent searches" title="Remove from recent searches">&times;</button></div>';
+    }).join("") : '<p class="hint">Addresses you choose will appear here.</p>';
+  }
+  function rememberRecent(s) {
+    if (!validRecent(s)) { return; }
+    recentSearches = recentSearches.filter(function (old) { return recentKey(old) !== recentKey(s); });
+    recentSearches.unshift(s);
+    recentSearches = recentSearches.slice(0, 10);
+    saveRecents();
+    renderRecents();
+  }
 
   /* A refresh used to come back to an empty third row and a few seconds of fetching.
      The reading is kept, so the page opens on what it was showing. Only the measured
@@ -990,7 +1034,7 @@
   /* ===================== Wiring ===================== */
 
   /* ===================== Reading by itself =====================
-     Every way of moving goes through here: the address list, the GPS button, a preset,
+     Every way of moving goes through here: the address list, the GPS button, a recent search,
      typed coordinates, a corrected height. Pressing a button for it was a step that
      only ever had one right answer. */
   var readSeq = 0;         // a slow read for a place you have already left must not land
@@ -1090,21 +1134,32 @@
     save();
   }
 
-  el("spots").innerHTML = SPOTS.map(function (s, i) {
-    return '<button class="spot" type="button" data-spot="' + i + '">' + esc(s.name) + "</button>";
-  }).join("");
+  renderRecents();
   el("spots").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-spot]");
+    var remove = e.target.closest("[data-remove-recent]");
+    if (remove) {
+      var index = +remove.getAttribute("data-remove-recent");
+      recentSearches.splice(index, 1);
+      saveRecents();
+      renderRecents();
+      var next = el("spots").querySelectorAll("[data-remove-recent]");
+      if (next.length) { next[Math.min(index, next.length - 1)].focus(); }
+      else { el("gps").focus(); }
+      return;
+    }
+    var b = e.target.closest("[data-recent]");
     if (!b) { return; }
-    var s = SPOTS[+b.getAttribute("data-spot")];
+    var s = recentSearches[+b.getAttribute("data-recent")];
+    if (!s) { return; }
     el("lat").value = s.lat.toFixed(5);
     el("lon").value = s.lon.toFixed(5);
     el("elev").value = "";
     elevAuto = true;
     invalidateTerrain();
     state.place = s.name;
-    el("addr").value = "";
+    el("addr").value = typeof s.query === "string" ? s.query : s.name;
     readFields();
+    rememberRecent(s);
     showPlace();
     paint();
     askRead();
@@ -1220,10 +1275,6 @@
         ? state.lat.toFixed(4) + ", " + state.lon.toFixed(4) : "");
     el("locationName").textContent = state.place ||
       (state.lat === 40.0959 && state.lon === -74.2176 ? "Lakewood NJ" : el("resultPlace").textContent || "Choose a location");
-    [].forEach.call(el("spots").children, function (button) {
-      var spot = SPOTS[+button.getAttribute("data-spot")];
-      button.setAttribute("aria-pressed", String(state.lat === spot.lat && state.lon === spot.lon));
-    });
   }
 
   /* The page owns the elevation box only until somebody types in it, and that is the
@@ -1251,6 +1302,7 @@
     invalidateTerrain();
     state.place = String(r.display_name || "").split(", ").slice(0, 3).join(", ");
     readFields();
+    rememberRecent({ name: state.place, query: el("addr").value, lat: state.lat, lon: state.lon });
     showPlace();
     paint();
     askRead();

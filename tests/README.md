@@ -40,10 +40,10 @@ downloads are cached atomically; failed downloads are never cached as water.
 | `feat-test.mjs` | 35 | address lookup, the map pin on the blocking ground, the explainer dropdown |
 | `auto-test.mjs` | 22 | reading the ground automatically, and typing into a field mid-read |
 | `keep-test.mjs` | 25 | surviving a refresh, surviving offline, the field labels and a deliberately entered 1.7m height |
-| `addr-test.mjs` | 15 | the address and the place name persisting |
+| `addr-test.mjs` | 34 | address and place persistence, recent search ordering, reuse, removal, empty history and another tab |
 | `icon-check.mjs` | 13 | the icon, the naming, and that the header mark is not a link |
 | `accuracy-test.mjs` | 391 | 11 locations through all 12 months, 1000m height corrections, US/Israel daylight saving, polar conditions, invalid input and Today in the selected time zone |
-| `layout-test.mjs` | 85 | initial phone screen, expanded controls, height changes, both skyline views, desktop columns and portal navigation at 375, 393, 412 and 1280px |
+| `layout-test.mjs` | 101 | initial phone screen, long recent addresses, keyboard removal, expanded controls, height changes, both skyline views, desktop columns and portal navigation at 375, 393, 412 and 1280px |
 
 `horizon-test.mjs` cross-checks the sea level sunrise and sunset against
 `zmanim-tool/js/zmanim/solar.js`, the NOAA engine ported 1:1 from the workbook the shul

@@ -7,6 +7,14 @@ let checks = 0;
 try {
   for (const [width, height] of [[375, 667], [393, 852], [412, 839], [1280, 900]]) {
     const ctx = await browser.newContext({ viewport: { width, height } });
+    await ctx.addInitScript(() => {
+      if (localStorage.getItem("cjHorizonRecentSearchesV1") === null) {
+        localStorage.setItem("cjHorizonRecentSearchesV1", JSON.stringify([
+          { name: "A long saved address " + "abcdefghij".repeat(45), query: "A long saved address", lat: 45.9237, lon: 6.8694 },
+          { name: "Jerusalem", query: "Jerusalem", lat: 31.778, lon: 35.2354 }
+        ]));
+      }
+    });
     await ctx.route("**/elevation-tiles-prod/**", async route => {
       const body = await tileBytes(route.request().url());
       await route.fulfill({ status: body ? 200 : 404, contentType: "image/png", body: body || "",
@@ -38,6 +46,11 @@ try {
 
     // Exercise both disclosure levels, not just their closed summaries.
     await page.locator("#locationControls > summary").click();
+    assert.equal(await page.locator("[data-recent]").count(), 2); checks++;
+    assert.equal((await measure()).overflow, 0); checks++;
+    await page.locator('[data-remove-recent="0"]').press("Enter");
+    assert.deepEqual(await page.locator("[data-recent]").allTextContents(), ["Jerusalem"]); checks++;
+    assert.equal(await page.inputValue("#lat"), "40.09590"); checks++;
     await page.locator("#settings > summary").click();
     assert.equal((await measure()).overflow, 0); checks++;
     await page.locator("#eye").fill("1.7");

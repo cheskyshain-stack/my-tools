@@ -9,6 +9,13 @@ let tileHits = 0;
 
 const b=await launch();
 const ctx=await b.newContext({viewport:{width:393,height:852}});
+await ctx.addInitScript(() => {
+  if (localStorage.getItem("cjHorizonRecentSearchesV1") === null) {
+    localStorage.setItem("cjHorizonRecentSearchesV1", JSON.stringify([
+      { name: "Chamonix", query: "Chamonix", lat: 45.9237, lon: 6.8694 }
+    ]));
+  }
+});
 await ctx.route("**/elevation-tiles-prod/**", async route=>{
   tileHits++;
   const body=await tileBytes(route.request().url());
@@ -43,9 +50,9 @@ check("the button has become a refresh", await pg.$eval("#run", n=>n.textContent
 check("it says what it did", /reads again by itself/.test(await pg.$eval("#readState", n=>n.textContent)), true);
 check("nothing popped up a box", dialogs, []);
 
-/* ---------- a preset reads again on its own ---------- */
+/* ---------- a recent search reads again on its own ---------- */
 const before = await thirdRow("setBox");
-await pg.click('.spot[data-spot="4"]');      // Chamonix
+await pg.click('.spot[data-recent="0"]');      // Chamonix
 await pg.waitForTimeout(500);
 await settled();
 await pg.waitForTimeout(400);
@@ -69,7 +76,7 @@ check("picking an address reads it", /\d\d\.\d+° up/.test(await thirdRow("setBo
 
 /* ---------- the same place twice costs nothing ---------- */
 const spent = tileHits;
-await pg.click('.spot[data-spot="4"]');       // Chamonix again, already in hand
+await pg.click('.spot[data-recent="0"]');       // Chamonix again, already in hand
 await pg.waitForTimeout(900);
 check("re-picking the place it is already on fetches nothing", tileHits, spent);
 check("and the button stays a refresh", await pg.$eval("#run", n=>n.textContent), "Read again");
