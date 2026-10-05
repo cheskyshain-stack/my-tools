@@ -153,10 +153,14 @@
   </div>
   <div id="hits"></div>
   <div class="row" style="margin-top:9px">
-    <div class="field"><label for="elev">Ground elevation (m)</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="from the map"></div>
-    <div class="field"><label for="eye">You are above it by (m)</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
+    <div class="field"><label for="elev">Height of the ground, in metres</label><input id="elev" type="number" step="1" inputmode="decimal" placeholder="read from the map"></div>
+    <div class="field"><label for="eye">Your eyes above that ground, in metres</label><input id="eye" type="number" step="0.5" inputmode="decimal" value="1.7"></div>
     <div class="field" style="flex:2 1 220px"><label for="tz">Show times in</label><select id="tz"></select></div>
   </div>
+  <p class="hint" style="margin-top:9px">The first is how high the land itself is where you are standing,
+    which the map fills in. The second is how far your eyes are above that same land: about 1.7 standing
+    outside, more at an upstairs window or on a roof. Both are in metres, and 1 metre is about 3 feet 3.
+    Together they are how high you are looking out from, which is what decides how far you can see.</p>
   <div class="spots" id="spots"></div>
 </div>
 
@@ -366,7 +370,10 @@
     var key = tileKey(z, x, y);
     if (tiles.has(key)) { return tiles.get(key); }
     var job = fetch(TILES + key + ".png", { mode: "cors" }).then(function (res) {
-      if (!res.ok) { return null; }             // off the edge of the pyramid
+      // 404 means there is genuinely no tile there, which is open water. Anything
+      // else, and any failure to reach it at all, is NOT water: see the catch.
+      if (res.status === 404) { return null; }
+      if (!res.ok) { throw new Error("map tile " + key + " answered " + res.status); }
       return res.blob().then(createImageBitmap).then(function (bmp) {
         var cv = document.createElement("canvas");
         cv.width = 256; cv.height = 256;
@@ -380,10 +387,20 @@
         if (bmp.close) { bmp.close(); }
         return out;
       });
-    }).catch(function () { return null; });
+    }).catch(function () {
+      /* A tile that could not be fetched must not come back as null, because
+         sampleTile reads null as sea level. Offline, that quietly produced a flat
+         world and a confident answer of "nothing is in the way" rather than an
+         error. It is marked instead, and the reading as a whole refuses. */
+      // Not remembered as failed: pressing Read again has to be able to try once more.
+      setTimeout(function () { tiles.delete(key); }, 0);
+      return FETCH_FAILED;
+    });
     tiles.set(key, job);
     return job;
   }
+
+  var FETCH_FAILED = { failed: true };
 
   function worldXY(lat, lon, z) {
     var n = Math.pow(2, z);
@@ -455,7 +472,15 @@
     return Promise.all(keys.map(function (k) {
       var t = need.get(k);
       return getTile(t[0], t[1], t[2]).then(function (g) { return [k, g]; });
-    })).then(function (pairs) { return { grids: new Map(pairs), count: keys.length }; });
+    })).then(function (pairs) {
+      var lost = pairs.filter(function (p) { return p[1] === FETCH_FAILED; }).length;
+      // One missing tile is one missing ridge, so the answer would be wrong rather
+      // than approximate. Better to say so than to hand back a flattened horizon.
+      if (lost) {
+        throw new Error(lost + " of " + keys.length + " map patches would not load");
+      }
+      return { grids: new Map(pairs), count: keys.length };
+    });
   }
 
   /* ===================== The screen ===================== */
@@ -477,12 +502,53 @@
     if (saved && typeof saved.lat === "number") { Object.assign(state, saved); }
   } catch (err) {}
 
+  /* A refresh used to come back to an empty third row and a few seconds of fetching.
+     The reading is kept, so the page opens on what it was showing. Only the measured
+     numbers are stored, never the map tiles: the samples are a few kilobytes and the
+     tiles are megabytes. */
   function save() {
     try {
       localStorage.setItem(KEY, JSON.stringify({
-        lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, tz: state.tz
+        lat: state.lat, lon: state.lon, elev: state.elev, eye: state.eye, tz: state.tz,
+        date: el("date") ? el("date").value : null,
+        sky: skyWhich,
+        read: profile ? { at: lastRead, tiles: profile.tiles, when: Date.now(),
+                          west: bare(profile.west), east: bare(profile.east) } : null
       }));
     } catch (err) {}
+  }
+
+  // A window with the closures stripped off, which is all that can be written down.
+  function bare(side) {
+    return side ? { from: side.from, to: side.to, samples: side.samples, peak: side.peak } : null;
+  }
+
+  /* A stored window, with its closures put back. Everything measured survives; the one
+     thing that cannot is the exact-bearing walk, which needs the tiles. So a restored
+     blocker answers with the nearest bearing that WAS walked, at most one step out, and
+     the quiet reading that follows a restore replaces it with the exact one. */
+  function reviveSide(b) {
+    if (!b || !b.samples || b.samples.length < 2) { return null; }
+    var samples = b.samples;
+    return {
+      from: b.from, to: b.to, samples: samples, peak: b.peak, cached: true,
+      covers: function (az) { return az >= b.from && az <= b.to; },
+      lookup: function (az) {
+        if (az < b.from || az > b.to) { return null; }
+        var i = Math.min(samples.length - 2, Math.max(0, Math.floor((az - b.from) / AZ_STEP)));
+        var a = samples[i], c = samples[i + 1] || a;
+        return a.deg + (c.deg - a.deg) * ((az - a.az) / AZ_STEP);
+      },
+      blocker: function (az) {
+        if (az < b.from || az > b.to) { return null; }
+        var best = null, gap = 1e9;
+        for (var i = 0; i < samples.length; i++) {
+          var d = Math.abs(samples[i].az - az);
+          if (d < gap) { gap = d; best = samples[i]; }
+        }
+        return best ? best.at : null;
+      }
+    };
   }
 
   function esc(s) {
@@ -625,6 +691,17 @@
     var top = Math.max(2, Math.ceil(Math.max.apply(null, hs) + 1));
     var bot = Math.min(-1.5, Math.floor(Math.min.apply(null, hs) - 0.5));
 
+    /* The marker goes on the curve that is actually drawn, which is the sampled one,
+       while the note and the card report the exact walk. They differ by a fraction of
+       a degree, and a marker floating off its own ridge is what looks broken. */
+    function drawnAt(sd, az, fallback) {
+      var ss = sd.samples;
+      if (!ss || az < sd.from || az > sd.to) { return fallback; }
+      var i = Math.min(ss.length - 2, Math.max(0, Math.floor((az - sd.from) / AZ_STEP)));
+      var p0 = ss[i], p1 = ss[i + 1] || p0;
+      return p0.deg + (p1.deg - p0.deg) * ((az - p0.az) / AZ_STEP);
+    }
+
     var X = function (az) { return padL + (az - az0) / (az1 - az0) * (W - padL - padR); };
     var Y = function (a) { return padT + (top - a) / (top - bot) * (H - padT - padB); };
 
@@ -662,7 +739,7 @@
         '" stroke="rgba(255,255,255,.35)" stroke-dasharray="4 4"/>' +
       '<path d="' + ground + '" fill="rgba(90,107,140,.5)" stroke="#5A6B8C" stroke-width="1.5"/>' +
       '<path d="' + trackD + '" fill="none" stroke="#F5B301" stroke-width="2"/>' +
-      '<circle cx="' + X(set.az).toFixed(1) + '" cy="' + Y(set.horizon).toFixed(1) +
+      '<circle cx="' + X(set.az).toFixed(1) + '" cy="' + Y(drawnAt(side, set.az, set.horizon)).toFixed(1) +
         '" r="5.5" fill="#F5B301" stroke="#0A1226" stroke-width="2"/>';
 
     /* Where that ground actually is, as a place you could drive to and look at. The
@@ -711,6 +788,12 @@
      and behind a big mountain those are far apart: at Chamonix the sun clears the
      eastern wall more than fifty degrees round from where netz would otherwise be.
      A narrow window does not fail loudly, it pins the answer to its own edge. */
+  /* The rays are what the chart draws and what a stored reading is rebuilt from. A
+     degree apart was tried and bought nothing: a mountain skyline is jagged rather
+     than smooth, so interpolating between rays does not converge the way it would on
+     a curve, and a restored reading stayed 0.08 degrees out either way. Two degrees
+     it is, at half the storage. The live answer does not depend on this at all: that
+     walks the exact bearing. */
   var HALF_WIDTH = 56, AZ_STEP = 2;
 
   function windowAround(lat, lon, mid) {
@@ -722,6 +805,15 @@
   }
 
   function finish(win, grids, obsH, lat, lon) {
+    /* One walk, memoised by twentieths of a degree, which is far finer than the map.
+       The fetching was the expensive part; walking a ray over tiles already in hand
+       is cheap, so the solver and the pin can afford to be the same calculation. */
+    var walked = new Map();
+    function exactAt(azimuth) {
+      var k = Math.round(azimuth * 20);
+      if (!walked.has(k)) { walked.set(k, ridgeOf(rayPoints(lat, lon, k / 20), grids, obsH)); }
+      return walked.get(k);
+    }
     var samples = win.rays.map(function (r) {
       var got = ridgeOf(r.pts, grids, obsH);
       return { az: r.az, deg: got.deg, at: got.at };
@@ -736,17 +828,18 @@
          pin is the ground that actually took the sun. */
       blocker: function (azimuth) {
         if (azimuth < win.from || azimuth > win.to) { return null; }
-        return ridgeOf(rayPoints(lat, lon, azimuth), grids, obsH).at;
+        return exactAt(azimuth).at;
       },
       covers: function (azimuth) { return azimuth >= win.from && azimuth <= win.to; },
       lookup: function (azimuth) {
         // Outside the window nothing was measured, so it answers null and the caller
         // falls back to the smooth earth. Clamping to the nearest edge instead is
         // what put a ridge behind the observer onto the far side of the sky.
+        /* The exact bearing, not an interpolation between the two rays either side
+           of it: reading the time off the interpolation while putting the pin on the
+           real walk had them 0.22 degrees apart in the Alps, about a minute. */
         if (azimuth < win.from || azimuth > win.to) { return null; }
-        var i = Math.min(samples.length - 2, Math.max(0, Math.floor((azimuth - win.from) / AZ_STEP)));
-        var a = samples[i], b = samples[i + 1] || a;
-        return a.deg + (b.deg - a.deg) * ((azimuth - a.az) / AZ_STEP);
+        return exactAt(azimuth).deg;
       }
     };
   }
@@ -805,19 +898,20 @@
     el("readState").className = bad ? "hint bad" : "hint";
   }
 
-  function autoRead(force) {
+  function autoRead(force, note) {
     var key = placeKey();
     if (!key) { return; }
     if (!force && profile && lastRead === key) { return; }
     var mine = ++readSeq;
     el("run").disabled = true;
     el("run").textContent = "Reading the ground";
-    say("Reading the ground around this spot.");
+    say(note || "Reading the ground around this spot.");
     readTerrain().then(function (p) {
       if (mine !== readSeq) { return; }          // a newer place is already on its way
       profile = p;
       lastRead = key;
       patchMissed = false;
+      save();
       el("run").disabled = false;
       el("run").textContent = "Read again";
       say("Read " + p.tiles + " patches of map around this spot. It reads again by itself " +
@@ -825,23 +919,29 @@
       paint();
     }).catch(function (err) {
       if (mine !== readSeq) { return; }
-      profile = null;
-      lastRead = null;
+      // A reading already on screen is better than a blank one, so a failed refresh
+      // leaves what is there and only says it could not be checked again.
+      var had = !!profile;
+      if (!had) { profile = null; lastRead = null; }
       el("run").disabled = false;
-      el("run").textContent = "Read the skyline";
+      el("run").textContent = had ? "Read again" : "Read the skyline";
       // Said here rather than in an alert: this runs on its own now, and a box you have
       // to dismiss every time you move is worse than the thing it is reporting.
-      say("Could not read the ground here (" + err.message + "). The first two rows are " +
-          "unaffected.", true);
+      say(had
+        ? "Could not reach the map to check this reading again (" + err.message +
+          "). What is on screen is the last reading that worked, rebuilt from the saved " +
+          "profile, so it can be a few seconds out until the map is reachable again."
+        : "Could not read the ground here (" + err.message + "). The first two rows are unaffected.",
+        true);
       paint();
     });
   }
 
-  function askRead(force) {
+  function askRead(force, note) {
     // Typing a latitude and then a longitude is two changes and one move, so they are
     // allowed to settle before anything is fetched.
     clearTimeout(readTimer);
-    readTimer = setTimeout(function () { autoRead(force); }, 280);
+    readTimer = setTimeout(function () { autoRead(force, note); }, 280);
   }
 
   function readFields() {
@@ -890,6 +990,7 @@
      unless the sun has swung far enough round the year to leave it. Then, and only
      then, it is read again. */
   function afterDate() {
+    save();
     paint();
     if (profile && patchMissed) { askRead(true); }
   }
@@ -1001,6 +1102,7 @@
     var btn = e.target.closest("[data-sky]");
     if (!btn) { return; }
     skyWhich = btn.getAttribute("data-sky");
+    save();
     drawSky();
   });
 
@@ -1012,13 +1114,32 @@
 
   el("lat").value = state.lat.toFixed(5);
   el("lon").value = state.lon.toFixed(5);
-  if (state.elev !== null && !isNaN(state.elev)) { el("elev").value = state.elev; }
+  if (state.elev !== null && !isNaN(state.elev)) { el("elev").value = state.elev; elevAuto = false; }
   el("eye").value = state.eye;
-  el("date").value = todayStr();
+
+  /* The day you were reading survives a refresh, but a day already gone does not: a
+     stale yesterday on a zmanim page is worse than landing on today. */
+  el("date").value = (state.date && state.date >= todayStr()) ? state.date : todayStr();
+  if (state.sky === "rise" || state.sky === "set") { skyWhich = state.sky; }
+
+  /* Put the last reading back before anything else, so a refresh opens on what it was
+     showing rather than on an empty third row and a wait. */
+  if (state.read) {
+    var west = reviveSide(state.read.west), east = reviveSide(state.read.east);
+    if (west && east) {
+      profile = { west: west, east: east, tiles: state.read.tiles, cached: true };
+      lastRead = state.read.at || null;
+    }
+  }
+
   paint();
-  // The location it opens on counts as a location, so the third row is there without
-  // anyone pressing for it.
-  askRead();
+
+  /* Then check it quietly. The screen is already right, so this costs a wait nobody is
+     looking at, and it buys back the one thing a stored reading cannot carry: the pin
+     walked on the sun's exact bearing rather than the nearest one sampled. */
+  askRead(!!profile, profile
+    ? "Showing the last reading. Checking it against the map again."
+    : null);
 }());
 </script>
 </body>

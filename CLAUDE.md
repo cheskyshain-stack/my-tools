@@ -243,6 +243,30 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   page agrees with it to under half a second at Lakewood, Jerusalem and Chamonix, in
   summer and in winter. That is what makes row one trustworthy enough to measure the
   other two against.
+- **A refresh keeps what was on screen.** The measured samples go into `localStorage`
+  (about 20KB, never the tiles, which are megabytes), along with the day and which half
+  of the sky was showing, and `reviveSide` puts the closures back. The page then paints
+  the stored reading first and re-checks it quietly, which matters because a restored
+  profile has to interpolate between rays where a live one walks the exact bearing: it
+  lands about 0.08 degrees out, roughly 27 seconds. **Halving the ray spacing does not
+  fix that** and was tried: a mountain skyline is jagged rather than smooth, so
+  interpolation does not converge the way it would on a curve. The offline message says
+  the reading was rebuilt from the saved profile and can be a few seconds out, rather
+  than presenting it as freshly measured. A day already past is not restored, because a
+  stale yesterday on a zmanim page is worse than landing on today.
+- **The solver and the pin are one walk.** `lookup` and `blocker` both call `exactAt`,
+  which walks the exact bearing and is memoised by twentieths of a degree. Reading the
+  time off an interpolation between the two nearest rays while putting the pin on the
+  real walk had them 0.22 degrees apart in the Alps, about a minute, with the card and
+  the row contradicting each other on screen. The chart's marker is still placed on the
+  **drawn** (sampled) curve, since a marker floating off its own ridge is what looks
+  broken; the note and the card report the exact figure.
+- **A tile that will not load is not the sea.** `sampleTile` reads a null grid as sea
+  level, which is right for a 404 (open water, off the edge of the pyramid) and badly
+  wrong for a failed fetch: offline, every tile came back null and the page confidently
+  reported a flat world and "nothing is in the way". Only a 404 is null now; anything
+  else marks the tile `FETCH_FAILED`, `gridsFor` refuses the whole reading if any tile
+  is marked, and the failed key is dropped from the cache so Read again can retry.
 - **The reading happens by itself**, on anything that moves the observer: a preset, the
   GPS button, a picked address, typed coordinates, a corrected height, and the location
   the page opens on. `askRead` debounces 280ms, because typing a latitude and then a
