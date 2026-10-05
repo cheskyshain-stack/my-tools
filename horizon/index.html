@@ -59,7 +59,8 @@
   .main-time .hint{font-size:11px;margin-top:7px}
   .calculation-details>summary{cursor:pointer;font-size:13px;font-weight:700;min-height:28px}
   .calculation-details[open]>summary{margin-bottom:14px}
-  #chartDetails{margin-top:14px;border-top:1px solid var(--cj-line,rgba(255,255,255,.09));padding-top:14px}
+  #chartDetails,#comparison{margin-top:14px;border-top:1px solid var(--cj-line,rgba(255,255,255,.09));padding-top:14px}
+  #comparison{margin-bottom:14px}
   .ground-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 12px}
   .ground-comparison div{min-width:0}
   .ground-comparison dt{font-size:11px;color:var(--cj-muted,#93A3C7)}
@@ -271,6 +272,20 @@
     <section class="main-time"><h2>Sunrise <span>Netz</span></h2><div id="riseMain" class="terrain-time unavailable">Reading terrain</div><p id="riseChange" class="hint"></p></section>
     <section class="main-time"><h2>Sunset <span>Shkiya</span></h2><div id="setMain" class="terrain-time unavailable">Reading terrain</div><p id="setChange" class="hint"></p></section>
   </div>
+  <details id="comparison" class="calculation-details">
+    <summary>Compare with sea level and height correction</summary>
+    <div class="results-grid">
+      <section class="time-panel" aria-labelledby="riseTitle">
+        <h2 id="riseTitle">Sunrise <span class="hint">Netz</span></h2>
+        <div id="riseBox"><div class="state">Waiting for a location.</div></div>
+      </section>
+      <section class="time-panel" aria-labelledby="setTitle">
+        <h2 id="setTitle">Sunset <span class="hint">Shkiya</span></h2>
+        <div id="setBox"><div class="state">Waiting for a location.</div></div>
+      </section>
+    </div>
+    <p class="hint compare-help">The change column compares each time with sea level. A plus means later; a minus means earlier.</p>
+  </details>
   <p class="hint" id="terrainSource">The main times use the surrounding ground, its distance and Earth's curvature.</p>
   <div class="reading-row">
     <p class="hint" id="readState" role="status" aria-live="polite">Reading the ground around this location.</p>
@@ -294,23 +309,6 @@
       <span><i style="background:rgba(255,255,255,.35)"></i>Reference level</span>
     </div>
     <p class="hint" id="skyNote" style="margin-top:9px"></p>
-  </details>
-</section>
-
-<section class="card">
-  <details id="comparison" class="calculation-details">
-    <summary>Compare with sea level and height correction</summary>
-    <div class="results-grid">
-      <section class="time-panel" aria-labelledby="riseTitle">
-        <h2 id="riseTitle">Sunrise <span class="hint">Netz</span></h2>
-        <div id="riseBox"><div class="state">Waiting for a location.</div></div>
-      </section>
-      <section class="time-panel" aria-labelledby="setTitle">
-        <h2 id="setTitle">Sunset <span class="hint">Shkiya</span></h2>
-        <div id="setBox"><div class="state">Waiting for a location.</div></div>
-      </section>
-    </div>
-    <p class="hint compare-help">The change column compares each time with sea level. A plus means later; a minus means earlier.</p>
   </details>
 </section>
 
@@ -1229,7 +1227,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
         ? "Could not reach the map to check this reading again (" + err.message +
           "). What is on screen is the last reading that worked, rebuilt from the saved " +
           "profile, so it can be a few seconds out until the map is reachable again."
-        : "Could not read the ground here (" + err.message + "). Sea level and height correction are available under Compare below.",
+        : "Could not read the ground here (" + err.message + "). Sea level and height correction are available under Compare.",
         true);
       paint();
     });
