@@ -1,5 +1,25 @@
 # Tests
 
+## Private Library
+
+`node --test xxx-api-test.mjs` tests the isolated backend with temporary SQLite
+storage: cookie/session security, CSRF and origins, age-result binding, provider
+failure handling, license/DRM denial, expiry, rate limits, per-user ownership,
+storage reopening, and signing vectors from Bunny's official implementation.
+
+`CJ_XXX_PORT=8861 node xxx-test.mjs` runs the actual portal and backend in Chromium,
+with a generated HLS clip and synthetic provider responses. It checks layout at
+375, 393, 412 and 1280px, real video decoding, search, categories, pagination,
+favorites, history, refresh, logout, escaped metadata and the existing shell.
+It needs Node 24 LTS, Chromium and FFmpeg, and uses the next port for its API.
+Pick fresh ports on every rerun. `npm run test:xxx` runs both suites.
+
+No fixture, account or forced age result is used in production. The live provider
+accounts and an actual iPhone Safari still need verification before activation.
+Deployment instructions and limits are in `../xxx-api/README.md`.
+
+## Existing Horizon suites
+
 Browser tests, because every bug in this repo that mattered was a browser bug. They
 drive the real pages in a real Chromium and assert on measured values, not on what the
 code looks like.

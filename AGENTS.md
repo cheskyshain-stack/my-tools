@@ -19,18 +19,20 @@ There is no bundler, no framework, no npm, and no build step. `assets/cj.css` ca
 shared design tokens and `assets/cj-refresh.js` the shared pull-to-refresh.
 
 The root `index.html` is a shell that holds the current tool in an iframe and mirrors its
-path into the address bar, so Back and Forward feel normal while each tool keeps its own
+path into the address bar with `replaceState`, so native iframe Back and Forward
+history is preserved while each tool keeps its own
 document. `home/index.html` is the tool list that the shell opens by default.
 
 | | |
 | --- | --- |
 | Visible tools | groceries, qr-code, braille, stopwatch, horizon, music, chess, sudoku, tic-tac-toe |
-| Hidden tools | budget, qwikpen, finances, school |
+| Hidden tools | budget, qwikpen, finances, school, xxx (authenticated private library) |
 | Other | admin (the music catalogue editor, PAT-gated), maaser |
 
 A hidden tool carries `class="hidden-tool"` on its card and appears only after a
 triple-click on the logo, remembered in `localStorage.cjAppsHiddenToolsVisible`. It is
-tidiness, not security: every page is public.
+tidiness, not security: every frontend page is public. The private library serves
+its data only through a separate authenticated API, documented in `xxx-api/README.md`.
 
 ## How it deploys
 

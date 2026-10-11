@@ -8,3 +8,10 @@
 tests/node_modules
 tests/tiles
 tests/*.png
+
+# Runtime credentials, licensed catalog records and private account data.
+xxx-api/private/
+xxx-api/.env
+xxx-api/*.sqlite*
+xxx-api/*.db*
+xxx-api/licenses/

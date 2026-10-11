@@ -1,0 +1,18 @@
+{
+  "source": "https://github.com/BunnyWay/BunnyCDN.TokenAuthentication/blob/48ff1af0879c61b69a42c8db5ead76f849f5ef87/nodejs/token.js",
+  "id": "11111111-1111-4111-8111-111111111111",
+  "key": "SecurityKey",
+  "expires": 1598024587,
+  "cases": [
+    {
+      "file": "thumbnail.jpg",
+      "directory": false,
+      "expected": "https://test-fixture.b-cdn.net/11111111-1111-4111-8111-111111111111/thumbnail.jpg?token=HS256-TexlW-LXwUMzIy8XqST0zCnP0LoqfoBDJ2Tv39-RkgI&expires=1598024587"
+    },
+    {
+      "file": "playlist.m3u8",
+      "directory": true,
+      "expected": "https://test-fixture.b-cdn.net/bcdn_token=HS256-a1cvK3stOhEV0ZnAfP1nBf1NvHrZXTD-6hQTqPezFWc&token_path=%2F11111111-1111-4111-8111-111111111111%2F&expires=1598024587/11111111-1111-4111-8111-111111111111/playlist.m3u8"
+    }
+  ]
+}

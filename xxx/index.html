@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" data-no-refresh>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="description" content="Your authenticated private video library.">
+<!-- Set this public origin only after deploying and validating the separate API. -->
+<meta name="cj-portal-api" content="">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-SNQ8gSCm5PsiJzaC4KC9A0P4GEUtrsWCjh4WrvojP0U='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.b-cdn.net; connect-src 'self' https://*.cjaffa.com https://*.b-cdn.net; media-src blob: https://*.b-cdn.net; worker-src blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>Private Library | CJ Portal</title>
+<link rel="manifest" href="/xxx/manifest.json">
+<link rel="apple-touch-icon" href="/logo.png">
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;overscroll-behavior:none}body{font-family:system-ui,sans-serif}button,input,select{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}[hidden]{display:none!important}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--cj-cyan,#00c8ff);outline-offset:4px}button{touch-action:manipulation}a{color:inherit}input{min-width:0;width:100%;height:50px;border:1px solid var(--cj-line);border-radius:12px;padding:0 14px;color:var(--cj-text);background:rgba(255,255,255,.04)}input:focus{border-color:var(--cj-accent)}
+.wrap{max-width:1080px;margin:auto;padding:0 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:84px;border-bottom:1px solid var(--cj-line)}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;min-width:0}.brand img{width:42px;height:42px;border-radius:12px}.brand strong{font:600 19px var(--cj-display)}.brand small{display:block;margin-top:4px;color:var(--cj-muted);font-size:11px}.account{display:flex;gap:10px;align-items:center}.account span{max-width:100px;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--cj-muted)}.quiet{border:1px solid var(--cj-line);border-radius:12px;color:var(--cj-text);background:rgba(255,255,255,.04);padding:12px;min-height:44px;font-size:13px}.badge{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--cj-line);border-radius:30px;padding:7px 11px;color:var(--cj-muted);font-size:11px;letter-spacing:.04em}.dot{width:6px;height:6px;border-radius:50%;background:var(--cj-cyan)}
+.gate{display:grid;gap:32px;padding:40px 0 48px;max-width:850px;margin:auto}.intro h1{font:600 clamp(36px,8vw,58px)/1.06 var(--cj-display);letter-spacing:-1.4px;margin:20px 0}.intro p{color:var(--cj-muted);line-height:1.7;font-size:15px;max-width:420px}.steps{display:flex;gap:22px;margin-top:24px;flex-wrap:wrap;color:var(--cj-muted);font-size:12px}.steps span{display:flex;align-items:center;gap:7px}.steps b{display:grid;place-items:center;width:24px;height:24px;background:rgba(37,131,247,.12);border:1px solid rgba(37,131,247,.25);border-radius:50%;color:var(--cj-cyan)}.gate-card{padding:26px;background:linear-gradient(145deg,rgba(24,39,71,.92),rgba(12,23,45,.95));border:1px solid var(--cj-line);border-radius:22px;box-shadow:var(--cj-shadow);align-self:center}.gate-card h2{font:600 25px var(--cj-display);margin:0 0 9px}.gate-card p{font-size:13px;color:var(--cj-muted);line-height:1.65;margin:0 0 22px}.field{display:grid;gap:8px;margin:18px 0}.field label{font-size:12px;font-weight:600}.primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border:0;border-radius:12px;padding:0 20px;font-weight:700;color:white;background:linear-gradient(135deg,var(--cj-accent),var(--cj-accent-deep));box-shadow:0 8px 25px rgba(37,131,247,.16)}.full{width:100%}.fine{font-size:11px;color:var(--cj-muted);line-height:1.7;margin-top:18px}.status{min-height:22px;margin:18px 0;font-size:13px;line-height:1.6;color:var(--cj-muted);overflow-wrap:anywhere}.status.error{color:#ffb8bd}
+.library{padding:28px 0 48px}.library-head{display:flex;gap:14px;align-items:start;justify-content:space-between;margin-bottom:24px}.library h1{font:600 32px var(--cj-display);margin:0 0 7px}.sub{color:var(--cj-muted);font-size:13px;line-height:1.6;margin:0}.search{display:flex;gap:8px;max-width:560px;margin:22px 0}.search input{flex:1}.tabs{display:flex;gap:6px;border-bottom:1px solid var(--cj-line);margin-top:22px;padding-bottom:12px}.tab{min-height:44px;border:0;border-radius:12px;background:transparent;color:var(--cj-muted);padding:0 15px;font-size:13px;font-weight:700}.tab[aria-selected="true"]{background:rgba(37,131,247,.14);color:var(--cj-cyan)}.filters{display:flex;gap:8px;overflow:auto;padding:18px 0 12px;scrollbar-width:thin}.chip{flex:none;min-height:38px;border:1px solid var(--cj-line);border-radius:24px;background:rgba(255,255,255,.03);color:var(--cj-muted);padding:0 14px;font-size:12px}.chip[aria-pressed="true"]{background:var(--cj-card);border-color:var(--cj-accent);color:var(--cj-text)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;margin-top:16px}.video-card{min-width:0;overflow:hidden;border:1px solid var(--cj-line);background:var(--cj-card);border-radius:16px}.watch{display:block;width:100%;text-align:left;padding:0;background:none;border:0;color:inherit}.poster{position:relative;aspect-ratio:16/10;background:linear-gradient(145deg,#14294a,#080e1c);overflow:hidden}.poster img{display:block;width:100%;height:100%;object-fit:cover}.runtime{position:absolute;right:7px;bottom:7px;background:rgba(0,0,0,.85);font:10px var(--cj-mono);border-radius:5px;padding:4px 6px}.card-copy{padding:12px 12px 0}.card-copy h2{font:600 13px/1.5 var(--cj-body);margin:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:39px}.category{font-size:10px;color:var(--cj-muted);padding:5px 12px 0;overflow-wrap:anywhere}.card-foot{display:flex;align-items:center;gap:4px;justify-content:space-between;padding:2px 6px 5px 12px;min-height:46px}.resume{font-size:10px;color:var(--cj-muted)}.star{border:0;background:none;color:var(--cj-muted);font-size:23px;min-width:44px;min-height:44px}.star[aria-pressed="true"]{color:var(--cj-gold)}.empty{padding:46px 18px;border:1px dashed rgba(147,163,199,.2);border-radius:18px;margin-top:18px;text-align:center}.empty h2{font:600 23px var(--cj-display);margin:0 0 10px}.empty p{font-size:13px;color:var(--cj-muted);line-height:1.7;margin:0;max-width:380px;margin-inline:auto}.pager{display:flex;align-items:center;justify-content:center;gap:14px;padding:24px 0;font-size:12px;color:var(--cj-muted)}.history-tools{display:flex;align-items:center;justify-content:flex-end;margin-top:16px;gap:8px}.footer{border-top:1px solid var(--cj-line);padding:22px 0 28px;font-size:11px;color:var(--cj-muted);display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+dialog{padding:0;border:1px solid rgba(147,163,199,.25);border-radius:18px;width:calc(100% - 24px);max-width:940px;max-height:calc(100dvh - 24px);background:#080d19;color:var(--cj-text);overflow:auto;box-shadow:0 30px 100px #000}dialog::backdrop{background:rgba(0,0,0,.88);backdrop-filter:blur(5px)}.player-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px}.player-head h2{font-size:15px;line-height:1.5;margin:0;overflow-wrap:anywhere}.player-close{flex:none;font-size:22px;width:44px;height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.06);color:white}.player video{width:100%;display:block;max-height:65dvh;background:#000;aspect-ratio:16/9}.player-bottom{padding:14px;display:flex;gap:12px;align-items:center;justify-content:space-between}.player-bottom p{margin:0;font-size:12px;line-height:1.6;color:var(--cj-muted)}
+@media(min-width:760px){.gate{grid-template-columns:1.1fr 1fr;gap:52px;padding-top:64px;padding-bottom:74px}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.card-copy h2{font-size:15px}.brand strong{font-size:22px}.poster{aspect-ratio:16/9}}@media(min-width:1020px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+<script src="/xxx/hls-1.6.13.min.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/" aria-label="Back to CJ Portal"><img src="/logo.png" alt=""><div><strong>Private Library</strong><small>CJ PORTAL · MEMBERS ONLY</small></div></a>
+    <div class="account" id="account" hidden><span id="username"></span><button class="quiet" id="logout" type="button">Sign out</button></div>
+  </header>
+  <main>
+    <section class="gate" id="gate" aria-label="Library access">
+      <div class="intro"><span class="badge"><span class="dot"></span><span id="age-label">18+</span> · PRIVATE ACCESS</span><h1>Your library.<br>Your space.</h1><p>An invitation-only viewing room. Sign in and verify your age to open your licensed video library.</p><div class="steps"><span><b>1</b>Sign in</span><span><b>2</b>Verify your age</span><span><b>3</b>Start watching</span></div></div>
+      <div class="gate-card">
+        <div id="login-panel"><h2>Welcome back</h2><p>Sign in with the account provided by your administrator.</p><form id="login"><div class="field"><label for="user">Username</label><input id="user" name="username" autocomplete="username" autocapitalize="none" maxlength="64" required></div><div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required></div><button class="primary full" id="sign-in" type="submit" disabled>Sign in</button></form><div class="fine">Accounts are invitation only. Need access or a password reset? Contact your administrator.</div></div>
+        <div id="age-panel" hidden><h2>One more step</h2><p id="age-copy">Verify that you meet the minimum age before opening the library. The verification service handles your identity check.</p><button class="primary full" id="verify-age" type="button">Verify my age</button><button class="quiet full" id="check-age" type="button" style="margin-top:10px">Check verification status</button><div class="fine">This library keeps your verification result, not a copy of your ID.</div></div>
+        <p class="status" id="gate-status" role="status" aria-live="polite">Connecting securely…</p>
+      </div>
+    </section>
+    <section class="library" id="library" aria-label="Video library" hidden>
+      <div class="library-head"><div><h1>Your library</h1><p class="sub" id="library-sub">A little time for yourself.</p></div><span class="badge"><span class="dot"></span>VERIFIED</span></div>
+      <form class="search" id="search" role="search"><label for="query" hidden>Search your library</label><input id="query" type="search" placeholder="Search your library" maxlength="120" autocomplete="off"><button class="primary" type="submit">Search</button></form>
+      <div class="tabs" role="tablist" aria-label="Library views"><button class="tab" type="button" data-view="all" role="tab" aria-selected="true" aria-controls="results">Browse</button><button class="tab" type="button" data-view="favorites" role="tab" aria-selected="false" aria-controls="results">Favorites</button><button class="tab" type="button" data-view="history" role="tab" aria-selected="false" aria-controls="results">History</button></div>
+      <div class="filters" id="categories" aria-label="Categories"></div>
+      <div class="history-tools" id="history-tools" hidden><button class="quiet" id="clear-history" type="button">Clear watch history</button><button class="quiet" id="confirm-clear" type="button" hidden>Confirm clear</button></div>
+      <p class="status" id="library-status" role="status" aria-live="polite"></p>
+      <div id="results" role="tabpanel"><div class="grid" id="grid"></div><div class="empty" id="empty" hidden><h2 id="empty-title">Your library is ready</h2><p id="empty-copy">Videos will appear here when licensed titles are added.</p></div></div>
+      <div class="pager" id="pager" hidden><button class="quiet" id="prev" type="button">Previous</button><span id="page-label"></span><button class="quiet" id="next" type="button">Next</button></div>
+    </section>
+  </main>
+  <footer class="footer"><span>Private access · Licensed playback</span><span>Your favorites and history stay in your account.</span></footer>
+</div>
+<dialog id="player-dialog" class="player" aria-labelledby="player-title"><div class="player-head"><h2 id="player-title">Video</h2><button class="player-close" id="close-player" type="button" aria-label="Close player">×</button></div><video id="video" controls playsinline preload="metadata" controlslist="nodownload" aria-label="Video player"></video><div class="player-bottom"><p id="player-status" role="status" aria-live="polite">Press Play to start watching.</p><button class="quiet" id="retry-player" type="button" hidden>Retry</button></div></dialog>
+<script>
+(function () {
+  'use strict';
+  var el = function (id) { return document.getElementById(id); };
+  var apiOrigin = document.querySelector('meta[name="cj-portal-api"]').content;
+  var session = null, view = 'all', category = '', page = 1, pages = 0, items = [], sequence = 0;
+  var current = null, hls = null, renewTimer = null, expiryTimer = null, ageTimer = null, busyProgress = false, lastProgress = 0, playerSequence = 0;
+  var video = el('video'), dialog = el('player-dialog');
+  function message(id, text, error) { el(id).textContent = text || ''; el(id).classList.toggle('error', !!error); }
+  function node(tag, className, text) { var n = document.createElement(tag); if (className) n.className = className; if (text !== undefined) n.textContent = text; return n; }
+  function clock(seconds) { var total = Math.max(0, Math.floor(seconds || 0)); return Math.floor(total / 60) + ':' + String(total % 60).padStart(2,'0'); }
+  function validateOrigin(value) {
+    var u = new URL(value), local = ['127.0.0.1','localhost'].indexOf(location.hostname) !== -1;
+    return u.origin === value && !u.username && !u.password && (local ? ['127.0.0.1','localhost'].indexOf(u.hostname) !== -1 : u.protocol === 'https:' && /\.cjaffa\.com$/.test(u.hostname) && u.hostname !== 'tools.cjaffa.com');
+  }
+  async function api(path, method, body, keepalive) {
+    var headers = {};
+    if (method && method !== 'GET') headers['X-CSRF-Token'] = session ? session.csrf : '';
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    var response;
+    try { response = await fetch(apiOrigin + path, { method: method || 'GET', credentials: 'include', cache: 'no-store', headers: headers, body: body === undefined ? undefined : JSON.stringify(body), signal: keepalive ? undefined : AbortSignal.timeout(20000), keepalive: !!keepalive }); }
+    catch (e) { throw new Error('The connection was interrupted. Please try again.'); }
+    var data; try { data = await response.json(); } catch (e) { throw new Error('The library could not complete this request.'); }
+    if (!response.ok) {
+      if (response.status === 401) lock(false);
+      if (data.code === 'age_required' || data.code === 'access_expiring') lock(true);
+      var error = new Error(data.message || 'This request could not be completed.'); error.code = data.code; throw error;
+    }
+    return data;
+  }
+  function stopMedia() {
+    playerSequence++; clearTimeout(renewTimer); clearTimeout(expiryTimer);
+    if (hls) { hls.destroy(); hls = null; }
+    video.pause(); video.removeAttribute('src'); video.load(); current = null;
+  }
+  function closePlayer() { saveProgress(true); stopMedia(); if (dialog.open) dialog.close(); }
+  function lock(ageOnly) {
+    sequence++; clearTimeout(ageTimer); closePlayer(); items = []; view = 'all'; category = ''; page = 1; el('grid').replaceChildren(); el('categories').replaceChildren(); el('query').value = '';
+    document.querySelectorAll('[data-view]').forEach(function (b) { b.setAttribute('aria-selected',String(b.dataset.view === 'all')); });
+    el('library').hidden = true; el('gate').hidden = false; el('age-panel').hidden = !ageOnly; el('login-panel').hidden = !!ageOnly;
+    if (!ageOnly) { session = null; el('account').hidden = true; }
+    message('gate-status', ageOnly ? 'Verify your age to continue.' : 'Sign in to open your library.');
+  }
+  async function refreshSession() {
+    var data = await api('/api/session');
+    if (!data.authenticated) { lock(false); return; }
+    session = data; el('account').hidden = false; el('username').textContent = data.username;
+    el('age-label').textContent = data.minimumAge + '+';
+    if (!data.ageVerified) {
+      lock(true); el('verify-age').disabled = !data.ageEnabled;
+      el('age-copy').textContent = 'Verify that you are ' + data.minimumAge + ' or older to open the library. The verification service handles your identity check.';
+      message('gate-status', data.ageEnabled ? 'Complete the age check to continue.' : 'Age verification is being set up. The library stays closed until it is ready.');
+      return;
+    }
+    el('gate').hidden = true; el('library').hidden = false;
+    clearTimeout(ageTimer); ageTimer = setTimeout(function () { lock(true); }, Math.max(0, data.ageExpiresAt - Date.now()));
+    await loadCatalog();
+  }
+  async function loadCatalog() {
+    var seq = ++sequence; message('library-status', 'Loading your library…');
+    el('confirm-clear').hidden = true;
+    var params = new URLSearchParams({ q: el('query').value.trim(), category: category, view: view, page: String(page) });
+    try {
+      var data = await api('/api/catalog?' + params);
+      if (seq !== sequence) return;
+      items = data.items; pages = data.pages; el('grid').replaceChildren();
+      items.forEach(function (item) {
+        var card = node('article','video-card'), watch = node('button','watch'); watch.type = 'button'; watch.dataset.watch = item.id; watch.setAttribute('aria-label','Watch ' + item.title);
+        var poster = node('div','poster'), img = node('img');
+        var thumb = new URL(item.thumbnail);
+        if (thumb.protocol === 'https:' && /^[a-z0-9-]+\.b-cdn\.net$/.test(thumb.hostname)) img.src = thumb.href;
+        img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'strict-origin-when-cross-origin'; poster.append(img,node('span','runtime',clock(item.duration)));
+        var copy = node('div','card-copy'); copy.append(node('h2','',item.title)); watch.append(poster,copy);
+        var foot = node('div','card-foot'), favorite = node('button','star',item.favorite ? '★' : '☆'); favorite.type = 'button'; favorite.dataset.favorite = item.id; favorite.setAttribute('aria-pressed',String(item.favorite)); favorite.setAttribute('aria-label',(item.favorite ? 'Remove ' : 'Add ') + item.title + (item.favorite ? ' from favorites' : ' to favorites'));
+        foot.append(node('span','resume',item.position > 0 ? 'Resume at ' + clock(item.position) : 'Full length'),favorite);
+        card.append(watch,node('div','category',item.category),foot); el('grid').append(card);
+      });
+      el('categories').replaceChildren();
+      [''].concat(data.categories).forEach(function (name) { var button = node('button','chip',name || 'All categories'); button.type = 'button'; button.dataset.category = name; button.setAttribute('aria-pressed',String(category === name)); el('categories').append(button); });
+      el('empty').hidden = items.length !== 0;
+      el('empty-title').textContent = el('query').value || category ? 'No matches this time' : view === 'favorites' ? 'Keep your favorites close' : view === 'history' ? 'Pick up where you left off' : 'Your library is ready';
+      el('empty-copy').textContent = el('query').value || category ? 'Try a different search or category.' : view === 'favorites' ? 'Tap the star on a video to save it here.' : view === 'history' ? 'Videos you watch will appear here. You can clear this history whenever you like.' : 'Videos will appear here when licensed titles are added.';
+      el('history-tools').hidden = view !== 'history'; el('pager').hidden = pages < 2;
+      el('prev').disabled = page <= 1; el('next').disabled = page >= pages; el('page-label').textContent = page + ' / ' + pages;
+      el('library-sub').textContent = data.total + (data.total === 1 ? ' video' : ' videos') + ' in this view'; message('library-status','');
+    } catch (error) {
+      if (seq !== sequence) return;
+      el('grid').replaceChildren(); el('empty').hidden = false; el('empty-title').textContent = 'The library is unavailable'; el('empty-copy').textContent = error.message;
+      el('pager').hidden = true; message('library-status', error.message, true);
+    }
+  }
+  async function saveProgress(force) {
+    if (!current || busyProgress || (!force && Date.now() - lastProgress < 15000) || !Number.isFinite(video.currentTime) || video.currentTime <= 0) return;
+    busyProgress = true; lastProgress = Date.now();
+    try { await api('/api/videos/' + current + '/progress','PUT',{ position: video.currentTime }, force); }
+    catch (error) { if (current) el('player-status').textContent = 'Your last position could not be saved. ' + error.message; }
+    finally { busyProgress = false; }
+  }
+  async function openVideo(id, renewing) {
+    var seq = ++playerSequence, position = renewing ? video.currentTime : null, paused = renewing ? video.paused : true;
+    if (!renewing) { closePlayer(); seq = ++playerSequence; current = id; dialog.showModal(); el('player-title').textContent = 'Loading video…'; }
+    el('retry-player').hidden = true; el('player-status').textContent = renewing ? 'Refreshing playback access…' : 'Preparing your video…';
+    try {
+      var data = await api('/api/videos/' + id + '/playback','POST');
+      if (seq !== playerSequence || current !== id) return;
+      var source = new URL(data.url);
+      if (data.type !== 'hls' || source.protocol !== 'https:' || !/^[a-z0-9-]+\.b-cdn\.net$/.test(source.hostname) || source.origin !== data.mediaOrigin || data.expiresAt <= Date.now()) throw new Error('The provider returned invalid playback access.');
+      if (hls) { hls.destroy(); hls = null; }
+      video.pause(); video.removeAttribute('src'); video.load();
+      el('player-title').textContent = data.title;
+      var resume = position === null ? data.position : position;
+      video.onloadedmetadata = function () {
+        if (seq !== playerSequence) return;
+        if (Number.isFinite(video.duration) && resume > 0 && resume < video.duration - 5) video.currentTime = resume;
+        el('player-status').textContent = 'Press Play to watch. Your place is saved as you go.';
+        if (renewing && !paused) video.play().catch(function () { el('player-status').textContent = 'Tap Play to continue.'; });
+      };
+      if (video.canPlayType('application/vnd.apple.mpegurl')) video.src = source.href;
+      else if (window.Hls && window.Hls.isSupported()) {
+        hls = new window.Hls({ enableWorker: true, maxBufferLength: 30 });
+        hls.on(window.Hls.Events.ERROR, function (event, detail) { if (detail.fatal) { if (hls) hls.destroy(); hls = null; video.pause(); el('player-status').textContent = 'Playback stopped. Check your connection and retry.'; el('retry-player').hidden = false; } });
+        hls.loadSource(source.href); hls.attachMedia(video);
+      } else throw new Error('This browser cannot play HLS video. Try Safari on iPhone or a current browser.');
+      clearTimeout(renewTimer); clearTimeout(expiryTimer);
+      renewTimer = setTimeout(function () { openVideo(id,true); }, Math.max(1000,data.expiresAt - Date.now() - 30000));
+      expiryTimer = setTimeout(function () { stopMedia(); el('player-status').textContent = 'Playback access expired. Close the player and verify your age again.'; }, Math.max(0,data.expiresAt - Date.now()));
+    } catch (error) { if (seq === playerSequence) { video.pause(); el('player-status').textContent = error.message; el('retry-player').hidden = false; } }
+  }
+  el('login').addEventListener('submit',async function (event) {
+    event.preventDefault(); el('sign-in').disabled = true; message('gate-status','Signing in…');
+    try { await api('/api/login','POST',{ username: el('user').value, password: el('password').value }); el('password').value = ''; await refreshSession(); }
+    catch (error) { el('password').value = ''; message('gate-status',error.message,true); }
+    finally { el('sign-in').disabled = false; }
+  });
+  el('logout').addEventListener('click',async function () {
+    closePlayer();
+    try { await api('/api/logout','POST'); lock(false); }
+    catch (error) { message('gate-status',error.message,true); message('library-status','Sign-out could not be confirmed. Please retry.',true); }
+  });
+  el('verify-age').addEventListener('click',async function () {
+    el('verify-age').disabled = true; message('gate-status','Opening age verification…');
+    try { var data = await api('/api/age/start','POST'), target = new URL(data.url); if (target.origin !== 'https://age.yoti.com') throw new Error('The verification service returned an invalid link.'); window.top.location.href = target.href; }
+    catch (error) { message('gate-status',error.message,true); el('verify-age').disabled = false; }
+  });
+  async function checkAge() {
+    el('check-age').disabled = true; message('gate-status','Checking your verification…');
+    try { var data = await api('/api/age/check','POST'); if (data.verified) await refreshSession(); else message('gate-status',data.pending ? 'Your verification is still processing. Check again shortly.' : 'Your verification did not pass. Start a new age check.'); }
+    catch (error) { message('gate-status',error.message,true); }
+    finally { el('check-age').disabled = false; }
+  }
+  el('check-age').addEventListener('click',checkAge);
+  el('search').addEventListener('submit',function (event) { event.preventDefault(); page = 1; loadCatalog(); });
+  document.querySelectorAll('[data-view]').forEach(function (button) { button.addEventListener('click',function () { view = button.dataset.view; page = 1; document.querySelectorAll('[data-view]').forEach(function (b) { b.setAttribute('aria-selected',String(b === button)); }); loadCatalog(); }); });
+  el('categories').addEventListener('click',function (event) { var button = event.target.closest('[data-category]'); if (button) { category = button.dataset.category; page = 1; loadCatalog(); } });
+  el('grid').addEventListener('click',async function (event) {
+    var watch = event.target.closest('[data-watch]'); if (watch) { openVideo(watch.dataset.watch,false); return; }
+    var button = event.target.closest('[data-favorite]'); if (!button) return;
+    button.disabled = true;
+    try { await api('/api/videos/' + button.dataset.favorite + '/favorite',button.getAttribute('aria-pressed') === 'true' ? 'DELETE' : 'PUT'); await loadCatalog(); }
+    catch (error) { message('library-status',error.message,true); button.disabled = false; }
+  });
+  el('clear-history').addEventListener('click',function () { el('confirm-clear').hidden = false; });
+  el('confirm-clear').addEventListener('click',async function () { try { await api('/api/history','DELETE'); await loadCatalog(); } catch (error) { message('library-status',error.message,true); } });
+  el('prev').addEventListener('click',function () { if (page > 1) { page--; loadCatalog(); } });
+  el('next').addEventListener('click',function () { if (page < pages) { page++; loadCatalog(); } });
+  el('close-player').addEventListener('click',closePlayer);
+  dialog.addEventListener('cancel',function (event) { event.preventDefault(); closePlayer(); });
+  el('retry-player').addEventListener('click',function () { if (current) openVideo(current,true); });
+  video.addEventListener('timeupdate',function () { saveProgress(false); });
+  video.addEventListener('pause',function () { saveProgress(true); });
+  video.addEventListener('ended',function () { saveProgress(true); });
+  video.addEventListener('error',function () { if (current) { el('player-status').textContent = 'This video could not be played. Check your connection and retry.'; el('retry-player').hidden = false; } });
+  window.addEventListener('pagehide',function () { saveProgress(true); stopMedia(); });
+  document.addEventListener('visibilitychange',function () { if (document.hidden) saveProgress(true); else if (session && session.ageVerified && session.ageExpiresAt <= Date.now()) lock(true); });
+  (async function () {
+    if (!apiOrigin) { message('gate-status','The private library is being set up. Sign-in will be available when it is ready.'); return; }
+    try {
+      if (!validateOrigin(apiOrigin)) throw new Error('The library connection is not configured correctly.');
+      el('sign-in').disabled = false;
+      var callback = new URLSearchParams(location.search).has('sessionId');
+      if (callback) history.replaceState(null,'',location.pathname);
+      await refreshSession(); if (callback && session && !session.ageVerified) await checkAge();
+    } catch (error) { message('gate-status',error.message,true); }
+  }());
+}());
+</script>
+</body>
+</html>

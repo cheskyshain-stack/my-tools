@@ -1,7 +1,8 @@
 # Working on this project
 
 CJ Portal, the collection of small web tools at https://tools.cjaffa.com. One repo, one
-folder per tool, no backend and no build step. Read `README.md` for what the site is.
+folder per tool and no frontend build step. The private library has its own separate
+API in `xxx-api/`. Read `README.md` for what the site is.
 This file is about changing it.
 
 ## Ground rules
@@ -64,7 +65,7 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
 ## Layout of the repo
 
 - `index.html` at the root is a **shell**: a full-height iframe that loads `/home/` and
-  mirrors the iframe's path into the address bar with `pushState`, so Back and Forward
+  mirrors the iframe's path into the address bar with `replaceState`, so Back and Forward
   feel normal while each tool runs in its own document. A tool must also work when
   opened directly, since that is what a bookmark or a shared link does.
 - `home/index.html` is the portal page itself: logo, three swipeable tabs (Music, Tools,
@@ -83,6 +84,18 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
    full-screen pages use `.cj-float`, a small logo pinned to the top left.
 4. Add a card to the Tools or Games grid in `home/index.html`, matching the markup of the
    cards around it.
+
+### The private library
+
+`xxx/index.html` is a public login shell. Private data, actual age verification
+and licensed HLS authorization belong to the separate Node 24 API in `xxx-api/`.
+Read `xxx-api/README.md` before connecting it. Never place the API on this site's
+hostname, put provider keys in the page, seed production with test videos, or
+treat the hidden card or an age checkbox as security. Its public API-origin meta
+tag stays blank until backend, provider, rights and device checks have passed.
+The server currently supports only documented, worldwide, full-length custom
+HLS rights with no DRM requirement. Missing configuration or unsupported rights
+keep playback closed. `tests/xxx-api-test.mjs` and `tests/xxx-test.mjs` cover it.
 
 ### The PIN on Money Flow
 
@@ -399,6 +412,15 @@ max-age that a phone will stretch much further. When a change seems not to have 
 read the stamp before believing anything else.
 
 ## The shell frame and the address bar
+
+The iframe's own navigation creates the browser history entry. The shell mirrors
+its path with `replaceState` only, and lets native history restore the iframe on
+Back and Forward. Do not add a parent `pushState` or set `iframe.src` from a
+`popstate` handler: the former duplicates the entry and the latter clears Forward
+history. Measured in Chromium against the original shell: opening Braille created
+four history entries and Forward stayed on Home; with native history it creates
+three and Forward restores `/braille/`. The private library suite checks both
+directions and measures the iframe's viewport fit.
 
 The root `index.html` is an iframe shell and the outer document is `overflow: hidden`,
 so **the frame must never be taller than what is on screen**. Anything past the bottom

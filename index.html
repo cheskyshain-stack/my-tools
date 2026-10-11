@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-  <iframe id="shellFrame" src="/home/" title="CJ Portal"></iframe>
+  <iframe id="shellFrame" src="/home/" title="CJ Portal" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>
 
 <script>
 /* The frame must be exactly as tall as what the person can see.
@@ -63,33 +63,20 @@ const iframe = $("shellFrame");
 /* ===== URL mirroring so Back/Forward stay inside the shell =====
    Sub-pages navigate the iframe on their own (normal <a> clicks work as
    usual inside it); this just mirrors the iframe's URL into the real
-   address bar with pushState/replaceState, and mirrors it back on
-   Back/Forward via popstate - so the browser's own history controls feel
-   normal while every page keeps running in its own isolated document. */
-let firstLoad = true;
-let suppressPush = false;
+   address bar with replaceState. An iframe navigation already creates a
+   browser history entry. Adding a parent pushState creates a duplicate,
+   and setting iframe.src during Back erases the browser's Forward entry.
+   Let native iframe history restore the document, then mirror its path. */
 
 iframe.addEventListener("load", () => {
   try{
     const path = iframe.contentWindow.location.pathname;
     const displayPath = path === "/home/" ? "/" : path;
-    if (suppressPush){
-      suppressPush = false;
-    } else if (firstLoad){
-      history.replaceState({ cjPath: path }, "", displayPath);
-    } else {
-      history.pushState({ cjPath: path }, "", displayPath);
-    }
-    firstLoad = false;
+    history.replaceState({ cjPath: path }, "", displayPath);
     if (iframe.contentDocument && iframe.contentDocument.title) document.title = iframe.contentDocument.title;
   }catch(e){ /* same-origin always expected; ignore defensively */ }
 });
 
-window.addEventListener("popstate", (e) => {
-  const target = (e.state && e.state.cjPath) || "/home/";
-  suppressPush = true;
-  iframe.src = target;
-});
 </script>
 </body>
 </html>
