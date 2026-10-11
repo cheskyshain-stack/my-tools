@@ -6,6 +6,7 @@ JavaScript, one folder per tool and no frontend build step. The private video
 library at `/xxx/` is accessible by direct link only, with no home navigation card.
 It uses a separate authenticated API; its deployment and licensing
 requirements are documented in `xxx-api/README.md`.
+Cloudflare Workers and D1 hosting is supported in `xxx-api/cloudflare/`.
 
 ## How it is published
 

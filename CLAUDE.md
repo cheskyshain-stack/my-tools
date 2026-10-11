@@ -89,6 +89,9 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
 
 `xxx/index.html` is a public login shell. Private data, actual age verification
 and licensed HLS authorization belong to the separate Node 24 API in `xxx-api/`.
+`xxx-api/cloudflare/` provides a Workers and D1 deployment option with the same
+shared API policy and providers. It uses its own API hostname and does not alter
+the main site's DNS-only GitHub Pages record. Read its README before deploying.
 Read `xxx-api/README.md` before connecting it. Never place the API on this site's
 hostname, put provider keys in the page, seed production with test videos, or
 treat the absence of a navigation card or an age checkbox as security. The library

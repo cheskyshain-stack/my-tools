@@ -66,7 +66,7 @@ test('authenticated API enforces age, ownership, licenses, expiry and upstream f
       const request = JSON.parse(options.body), id = randomUUID(); ageSessions.set(id,request.reference_id);
       assert.equal(request.type,'OVER'); assert.equal(request.doc_scan.authenticity,'AUTO');
       assert.equal(request.callback.url,'https://tools.cjaffa.com/xxx/');
-      assert.equal(options.redirect,'error');
+      assert.equal(options.redirect,'manual');
       return Response.json({ id });
     }
     if (url.includes('/result')) {

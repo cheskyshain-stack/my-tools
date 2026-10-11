@@ -1,28 +1,11 @@
 import { DatabaseSync } from 'node:sqlite';
-import { randomBytes, randomUUID, scrypt, timingSafeEqual, createHash } from 'node:crypto';
-import { promisify } from 'node:util';
+import { randomUUID } from 'node:crypto';
+import { hashPassword } from './security.mjs';
+export { digest, token, hashPassword, verifyPassword } from './security.mjs';
+import { licenseValues } from './license.mjs';
+export { allowedLicense } from './license.mjs';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-
-const derive = promisify(scrypt);
-const KDF = { N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
-export const digest = value => createHash('sha256').update(value).digest('hex');
-export const token = () => randomBytes(32).toString('base64url');
-
-export async function hashPassword(password) {
-  if (typeof password !== 'string' || password.length < 14 || password.length > 256) throw new Error('Use a password of 14 to 256 characters.');
-  const salt = randomBytes(16).toString('hex');
-  const hash = await derive(password, salt, 32, KDF);
-  return `${salt}:${hash.toString('hex')}`;
-}
-
-export async function verifyPassword(password, stored) {
-  if (typeof password !== 'string' || password.length > 256) return false;
-  const [salt, expected] = stored.split(':');
-  const actual = await derive(password, salt, 32, KDF);
-  const bytes = Buffer.from(expected, 'hex');
-  return bytes.length === actual.length && timingSafeEqual(actual, bytes);
-}
 
 export function openStore(path) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
@@ -45,24 +28,12 @@ export async function createUser(db, username, password) {
 }
 
 export function importLicense(db, item) {
-  if (!item || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.providerVideoId || '')) throw new Error('A Bunny video UUID is required.');
-  const starts = Date.parse(item.startsAt), ends = Date.parse(item.endsAt);
-  if (!Number.isFinite(starts) || !Number.isFinite(ends) || ends <= starts) throw new Error('Explicit, valid license dates are required.');
-  if (typeof item.licenseReference !== 'string' || item.licenseReference.length < 3 || item.licenseReference.length > 200) throw new Error('A license evidence reference is required.');
-  if (typeof item.category !== 'string' || !item.category.trim() || item.category.length > 60) throw new Error('A category of up to 60 characters is required.');
-  if (!Array.isArray(item.countries) || !item.countries.length || item.countries.length > 250 || item.countries.some(c => c !== '*' && !/^[A-Z]{2}$/.test(c)) || (item.countries.includes('*') && item.countries.length !== 1)) throw new Error('Use ISO country codes, or ["*"] for documented worldwide rights.');
-  if (typeof item.fullLengthAuthorized !== 'boolean' || typeof item.nativeHlsAuthorized !== 'boolean' || typeof item.drmRequired !== 'boolean') throw new Error('Explicit full-length, native-HLS and DRM declarations are required.');
+  const values = licenseValues(item);
   const existing = db.prepare('SELECT id FROM licenses WHERE provider_id=?').get(item.providerVideoId.toLowerCase());
   if (!existing && db.prepare('SELECT COUNT(*) AS count FROM licenses').get().count >= 500) throw new Error('This adapter supports at most 500 licensed titles.');
   const id = existing?.id || randomUUID();
-  db.prepare(`INSERT INTO licenses VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET reference=excluded.reference,category=excluded.category,starts=excluded.starts,ends=excluded.ends,countries=excluded.countries,full_length=excluded.full_length,native_hls=excluded.native_hls,drm_required=excluded.drm_required`).run(id, item.providerVideoId.toLowerCase(), item.licenseReference, item.category.trim(), starts, ends, JSON.stringify([...new Set(item.countries)]), Number(item.fullLengthAuthorized), Number(item.nativeHlsAuthorized), Number(item.drmRequired));
+  db.prepare(`INSERT INTO licenses VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET reference=excluded.reference,category=excluded.category,starts=excluded.starts,ends=excluded.ends,countries=excluded.countries,full_length=excluded.full_length,native_hls=excluded.native_hls,drm_required=excluded.drm_required`).run(id, ...values);
   return id;
-}
-
-export function allowedLicense(row, now = Date.now()) {
-  // This adapter supports worldwide rights only. Regional rights stay closed until
-  // a trusted geolocation/entitlement adapter exists; a browser country is not proof.
-  return !!row && row.starts <= now && row.ends > now && row.full_length === 1 && row.native_hls === 1 && row.drm_required === 0 && row.countries === '["*"]';
 }
 
 export function takeLimit(db, key, maximum, seconds, now = Date.now()) {

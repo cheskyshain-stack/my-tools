@@ -18,6 +18,14 @@ No fixture, account or forced age result is used in production. The live provide
 accounts and an actual iPhone Safari still need verification before activation.
 Deployment instructions and limits are in `../xxx-api/README.md`.
 
+For Cloudflare, run `npm ci` and `npm test` in `../xxx-api/cloudflare/`.
+This bundles the Worker and runs `xxx-worker-test.mjs` against the real workerd
+runtime and local D1. It checks login, secure cookies, age/provider binding,
+per-user state, signing, redirect denial, account/password revocation, schema
+validation, deletion cascades and concurrent rate limits. It uses synthetic
+providers and does not require a Cloudflare account. Actual deployed Worker CPU
+and provider/device verification still need checking before frontend activation.
+
 ## Existing Horizon suites
 
 Browser tests, because every bug in this repo that mattered was a browser bug. They

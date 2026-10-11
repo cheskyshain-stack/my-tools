@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cj-private-api",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "portal-api.cjaffa.com", "custom_domain": true }],
+  "vars": {
+    "PORTAL_ORIGIN": "https://tools.cjaffa.com",
+    "API_ORIGIN": "https://portal-api.cjaffa.com",
+    "MINIMUM_AGE": "18",
+    "BUNNY_CUSTOM_HLS_APPROVED": "false"
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "cj-private",
+    "database_id": "00000000-0000-0000-0000-000000000000",
+    "migrations_dir": "migrations"
+  }],
+  "limits": { "cpu_ms": 1000 },
+  "observability": { "enabled": false },
+  "triggers": { "crons": ["*/15 * * * *"] }
+}

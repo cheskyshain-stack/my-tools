@@ -15,3 +15,7 @@ xxx-api/.env
 xxx-api/*.sqlite*
 xxx-api/*.db*
 xxx-api/licenses/
+xxx-api/cloudflare/node_modules/
+xxx-api/cloudflare/.dev.vars*
+xxx-api/cloudflare/.env*
+xxx-api/cloudflare/private/

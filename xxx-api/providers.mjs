@@ -6,7 +6,9 @@ export class ServiceError extends Error {
 
 async function getJson(fetcher, url, options) {
   let response;
-  try { response = await fetcher(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(10000) }); }
+  // Workers supports manual/follow, not error. Reject all non-success responses
+  // below, including redirects, so credentials never follow an upstream redirect.
+  try { response = await fetcher(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(10000) }); }
   catch { throw new ServiceError(502, 'provider_unavailable', 'The provider is temporarily unavailable. Try again later.'); }
   if (!response.ok) throw new ServiceError(502, 'provider_unavailable', 'The provider could not complete this request.');
   // Do not reflect upstream errors, credentials, headers or signed URLs into logs.

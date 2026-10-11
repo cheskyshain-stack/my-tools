@@ -64,6 +64,10 @@ Verified primary documentation:
 
 ## Deploy the separate API
 
+For Cloudflare hosting, use [the Workers and D1 deployment option](cloudflare/README.md).
+It shares the API policy and providers with this server, uses a new API hostname,
+and preserves the existing GitHub Pages site. The instructions below cover Linux.
+
 Use a Linux server with Node **24 LTS**, Caddy, HTTPS and persistent storage.
 The API has no npm dependencies or build step. `node:sqlite` requires this
 Node version. A server account and DNS access are necessary; neither was
@@ -73,7 +77,7 @@ attached to the development environment.
    point only that hostname to the API server. Do not change `tools` DNS or
    the GitHub Pages configuration. A `workers.dev` origin is unsuitable for
    this cookie-based API because Safari restricts cross-site cookies.
-2. Copy `server.mjs`, `store.mjs`, `providers.mjs` and `admin.mjs` to
+2. Copy all root-level `.mjs` files in `xxx-api/` to
    `/opt/cj-private`. Create the `cj-private` service user and
    `/var/lib/cj-private`, owned by that user and mode `0700`.
 3. Copy `.env.example` to `/etc/cj-private.env`, owned by root, mode `0600`.
