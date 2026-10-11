@@ -87,7 +87,7 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
 
 ### The private library
 
-`xxx/index.html` is a public login shell. Private data, actual age verification
+`333/index.html` is a public login shell. Private data, actual age verification
 and licensed HLS authorization belong to the separate Node 24 API in `xxx-api/`.
 `xxx-api/cloudflare/` provides a Workers and D1 deployment option with the same
 shared API policy and providers. It uses its own API hostname and does not alter

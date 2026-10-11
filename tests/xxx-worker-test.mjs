@@ -38,7 +38,7 @@ test('real Workers runtime and D1 enforce private access, age and per-user playb
       if (fail) return new Response('private upstream error',{ status:403 });
       if (request.url.endsWith('/sessions')) {
         const input = await request.json(), id = randomUUID(); ages.set(id,input.reference_id);
-        assert.equal(input.callback.url,portal + '/xxx/');
+        assert.equal(input.callback.url,portal + '/333/');
         return Response.json({ id });
       }
       if (request.url.includes('/result')) {

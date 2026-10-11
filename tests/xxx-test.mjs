@@ -38,7 +38,7 @@ const staticServer = http.createServer((request,response) => {
   const file = resolve(root,'.' + decodeURIComponent(path) + (path.endsWith('/') ? 'index.html' : ''));
   if (!file.startsWith(root + '/') || !existsSync(file)) { response.writeHead(404); return response.end(); }
   let data = readFileSync(file);
-  if (file === join(root,'xxx/index.html')) data = Buffer.from(data.toString().replace('name="cj-portal-api" content=""',`name="cj-portal-api" content="${config.apiOrigin}"`).replace("connect-src 'self'",`connect-src 'self' ${config.apiOrigin}`));
+  if (file === join(root,'333/index.html')) data = Buffer.from(data.toString().replace('name="cj-portal-api" content=""',`name="cj-portal-api" content="${config.apiOrigin}"`).replace("connect-src 'self'",`connect-src 'self' ${config.apiOrigin}`));
   const type = ({ '.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png' })[extname(file)] || 'application/octet-stream';
   response.writeHead(200,{ 'Content-Type':type,'Cache-Control':'no-store' }); response.end(data);
 });
@@ -47,6 +47,7 @@ await new Promise(resolve => staticServer.listen(port,'127.0.0.1',resolve));
 const browser = await launch({ args:['--no-sandbox'] });
 let checks = 0;
 try {
+  assert.equal((await fetch(origin + '/xxx/')).status,404); checks++;
   for (const [width,height] of [[375,667],[393,852],[412,839],[1280,900]]) {
     const context = await browser.newContext({ viewport:{ width,height },hasTouch:width < 500,isMobile:width < 500 });
     const errors = [], mediaRequests = [];
@@ -71,7 +72,7 @@ try {
     const page = await context.newPage();
     page.on('pageerror',e => errors.push(e.message)); page.on('console',msg => { if (msg.type() === 'error') errors.push(msg.text()); });
     const measure = async (scope = page) => scope.evaluate(() => ({ overflow:document.documentElement.scrollWidth - document.documentElement.clientWidth,wide:[...document.querySelectorAll('button,input,header,article')].filter(n => n.getBoundingClientRect().right > innerWidth + 1 && n.getBoundingClientRect().width > 0).map(n => n.id || n.tagName),cardWidths:[...document.querySelectorAll('.video-card')].slice(0,2).map(n => Math.round(n.getBoundingClientRect().width)) }));
-    await page.goto(origin + '/xxx/',{ waitUntil:'networkidle' });
+    await page.goto(origin + '/333/',{ waitUntil:'networkidle' });
     await page.waitForFunction(() => !document.getElementById('sign-in').disabled);
     assert.equal(await page.locator('#library').isVisible(),false); checks++;
     assert.equal(await page.locator('#grid img').count(),0); checks++;
@@ -83,12 +84,12 @@ try {
     assert.equal((await measure()).overflow,0); checks++;
     await page.locator('#verify-age').click(); await page.waitForURL('https://age.yoti.com/**');
     const sessionId = new URL(page.url()).searchParams.get('sessionId');
-    await page.goto(origin + '/xxx/?sessionId=' + sessionId);
+    await page.goto(origin + '/333/?sessionId=' + sessionId);
     await page.locator('#library').waitFor({ state:'visible' }); await page.locator('.video-card').first().waitFor();
     assert.equal(await page.locator('.video-card').count(),24); checks++;
     assert.equal(await page.locator('#grid img[onerror]').count(),0); checks++;
     assert.match(await page.locator('.card-copy h2').first().innerText(),/<img/); checks++;
-    assert.equal(page.url(),origin + '/xxx/'); checks++;
+    assert.equal(page.url(),origin + '/333/'); checks++;
     const dimensions = await measure(); assert.equal(dimensions.overflow,0); checks++;
     assert.deepEqual(dimensions.wide,[]); checks++;
     console.log(`  ${width}px library: overflow ${dimensions.overflow}px, card widths ${dimensions.cardWidths.join(', ')}px`);
@@ -135,27 +136,27 @@ try {
     await page.goto(origin + '/');
     const frame = page.frameLocator('#shellFrame');
     await frame.locator('.tab[data-page="1"]').click();
-    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
+    assert.equal(await frame.locator('a[href="/333/"]').count(),0); checks++;
     await frame.locator('#secretLogo').click({ clickCount:3 });
-    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
+    assert.equal(await frame.locator('a[href="/333/"]').count(),0); checks++;
     assert.equal(await frame.locator('a[href="/qwikpen/"]').isVisible(),true); checks++;
     await page.reload();
     await frame.locator('a[href="/school/"]').waitFor({ state:'visible' });
-    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
+    assert.equal(await frame.locator('a[href="/333/"]').count(),0); checks++;
     const home = page.frames().find(f => f !== page.mainFrame() && f.url().includes('/home/'));
     assert.equal((await measure(home)).overflow,0); checks++;
     // Direct navigation still works without a link in the site's navigation.
-    await frame.locator('body').evaluate(() => { location.href = '/xxx/'; });
-    await page.waitForURL(origin + '/xxx/');
+    await frame.locator('body').evaluate(() => { location.href = '/333/'; });
+    await page.waitForURL(origin + '/333/');
     await frame.locator('#login-panel').waitFor({ state:'visible' }); checks++;
-    const child = page.frames().find(f => f !== page.mainFrame() && f.url().includes('/xxx/'));
+    const child = page.frames().find(f => f !== page.mainFrame() && f.url().includes('/333/'));
     assert.equal((await measure(child)).overflow,0); checks++;
     const shell = await page.locator('#shellFrame').evaluate(n => ({ bottom:n.getBoundingClientRect().bottom,visible:visualViewport.height }));
     assert.ok(Math.abs(shell.bottom - shell.visible) < 1); checks++;
     assert.match(await page.locator('#shellFrame').getAttribute('allow'),/fullscreen/); checks++;
     await page.goBack(); await page.waitForURL(origin + '/');
     await frame.locator('#secretLogo').waitFor({ state:'visible' }); checks++;
-    await page.goForward(); await page.waitForURL(origin + '/xxx/');
+    await page.goForward(); await page.waitForURL(origin + '/333/');
     await frame.locator('#login-panel').waitFor({ state:'visible' }); checks++;
     assert.deepEqual(errors,[]); checks++;
     await context.close();

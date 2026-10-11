@@ -65,7 +65,7 @@ export function yotiAdapter(config, fetcher = fetch) {
     configured,
     async start(reference) {
       if (!configured) throw new ServiceError(503, 'age_unconfigured', 'Age verification is not connected yet.');
-      const callback = `${config.portalOrigin}/xxx/`;
+      const callback = `${config.portalOrigin}/333/`;
       const data = await getJson(fetcher, 'https://age.yoti.com/api/v1/sessions', {
         method: 'POST', headers,
         body: JSON.stringify({ type: 'OVER', ttl: 900, reference_id: reference, digital_id: { allowed: true, threshold: config.minimumAge, retry_limit: 1 }, doc_scan: { allowed: true, threshold: config.minimumAge, authenticity: 'AUTO', level: 'PASSIVE', retry_limit: 1 }, callback: { auto: true, url: callback }, cancel_url: callback, synchronous_checks: true })

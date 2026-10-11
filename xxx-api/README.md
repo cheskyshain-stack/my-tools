@@ -1,6 +1,6 @@
 # Private Library deployment
 
-The frontend lives at `https://tools.cjaffa.com/xxx/`. It is a public login shell,
+The frontend lives at `https://tools.cjaffa.com/333/`. It is a public login shell,
 with no catalog, thumbnails, credentials or user records bundled into it. All
 private data and playback authorization come from this separate API.
 
@@ -94,7 +94,7 @@ attached to the development environment.
    review. The API read key and CDN signing key are different credentials.
 5. Configure your Yoti organization, SDK and API key. Set the minimum age to
    the applicable policy, at least 18. Confirm its hosted ID methods and consent
-   requirements for your audience. The callback is `https://tools.cjaffa.com/xxx/`.
+   requirements for your audience. The callback is `https://tools.cjaffa.com/333/`.
    There is no self-attestation or test-verification fallback in production.
 6. Install `cj-private.service`, then run `systemctl daemon-reload` and
    `systemctl enable --now cj-private`. The API listens only on
@@ -142,9 +142,9 @@ attached to the development environment.
    seeking, resume, logout and unsigned-media denial. Test on an actual iPhone
    Safari and Android device before enabling the production connection.
 10. Set only the public API origin in the `cj-portal-api` meta tag in
-    `xxx/index.html`. Keep the API's `PORTAL_ORIGIN` at
+    `333/index.html`. Keep the API's `PORTAL_ORIGIN` at
     `https://tools.cjaffa.com`. Run the tests, pull `main`, commit and publish
-    through the existing GitHub Pages branch workflow. Confirm `/xxx/` serves
+    through the existing GitHub Pages branch workflow. Confirm `/333/` serves
     the new bytes with a cache-buster. The blank meta tag is intentional until
     the backend is ready: sign-in and playback remain unavailable.
 
@@ -207,7 +207,7 @@ These fixtures do not verify a live provider account or iPhone hardware.
 
 The vendored hls.js file has SHA-256
 `7c47cd97d7a6e7b98d9623dd8ed9a6d45af4be4085e0c2001cd7175c2b4cfb07`.
-Its upstream license is included at `xxx/HLS-LICENSE`. Keep the version pinned
+Its upstream license is included at `333/HLS-LICENSE`. Keep the version pinned
 and review updates before replacing it.
 
 For an isolated manual backend test, `PORTAL_LOCAL=true` accepts only loopback

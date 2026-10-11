@@ -4,6 +4,7 @@ This option runs only the private API on Cloudflare Workers, with accounts,
 sessions, licensed-title records, favorites and history in D1. The frontend and
 all existing routes stay on GitHub Pages. Use a new Custom Domain such as
 `portal-api.cjaffa.com`. Keep `tools.cjaffa.com` DNS-only, with its existing CNAME.
+The frontend and Yoti return address are `https://tools.cjaffa.com/333/`.
 There is no home navigation card for the library.
 
 The Worker shares `../application.mjs`, provider adapters, origin checks, age

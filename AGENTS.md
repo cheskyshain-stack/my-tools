@@ -27,7 +27,7 @@ document. `home/index.html` is the tool list that the shell opens by default.
 | --- | --- |
 | Visible tools | groceries, qr-code, braille, stopwatch, horizon, music, chess, sudoku, tic-tac-toe |
 | Hidden tools | budget, qwikpen, finances, school |
-| Direct link only | xxx (authenticated private library, no home card) |
+| Direct link only | 333 (authenticated private library, no home card) |
 | Other | admin (the music catalogue editor, PAT-gated), maaser |
 
 A hidden tool carries `class="hidden-tool"` on its card and appears only after a
