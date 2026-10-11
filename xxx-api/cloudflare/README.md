@@ -15,7 +15,24 @@ Read [content authorization and provider requirements](../README.md) first.
 
 ## Connect the account
 
-In Cloudflare, create a scoped API token for the account owning `cjaffa.com`.
+Wrangler can use a browser-approved OAuth login in the workspace that performs
+deployment. A desktop login stays on that computer; it does not authorize a
+separate cloud task. In a remote workspace, run:
+
+```sh
+npx wrangler login --device --browser=false --scopes account:read user:read workers_scripts:write workers_routes:write d1:write zone:read
+```
+
+Open the verification page printed by Wrangler, enter the current code and
+approve within five minutes. Start from a fresh verification page if the code
+expires. Confirm the account with `npx wrangler whoami`. On a local computer,
+`npx wrangler login` also supports a browser and localhost callback.
+Wrangler stores the login outside the repository; do not copy its credentials
+into source files or print them. The tracked configuration selects the verified
+account and D1 database for this portal.
+
+For environment-secret authentication or the administrator CLI, create a scoped
+API token in Cloudflare for the account owning `cjaffa.com`.
 Use Account permissions Workers Scripts Edit and D1 Edit. For the `cjaffa.com`
 zone, grant Zone Read, Workers Routes Edit and DNS Edit for the new hostname.
 Restrict resources to that account and zone. Existing unrelated Worker tokens
@@ -42,13 +59,15 @@ Run in `xxx-api/cloudflare/`, using Node 24 for deployment tooling:
 ```sh
 npm ci
 npm test
-npx wrangler d1 create cj-private
+npx wrangler d1 migrations list cj-private --remote
 ```
 
-Keep the database UUID returned by Cloudflare. Replace only the zero UUID in
-`wrangler.jsonc` with it, and provision `CLOUDFLARE_D1_DATABASE_ID`. Account and
-database IDs are configuration, not API keys. The configuration intentionally
-has no `tools.cjaffa.com` route and no `workers.dev` or preview URL.
+The existing `cj-private` database is already bound in `wrangler.jsonc`. Reuse it.
+Create a database only when provisioning a separate installation, then explicitly
+update that installation's account and database IDs. For the administrator CLI,
+provision `CLOUDFLARE_D1_DATABASE_ID` with the configured database UUID. Account and
+database IDs are configuration, not API keys. There is no `tools.cjaffa.com` route,
+`workers.dev` address or preview URL in this configuration.
 
 ```sh
 npm run migrate
@@ -69,6 +88,17 @@ and observability are disabled in the supplied configuration to avoid capturing
 passwords, cookies, verification evidence or signed media URLs.
 
 ## Create your login
+
+Deployment checkpoint, 2026-10-11: Cloudflare OAuth authorization and ownership
+of `cjaffa.com` were verified. The existing D1 database has schema version 1 and
+no login accounts or licensed-title records. The Worker build passed, but the
+upload was rejected with Cloudflare error `100328` because the Free plan does
+not support the configured CPU limit. The API is not live and the frontend API
+meta tag remains blank. The account owner must enable a suitable Workers plan
+before retrying deployment; this does not require changing the main website's
+plan or DNS record. [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)
+and [CPU limits](https://developers.cloudflare.com/workers/platform/limits/)
+describe the subscription and resource requirements.
 
 Account creation is available through the administrator CLI, not a public web
 endpoint. The CLI uses Cloudflare's authenticated D1 API with bound parameters:
@@ -147,6 +177,7 @@ or overwriting unrelated GitHub Pages changes.
 
 Verified documentation:
 
+- [Wrangler OAuth login](https://developers.cloudflare.com/workers/wrangler/commands/general/#login).
 - [Workers Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 - [D1 bindings](https://developers.cloudflare.com/d1/worker-api/d1-database/) and
   [migrations](https://developers.cloudflare.com/d1/reference/migrations/).

@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cj-private-api",
+  "account_id": "04b085d9f19ac1ba6d333e0006fc94c1",
   "main": "worker.mjs",
   "compatibility_date": "2026-10-11",
   "compatibility_flags": ["nodejs_compat"],
@@ -16,7 +17,7 @@
   "d1_databases": [{
     "binding": "DB",
     "database_name": "cj-private",
-    "database_id": "00000000-0000-0000-0000-000000000000",
+    "database_id": "101d892a-319f-42ac-bb34-ab9880605e4d",
     "migrations_dir": "migrations"
   }],
   "limits": { "cpu_ms": 1000 },
