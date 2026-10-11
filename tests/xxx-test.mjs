@@ -135,9 +135,18 @@ try {
     await page.goto(origin + '/');
     const frame = page.frameLocator('#shellFrame');
     await frame.locator('.tab[data-page="1"]').click();
-    assert.equal(await frame.locator('a[href="/xxx/"]').isVisible(),false); checks++;
+    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
     await frame.locator('#secretLogo').click({ clickCount:3 });
-    await frame.locator('a[href="/xxx/"]').click(); await page.waitForURL(origin + '/xxx/');
+    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
+    assert.equal(await frame.locator('a[href="/qwikpen/"]').isVisible(),true); checks++;
+    await page.reload();
+    await frame.locator('a[href="/school/"]').waitFor({ state:'visible' });
+    assert.equal(await frame.locator('a[href="/xxx/"]').count(),0); checks++;
+    const home = page.frames().find(f => f !== page.mainFrame() && f.url().includes('/home/'));
+    assert.equal((await measure(home)).overflow,0); checks++;
+    // Direct navigation still works without a link in the site's navigation.
+    await frame.locator('body').evaluate(() => { location.href = '/xxx/'; });
+    await page.waitForURL(origin + '/xxx/');
     await frame.locator('#login-panel').waitFor({ state:'visible' }); checks++;
     const child = page.frames().find(f => f !== page.mainFrame() && f.url().includes('/xxx/'));
     assert.equal((await measure(child)).overflow,0); checks++;

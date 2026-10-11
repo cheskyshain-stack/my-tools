@@ -91,7 +91,9 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
 and licensed HLS authorization belong to the separate Node 24 API in `xxx-api/`.
 Read `xxx-api/README.md` before connecting it. Never place the API on this site's
 hostname, put provider keys in the page, seed production with test videos, or
-treat the hidden card or an age checkbox as security. Its public API-origin meta
+treat the absence of a navigation card or an age checkbox as security. The library
+is accessible by direct link only and has no home card, even when hidden tools
+are revealed. Its public API-origin meta
 tag stays blank until backend, provider, rights and device checks have passed.
 The server currently supports only documented, worldwide, full-length custom
 HLS rights with no DRM requirement. Missing configuration or unsupported rights

@@ -162,8 +162,8 @@ clips, all confined to tests. No real catalog or media files ship with the porta
 
 The HTML uses a script-hash CSP, a restricted media/connect policy and no inline
 event handlers. GitHub Pages cannot provide a private HTML response or custom
-security headers for this folder. The server is the security boundary; hiding
-the home card, `noindex`, and the frontend gates are presentation controls.
+security headers for this folder. The server is the security boundary; the absence
+of a navigation card, `noindex`, and the frontend gates are presentation controls.
 The iframe explicitly allows fullscreen and picture-in-picture without changing
 its viewport sizing or routes. The shell now mirrors native iframe navigation
 with `replaceState`, avoiding the duplicate entry and lost Forward history found
@@ -196,7 +196,8 @@ frontend/API servers, generates a 60-second color-bar HLS clip, exercises the re
 application and API with synthetic provider responses, and removes its database
 and media afterwards. It checks authentication and age gates, search, categories,
 pagination, favorites, persisted history, real HLS decoding, access renewal,
-escaping, logout, the hidden home card, Back/Forward and viewport geometry. Use a **new port
+escaping, logout, absence from home navigation even with hidden tools revealed,
+Back/Forward and viewport geometry. Use a **new port
 on every rerun**, for example `CJ_XXX_PORT=8865`; the API uses the next port.
 These fixtures do not verify a live provider account or iPhone hardware.
 
