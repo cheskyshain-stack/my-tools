@@ -337,6 +337,28 @@ and puts sunrise back three hours. Flat country is where this feature does nothi
   follows the visible horizon or mishor is a machlokes and almost every printed luach uses
   sea level, so the page says so in as many words and looks nothing like the shul's boards.
   Do not quietly promote the terrain row to the headline.
+- **Feet and miles are the default, and metres are the storage.** `state.units` only ever
+  changes what is printed: `state.elev` and `state.eye` stay in metres, and
+  `heightDisplays` remembers the strings on screen so switching units, changing the date or
+  refreshing cannot walk the canonical elevation through repeated rounding. A stored metric
+  height from before the switch is carried forward, and the test suite's original physical
+  cases ask for metres by name so they keep testing the same numbers.
+- **The time zone follows the location, and the day does too.** `tzlookup` is tz-lookup
+  6.1.25 vendored into the page (CC0-1.0, one minified function), so the zone comes off the
+  coordinates with no request; `Intl` then applies daylight saving. Picking a zone by hand
+  sets `tzMode = "manual"` and shows a button that hands it back to the location. `todayStr`
+  is **today where the location is**, not where the browser is: at 23:25 UTC looking at
+  Chamonix it is already tomorrow there. A test of mine asserted otherwise and the test was
+  what was wrong.
+- **The skyline time is the headline and sea level is the comparison under it**, with the
+  three-row table behind a `<details>`. The coordinates and the two height boxes are behind
+  `#locationControls` > `#settings` as well, since the ordinary way in is an address. The
+  layout suite asserts both headline times are on the first phone screen at 375, 393, 412
+  and 1280px. Recent searches are their own list, up to ten, deduped on coordinates to five
+  decimals, each removable.
+- **`horizon/DEVELOPING.md` is the standalone handover for this tool**: the same ground as
+  this section plus the file map, the storage shape, the test table and the limits, written
+  so somebody who has never seen the repo can pick it up. Keep the two in step.
 - Testing needs real tiles and this container's browser has no route to AWS, so
   `horizon-test.mjs` intercepts the tile requests and serves bytes fetched with curl,
   which does get out. Fetch them with **async** `execFile`: a synchronous curl inside a

@@ -2,7 +2,7 @@
 
 A handover for an agent picking this repo up for the first time.
 
-**`CLAUDE.md`, beside this file, is the real specification.** It is 570 lines and it is
+**`CLAUDE.md`, beside this file, is the real specification.** It is nearly 600 lines and it is
 written for exactly this purpose: it says why each decision was made, which alternatives
 were tried and rejected, and which bugs each piece of apparently odd code is there to
 prevent. Read it before changing anything. This file is the orientation; that one is the
@@ -58,7 +58,7 @@ landed in the repo; the live site follows a minute or so later.
 
 ## Testing
 
-`tests/` holds six Playwright suites, 129 checks. `tests/README.md` explains how to run
+`tests/` holds ten Playwright suites, 712 checks. `tests/README.md` explains how to run
 them and, more importantly, which bug each one exists to prevent. Run the ones touching
 what you changed, and read that list before deleting an assertion that looks redundant.
 
@@ -75,7 +75,8 @@ page and a false pass. That has produced false confidence here more than once.
 
 `horizon/` (Netz & Shkiya) computes sunrise and sunset three ways: at sea level, with the
 observer's elevation, and against the real terrain horizon read from elevation tiles. It
-is by far the most intricate tool here and `CLAUDE.md` has a long section on it. Four
+is by far the most intricate tool here. `CLAUDE.md` has a long section on it and
+`horizon/DEVELOPING.md` is a full standalone handover for that tool alone. Five
 hard-won points:
 
 - **Refraction is applied twice, in different places, on purpose.** The ray from a ridge
@@ -90,6 +91,9 @@ hard-won points:
 - **Never write into a form field while it has focus.** Doing so destroys the selection,
   so the next keystrokes land after whatever the page just wrote. A typed `1000` came out
   as `27.41000`.
+- **The sun can cross a skyline more than once.** The solver reports the **first**
+  crossing and names the rest. A plain bisection lands on whichever one it happens to
+  bracket, which was 1 minute 41 seconds out at Chamonix with nothing on screen to say so.
 
 ## Working with the owner
 
