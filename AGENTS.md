@@ -27,17 +27,11 @@ document. `home/index.html` is the tool list that the shell opens by default.
 | --- | --- |
 | Visible tools | groceries, qr-code, braille, stopwatch, horizon, music, chess, sudoku, tic-tac-toe |
 | Hidden tools | budget, qwikpen, finances, school |
-| Direct link only | 333 (authenticated private library, no home card) |
 | Other | admin (the music catalogue editor, PAT-gated), maaser |
 
 A hidden tool carries `class="hidden-tool"` on its card and appears only after a
 triple-click on the logo, remembered in `localStorage.cjAppsHiddenToolsVisible`. It is
-tidiness, not security: every frontend page is public. The private library serves
-its data only through a separate authenticated API, documented in `xxx-api/README.md`.
-The API can run on Node with SQLite or on Cloudflare Workers with D1, using the
-shared `xxx-api/application.mjs` policy. Cloudflare instructions are in
-`xxx-api/cloudflare/README.md`; the Worker belongs on its own API hostname.
-The private library has no navigation card, even when hidden tools are revealed.
+tidiness, not security: every frontend page is public.
 
 ## How it deploys
 

@@ -1,8 +1,7 @@
 # Working on this project
 
 CJ Portal, the collection of small web tools at https://tools.cjaffa.com. One repo, one
-folder per tool and no frontend build step. The private library has its own separate
-API in `xxx-api/`. Read `README.md` for what the site is.
+folder per tool and no frontend build step. Read `README.md` for what the site is.
 This file is about changing it.
 
 ## Ground rules
@@ -84,23 +83,6 @@ failed deploy. When a card icon changes, bump the stamp on its `src` in
    full-screen pages use `.cj-float`, a small logo pinned to the top left.
 4. Add a card to the Tools or Games grid in `home/index.html`, matching the markup of the
    cards around it.
-
-### The private library
-
-`333/index.html` is a public login shell. Private data, actual age verification
-and licensed HLS authorization belong to the separate Node 24 API in `xxx-api/`.
-`xxx-api/cloudflare/` provides a Workers and D1 deployment option with the same
-shared API policy and providers. It uses its own API hostname and does not alter
-the main site's DNS-only GitHub Pages record. Read its README before deploying.
-Read `xxx-api/README.md` before connecting it. Never place the API on this site's
-hostname, put provider keys in the page, seed production with test videos, or
-treat the absence of a navigation card or an age checkbox as security. The library
-is accessible by direct link only and has no home card, even when hidden tools
-are revealed. Its public API-origin meta
-tag stays blank until backend, provider, rights and device checks have passed.
-The server currently supports only documented, worldwide, full-length custom
-HLS rights with no DRM requirement. Missing configuration or unsupported rights
-keep playback closed. `tests/xxx-api-test.mjs` and `tests/xxx-test.mjs` cover it.
 
 ### The PIN on Money Flow
 
@@ -424,8 +406,8 @@ Back and Forward. Do not add a parent `pushState` or set `iframe.src` from a
 `popstate` handler: the former duplicates the entry and the latter clears Forward
 history. Measured in Chromium against the original shell: opening Braille created
 four history entries and Forward stayed on Home; with native history it creates
-three and Forward restores `/braille/`. The private library suite checks both
-directions and measures the iframe's viewport fit.
+three and Forward restores `/braille/`. Keep both directions and the iframe's
+viewport fit intact when changing the shell.
 
 The root `index.html` is an iframe shell and the outer document is `overflow: hidden`,
 so **the frame must never be taller than what is on screen**. Anything past the bottom

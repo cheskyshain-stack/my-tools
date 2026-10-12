@@ -2,11 +2,7 @@
 
 The small web tools at **https://tools.cjaffa.com**: shopping list, QR codes, Braille,
 stopwatch, chess, sudoku, tic-tac-toe, music, and a few private ones. Plain HTML, CSS and
-JavaScript, one folder per tool and no frontend build step. The private video
-library at `/333/` is accessible by direct link only, with no home navigation card.
-It uses a separate authenticated API; its deployment and licensing
-requirements are documented in `xxx-api/README.md`.
-Cloudflare Workers and D1 hosting is supported in `xxx-api/cloudflare/`.
+JavaScript, one folder per tool and no frontend build step.
 
 ## How it is published
 
