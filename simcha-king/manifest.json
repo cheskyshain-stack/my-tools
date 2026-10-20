@@ -1,0 +1,18 @@
+{
+  "name": "Simcha King",
+  "short_name": "Simcha King",
+  "description": "Preview Simcha King service requests, package choices, questions, and call back requests.",
+  "start_url": "/simcha-king/",
+  "scope": "/simcha-king/",
+  "display": "standalone",
+  "background_color": "#FFF8E9",
+  "theme_color": "#080b12",
+  "icons": [
+    {
+      "src": "/simcha-king/icon.png?v=1",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

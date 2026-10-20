@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="description" content="Simcha King. Your simcha, handled. Request a service or package, ask a question, or request a call back from Yossi.">
+  <meta name="theme-color" content="#080b12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Simcha King">
+  <meta property="og:title" content="Simcha King Request Preview">
+  <meta property="og:description" content="Your simcha, handled. Explore the Simcha King service and package request preview.">
+  <meta property="og:image" content="https://tools.cjaffa.com/simcha-king/icon.png?v=1">
+  <meta property="og:url" content="https://tools.cjaffa.com/simcha-king/">
+  <title>Simcha King | CJ Portal</title>
+  <link rel="canonical" href="https://tools.cjaffa.com/simcha-king/">
+  <link rel="manifest" href="/simcha-king/manifest.json">
+  <link rel="icon" type="image/png" href="/simcha-king/icon.png?v=1">
+  <link rel="apple-touch-icon" href="/simcha-king/icon.png?v=1">
+  <style>
+    :root{color-scheme:light;--ink:#14243A;--muted:#5d626b;--navy:#14243A;--navy-hover:#20354e;--gold:#D4A84F;--paper:#FFF8E9;--line:#e0d9cc;--white:#fff;--error:#a52d2d;--serif:Georgia,'Times New Roman',serif;--sans:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    *{box-sizing:border-box}
+    [hidden]{display:none!important}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button,input,textarea,select{-webkit-tap-highlight-color:transparent}
+    :focus-visible{outline:3px solid #a88042;outline-offset:4px}
+    .shell{max-width:1100px;margin:auto;padding:22px 32px 32px}
+    .preview-bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .preview-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:none}
+    .text-button{border:0;background:none;padding:5px 0;color:var(--navy);font-weight:650;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
+    .brand{display:flex;align-items:center;gap:11px;margin:28px 0 32px;font-size:12px;letter-spacing:.14em;font-weight:700;text-transform:uppercase}
+    .brand-mark{display:grid;place-items:center;width:35px;height:35px;background:var(--navy);color:#f7e6c4;border-radius:50%;font:24px var(--serif);letter-spacing:0}
+    .eyebrow{color:#816336;font-size:11px;letter-spacing:.17em;text-transform:uppercase;font-weight:750;margin:0 0 12px}
+    h1{font-family:var(--serif);font-weight:400;font-size:clamp(32px,5.5vw,52px);line-height:1.1;letter-spacing:-.035em;margin:0;max-width:650px}
+    .intro{font-size:15px;color:var(--muted);max-width:560px;margin:16px 0 28px}
+    .progress{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:28px;font-size:12px;color:var(--muted)}
+    .progress span{display:inline-flex;gap:7px;align-items:center}
+    .progress b{display:inline-grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);border-radius:50%;font-size:10px;font-weight:600;background:var(--white)}
+    .progress [aria-current="step"]{color:var(--ink);font-weight:650}
+    .progress [aria-current="step"] b{background:var(--navy);border-color:var(--navy);color:white}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 245px;align-items:start;gap:30px}
+    .card{background:var(--white);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 12px 40px #233b3105}
+    .card-body{padding:28px}
+    fieldset{border:0;padding:0;margin:0;min-width:0}
+    legend,.section-title{font-size:16px;font-weight:700;margin:0 0 16px;padding:0;letter-spacing:-.02em}
+    .route-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .route-option{position:relative;display:block;cursor:pointer;min-width:0}
+    .route-option input{position:absolute;top:11px;right:10px;accent-color:var(--navy);margin:0;width:14px;height:14px}
+    .route-face{display:flex;flex-direction:column;gap:12px;padding:16px 10px 13px;border:1px solid var(--line);border-radius:10px;height:100%;font-size:12px;font-weight:650;line-height:1.35;transition:background .15s,border-color .15s}
+    .route-face svg{width:23px;height:23px;color:#697a6a}
+    .route-option input:checked+.route-face{background:#f4f0e6;border-color:#14243A;box-shadow:inset 0 0 0 1px #14243A}
+    .route-option input:checked+.route-face svg{color:var(--navy)}
+    .route-option input:focus-visible+.route-face{outline:3px solid var(--gold);outline-offset:3px}
+    .section{margin-top:26px;padding-top:25px;border-top:1px solid #e9e9e2}
+    .section-header{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:16px}
+    .section-header .section-title{margin:0}
+    .required-note{color:var(--muted);font-size:11px}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:17px 16px}
+    .full{grid-column:1/-1}
+    .field{min-width:0}
+    .field>label{display:block;font-size:12px;font-weight:650;margin-bottom:7px}
+    .optional{color:var(--muted);font-weight:400;font-size:11px}
+    input:not([type=radio]):not([type=checkbox]),select,textarea{width:100%;min-width:0;padding:11px 12px;min-height:44px;border:1px solid #d0d5cc;border-radius:7px;background:#fff;color:var(--ink);font-size:14px;box-shadow:0 1px 1px #00000002}
+    input::placeholder,textarea::placeholder{color:#80867e;opacity:1}
+    input:disabled{background:#f2f3ee;color:var(--muted)}
+    textarea{resize:vertical;min-height:100px;line-height:1.5}
+    input[aria-invalid=true],select[aria-invalid=true],textarea[aria-invalid=true]{border-color:var(--error)!important}
+    .field-error{display:none;color:var(--error);font-size:12px;margin-top:5px}
+    [aria-invalid=true]~.field-error{display:block}
+    .hint{font-size:11px;color:var(--muted);margin:7px 0 0}
+    .field>label.check{display:flex;gap:7px;align-items:center;font-size:11px;color:var(--muted);font-weight:400;margin:8px 0 0;cursor:pointer}
+    .check input{accent-color:var(--navy);width:15px;height:15px;margin:0;flex:none}
+    .actions{background:#fcfcf9;border-top:1px solid #e9e9e2;padding:20px 28px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+    .button{display:inline-flex;gap:16px;align-items:center;justify-content:center;min-height:46px;padding:12px 22px;background:var(--navy);border:1px solid var(--navy);color:white;font-weight:650;font-size:13px;border-radius:7px}
+    .button:hover{background:var(--navy-hover)}
+    .button svg{width:16px;height:16px}
+    .button.secondary{background:white;color:var(--navy);border-color:#bcc8bb}
+    .button.secondary:hover{background:#fff8e9}
+    .form-note{font-size:11px;color:var(--muted);max-width:220px;margin:0}
+    .aside{padding-top:6px}
+    .aside-art{height:146px;width:100%;display:block;color:var(--navy);margin-bottom:23px}
+    .aside h2{font:normal 27px/1.2 var(--serif);letter-spacing:-.02em;margin:0 0 12px}
+    .aside p{font-size:12px;color:var(--muted);margin:0 0 20px}
+    .aside ol{list-style:none;padding:0;margin:0;display:grid;gap:19px}
+    .aside li{display:flex;align-items:flex-start;gap:11px;font-size:12px;line-height:1.5}
+    .aside li>span{color:#856b42;font-family:var(--serif);font-size:16px;line-height:1.4}
+    .aside small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+    .aside-foot{border-top:1px solid var(--line);padding-top:17px;margin-top:24px;font-size:11px;color:var(--muted)}
+    .footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:26px}
+    .review-heading{font:normal 30px/1.2 var(--serif);margin:0 0 10px;letter-spacing:-.02em}
+    .review-intro{font-size:13px;color:var(--muted);margin:0 0 22px}
+    .summary-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#80623a;margin-bottom:14px}
+    dl{margin:0}
+    .review-row{display:grid;grid-template-columns:135px minmax(0,1fr);gap:16px;padding:11px 0;border-top:1px solid #e8ebe4;font-size:13px}
+    dt{color:var(--muted)}
+    dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+    .callout{font-size:12px;line-height:1.6;background:#fff8e9;border:1px solid #e6d8b9;border-radius:8px;padding:13px 15px;margin:23px 0 0;color:#5a4930}
+    .finish{padding:38px 30px;text-align:center}
+    .finish-mark{display:grid;place-items:center;width:57px;height:57px;border-radius:50%;background:#fff4d9;color:var(--navy);margin:0 auto 20px}
+    .finish-mark svg{width:26px;height:26px}
+    .finish h2{font:normal 32px/1.15 var(--serif);letter-spacing:-.025em;margin:0 0 13px}
+    .finish p{font-size:13px;color:var(--muted);max-width:380px;margin:0 auto 23px}
+    .finish-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+    .status{font-size:12px;color:var(--navy);margin-top:12px;min-height:20px}
+    .error-banner{background:#fff2ee;color:#8d2929;border:1px solid #ecc9bf;border-radius:7px;font-size:12px;padding:11px 13px;margin-bottom:20px}
+    .noscript{padding:20px;color:#8d2929}
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.aside{display:none}.shell{max-width:720px;padding:20px 26px 26px}.brand{margin:25px 0}.intro{max-width:100%}}
+    @media(max-width:480px){.shell{padding:16px 15px 22px}.preview-bar{font-size:10px;gap:8px;padding-bottom:14px}.brand{margin:21px 0;font-size:10px}.brand-mark{width:31px;height:31px;font-size:22px}h1{font-size:35px}.intro{font-size:13px;margin:14px 0 23px}.card{border-radius:13px}.card-body{padding:21px 17px}.route-face{padding:15px 9px 12px;font-size:11px;gap:13px}.route-face svg{width:20px;height:20px}.route-option input{width:12px;height:12px;top:9px;right:7px}.fields{grid-template-columns:1fr;gap:16px}.full{grid-column:auto}.section-title,legend{font-size:15px}.actions{padding:17px;gap:14px}.actions .button{width:100%}.form-note{max-width:100%;order:2}.review-row{grid-template-columns:100px minmax(0,1fr);gap:12px;font-size:12px}.finish{padding:30px 20px}.finish h2{font-size:29px}.finish-actions .button{width:100%}.progress{margin-bottom:22px}.required-note{font-size:10px}.footer{font-size:10px}}
+    .hero{background:var(--ink);color:white;border-radius:15px;padding:30px 36px 33px;margin:22px 0 26px;border-bottom:4px solid var(--gold)}
+    .hero-top{display:flex;gap:18px;justify-content:space-between;align-items:start;margin-bottom:28px}
+    .hero .brand{display:block;margin:0;text-transform:none;letter-spacing:0}
+    .brand-name{display:block;font-family:var(--serif);font-weight:400;font-size:29px;letter-spacing:.09em;line-height:1.15}
+    .brand-tagline{display:block;font-size:11px;font-weight:400;color:#e2d9c6;margin-top:6px;letter-spacing:.08em}
+    .hero-contact{text-align:right;font-size:11px;color:#e2d9c6;line-height:1.8}
+    .hero-contact a{color:var(--gold);font-size:15px;font-weight:600;text-underline-offset:4px;white-space:nowrap}
+    .hero .eyebrow{color:var(--gold)}
+    .hero h1{font-size:clamp(34px,5.5vw,53px);max-width:700px}
+    .hero .intro{color:#e2e5e9;font-size:14px;margin:17px 0 20px;max-width:600px}
+    .service-list{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;letter-spacing:.03em}
+    .service-list span{border:1px solid #66707f;border-radius:20px;padding:4px 11px;color:#f9edcf}
+    .section-header{align-items:start}
+    .section-header .section-title{line-height:1.4}
+    .route-face{padding-right:20px;font-size:12px}
+    .route-face svg{color:#6c7480}
+    .package-list{display:grid;gap:9px;margin:19px 0}
+    .package-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:15px 14px;text-align:left;border:1px solid #d9cdb5;border-radius:9px;background:#fffcf4;color:var(--ink);font-size:13px;font-weight:650}
+    .package-choice span{color:#846024;font-size:16px;font-weight:400}
+    .package-choice:hover{background:#f7edda;border-color:#a48040}
+    .package-choice[aria-pressed=true]{background:var(--ink);color:#fff8e9;border-color:var(--ink)}
+    .package-choice[aria-pressed=true] span{color:var(--gold)}
+    .contact-card{background:var(--ink);color:#fff8e9;padding:20px;border-radius:12px;margin-top:23px}
+    .contact-card p{color:#e2d9c6;margin:0 0 7px;font-size:11px}
+    .contact-card a{color:var(--gold);font-size:16px;font-weight:600;text-underline-offset:4px}
+    .contact-card .tagline{color:white;font-family:var(--serif);font-size:22px;line-height:1.2;margin-bottom:17px}
+    .form-note{max-width:280px}
+    .footer a{color:var(--ink);text-underline-offset:3px}
+    @media(max-width:850px){.hero{padding:27px 28px}.hero .brand{margin:0}}
+    @media(max-width:480px){.hero{padding:23px 20px;margin-top:19px}.hero-top{display:block;margin-bottom:25px}.brand-name{font-size:26px}.hero-contact{text-align:left;margin-top:17px;font-size:10px}.hero-contact a{font-size:14px}.hero h1{font-size:37px}.hero .intro{font-size:12px;line-height:1.6}.hero .eyebrow{font-size:9px}.route-face{font-size:11px;padding-right:14px}.service-list{gap:6px;font-size:10px}.service-list span{padding:4px 9px}.form-note{max-width:100%}}
+    /* The viewer may insert a dark theme wrapper between body and this form. */
+    #simcha-king-preview{--ink:#14243A;--muted:#5d626b;--navy:#14243A;--navy-hover:#20354e;--gold:#D4A84F;--paper:#FFF8E9;--line:#e0d9cc;--white:#fff;--error:#a52d2d;--serif:Georgia,'Times New Roman',serif;--sans:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color-scheme:light;color:#14243A;background:#FFF8E9;font-family:var(--sans);font-size:15px;line-height:1.55}
+    #simcha-king-preview :is(.card,.card-body,.field>label,.route-face,.route-face>span,.section-title,legend,.review-heading,dd,.finish h2){color:var(--ink)}
+    #simcha-king-preview :is(input,select,textarea){color:var(--ink);background-color:#fff;color-scheme:light;-webkit-text-fill-color:currentColor}
+    #simcha-king-preview :is(input,textarea)::placeholder{color:#626975;-webkit-text-fill-color:#626975;opacity:1}
+    #simcha-king-preview .hero :is(h1,.brand-name){color:#FFF8E9}
+    #simcha-king-preview .progress>span{color:var(--muted)}
+    #simcha-king-preview .progress>[aria-current="step"]{color:var(--ink)}
+    html,body{overscroll-behavior-y:none}
+    body.simcha-king-page{background:#FFF8E9;color:#14243A;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+    #cj-portal-nav{width:min(1100px,100%);margin:0 auto;padding:12px 24px;grid-template-columns:48px minmax(0,1fr) auto;background:var(--cj-bg);border-radius:0 0 14px 14px}
+    #cj-portal-nav .cj-brand{width:48px;height:48px;border-radius:10px}
+    #cj-portal-nav h1{font-size:20px}
+    #cj-portal-nav .portal-home{height:auto;min-height:40px;padding:8px 13px;font-size:12px;text-decoration:none;white-space:nowrap}
+    @media(max-width:480px){#cj-portal-nav{padding:10px 15px;gap:9px;grid-template-columns:42px minmax(0,1fr) auto}#cj-portal-nav .cj-brand{width:42px;height:42px}#cj-portal-nav h1{font-size:18px}#cj-portal-nav .portal-home{padding:8px 10px;font-size:11px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+  <link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body class="simcha-king-page">
+  <header class="cj-page-header" id="cj-portal-nav">
+    <a class="cj-brand" href="/" aria-label="CJ Portal home"><img src="/simcha-king/icon.png?v=1" alt="Simcha King"></a>
+    <h1>Simcha King</h1>
+    <a class="cj-btn cj-btn-ghost portal-home" href="/">Portal home</a>
+  </header>
+  <main class="shell" id="simcha-king-preview">
+    <div class="preview-bar"><span class="preview-status"><span class="dot" aria-hidden="true"></span>Form preview. Nothing is sent.</span><button class="text-button" type="button" id="sample-button">Try a sample</button></div>
+    <header class="hero">
+      <div class="hero-top"><div class="brand"><span class="brand-name">SIMCHA KING</span><span class="brand-tagline">Your simcha, handled.</span></div><div class="hero-contact">Call or text Yossi<br><a href="tel:+17324514254">(732) 451 4254</a></div></div>
+      <p class="eyebrow">Planning, catering, and delivery</p>
+      <h1>Be a King at<br>Your Own Simcha!</h1>
+      <p class="intro">Tell us what you need and we’ll be in touch.</p>
+      <div class="service-list" aria-label="Services"><span>Kiddush</span><span>Vacht Nacht</span><span>Shalom Zachor</span></div>
+    </header>
+    <nav class="progress" aria-label="Form progress"><span id="progress-details" aria-current="step"><b>1</b>Your details</span><span id="progress-review"><b>2</b>Review request</span></nav>
+    <div class="layout">
+      <div class="card">
+        <form id="request-form" novalidate>
+          <div id="edit-view">
+            <div class="card-body">
+              <div class="error-banner" role="alert" id="error-banner" hidden>Please check the highlighted details below.</div>
+              <fieldset>
+                <legend>How can we help?</legend>
+                <div class="route-options">
+                  <label class="route-option"><input type="radio" name="requestType" value="service" checked required><span class="route-face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 18h16M5 16a7 7 0 0 1 14 0M12 7V5m-2 0h4M3 21h18"/></svg><span>Request a service or package</span></span></label>
+                  <label class="route-option"><input type="radio" name="requestType" value="question"><span class="route-face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-8 8H5l-3 3V11.5a9 9 0 0 1 18 0Z"/><path d="M7 10h8M7 14h5"/></svg><span>Ask a general question</span></span></label>
+                  <label class="route-option"><input type="radio" name="requestType" value="callback"><span class="route-face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m5 3 4 1 1 5-3 2c1.5 3 3 4.5 6 6l2-3 5 1 1 4c-1 5-9 2-14-3S0 4 5 3Z"/></svg><span>Request a call back</span></span></label>
+                </div>
+              </fieldset>
+              <section class="section" aria-labelledby="contact-title">
+                <div class="section-header"><h2 class="section-title" id="contact-title">Contact Information</h2><span class="required-note">* Required</span></div>
+                <div class="fields">
+                  <div class="field full"><label for="fullName">Full name *</label><input id="fullName" name="fullName" autocomplete="name" maxlength="120" placeholder="Your first and last name" required aria-describedby="fullName-error"><span class="field-error" id="fullName-error"></span></div>
+                  <div class="field"><label for="phone">Phone number *</label><input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="Your phone number" required aria-describedby="phone-error"><span class="field-error" id="phone-error"></span></div>
+                  <div class="field"><label for="email">Email address <span class="optional">(optional)</span></label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" aria-describedby="email-error"><span class="field-error" id="email-error"></span></div>
+                  <div class="field full"><label for="canText">Can this phone number receive text messages? *</label><select id="canText" name="canText" required aria-describedby="canText-error"><option value="">Please choose</option><option>Yes</option><option>No</option></select><span class="field-error" id="canText-error"></span></div>
+                </div>
+              </section>
+              <fieldset class="section" id="service-fields">
+                <legend>Plan Your Simcha</legend>
+                <div class="fields">
+                  <div class="field full"><label for="simcha">Which simcha is this for? *</label><select id="simcha" name="simcha" required aria-describedby="simcha-error"><option value="">Choose your simcha</option><option>Kiddush</option><option>Vacht Nacht</option><option>Shalom Zachor</option><option>Other</option></select><span class="field-error" id="simcha-error"></span></div>
+                  <div class="field"><label for="eventDate">Event date *</label><input id="eventDate" name="eventDate" type="date" required aria-describedby="eventDate-error"><span class="field-error" id="eventDate-error"></span></div>
+                  <div class="field"><label for="guests">Estimated number of guests *</label><select id="guests" name="guests" required aria-describedby="guests-error"><option value="">Choose a guest size</option><option>About 40</option><option>About 100</option><option>About 200</option><option>Other or not sure</option></select><span class="field-error" id="guests-error"></span></div>
+                  <div class="field full"><label for="packageLevel">Which package level are you interested in? *</label><select id="packageLevel" name="packageLevel" required aria-describedby="packageLevel-error"><option value="">Choose a package</option><option>Classic Package</option><option>Royal Package</option><option>King Package</option></select><span class="field-error" id="packageLevel-error"></span><p class="hint">Yossi will confirm the menu, price, and availability with you.</p></div>
+                  <div class="field full"><label for="location">Delivery address or simcha location <span class="optional">(optional)</span></label><input id="location" name="location" autocomplete="street-address" maxlength="400" placeholder="Shul, venue, or address"></div>
+                  <div class="field full"><label for="eventNotes">Anything else we should know? <span class="optional">(optional)</span></label><textarea id="eventNotes" name="eventNotes" maxlength="3000" placeholder="Timing, food preferences, allergies, or special requests"></textarea></div>
+                </div>
+              </fieldset>
+              <fieldset class="section" id="question-fields" hidden disabled>
+                <legend>General Question</legend>
+                <div class="field"><label for="question">What would you like to know? *</label><textarea id="question" name="question" maxlength="3000" placeholder="Ask about menus, availability, or anything else" required aria-describedby="question-error"></textarea><span class="field-error" id="question-error"></span></div>
+              </fieldset>
+              <fieldset class="section" id="callback-fields" hidden disabled>
+                <legend>Call Back Request</legend>
+                <div class="fields">
+                  <div class="field"><label for="callDate">What is the best day to call? <span class="optional">(optional)</span></label><input id="callDate" name="callDate" type="date" aria-describedby="callDate-error"><span class="field-error" id="callDate-error"></span></div>
+                  <div class="field"><label for="callTime">What is the best time to call? <span class="optional">(optional)</span></label><select id="callTime" name="callTime"><option>Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></div>
+                  <div class="field full"><label for="callTopic">What would you like to discuss? <span class="optional">(optional)</span></label><textarea id="callTopic" name="callTopic" maxlength="3000" placeholder="A few words will help Yossi prepare for your call"></textarea></div>
+                </div>
+              </fieldset>
+            </div>
+            <div class="actions"><p class="form-note">Preview only. Your details open for review and are not sent.</p><button type="button" class="button" id="review-request-button">Send Request<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5"/></svg></button></div>
+          </div>
+        </form>
+        <section id="review-view" hidden aria-labelledby="review-title">
+          <div class="card-body"><p class="eyebrow">One last look</p><h2 class="review-heading" id="review-title" tabindex="-1">Does everything look right?</h2><p class="review-intro">Review your details before finishing this preview.</p><div class="summary-label" id="summary-type"></div><dl id="review-details"></dl><p class="callout">This is a preview. No message will be sent, no payment will be taken, and no event date will be reserved.</p></div>
+          <div class="actions"><button type="button" id="edit-button" class="text-button">Back to editing</button><button type="button" id="finish-button" class="button">Finish preview<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button></div>
+        </section>
+        <section id="finish-view" class="finish" hidden aria-labelledby="finish-title"><div class="finish-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></div><p class="eyebrow">Preview complete</p><h2 id="finish-title" tabindex="-1">Your request preview is ready.</h2><p>Nothing has been sent to Yossi. For assistance, call or text <a href="tel:+17324514254">(732) 451 4254</a>.</p><div class="finish-actions"><button class="button" type="button" id="copy-button">Copy request</button><button class="button secondary" type="button" id="restart-button">Start again</button></div><button class="text-button" type="button" id="view-button" style="margin-top:16px">View request details</button><div class="status" id="copy-status" role="status" aria-live="polite"></div></section>
+      </div>
+      <aside class="aside" aria-label="Packages and contact information">
+        <p class="eyebrow">A package for your simcha</p><h2>Start with<br>what suits you.</h2><p>Choose a package to include it in your request. Yossi will help with the details.</p>
+        <div class="package-list"><button type="button" class="package-choice" data-package="Classic Package" aria-pressed="false">Classic Package<span aria-hidden="true">I</span></button><button type="button" class="package-choice" data-package="Royal Package" aria-pressed="false">Royal Package<span aria-hidden="true">II</span></button><button type="button" class="package-choice" data-package="King Package" aria-pressed="false">King Package<span aria-hidden="true">III</span></button></div>
+        <p>Planning for about 40, 100, or 200 guests? Choose a size, or let us know if you are still deciding.</p>
+        <div class="aside-foot">Menus and prices will be added once confirmed. Requests are subject to availability and confirmation.</div>
+        <div class="contact-card"><p class="tagline">Your simcha,<br>handled.</p><p>Call or text Yossi</p><a href="tel:+17324514254">(732) 451 4254</a></div>
+      </aside>
+    </div>
+    <footer class="footer"><span>Simcha King. Your simcha, handled.</span><span><a href="tel:+17324514254">Call or text Yossi (732) 451 4254</a></span></footer>
+    <noscript><p class="noscript">JavaScript is needed to try this form preview. No information has been sent.</p></noscript>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const form = $('request-form');
+    const types = {service:'Service or package request',question:'General question',callback:'Call Back Request'};
+    let type = 'service';
+    let summaryRows = [];
+    function localDate(date = new Date()) {
+      return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+    }
+    function updateDateMinimums() { $('eventDate').min = localDate(); $('callDate').min = localDate(); }
+    function showView(view, focus = true) {
+      $('edit-view').hidden = view !== 'edit';
+      $('review-view').hidden = view !== 'review';
+      $('finish-view').hidden = view !== 'finish';
+      $('progress-details').toggleAttribute('aria-current', view === 'edit');
+      $('progress-review').toggleAttribute('aria-current', view !== 'edit');
+      if (view === 'edit') $('progress-details').setAttribute('aria-current','step');
+      else $('progress-review').setAttribute('aria-current','step');
+      if (focus) (view === 'review' ? $('review-title') : view === 'finish' ? $('finish-title') : $('fullName')).focus();
+    }
+    function clearErrors() {
+      form.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+      form.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+      $('error-banner').hidden = true;
+    }
+    function updatePackageChoices() {
+      document.querySelectorAll('[data-package]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.package === $('packageLevel').value && type === 'service')));
+    }
+    function selectType(nextType, persist = false) {
+      if (!Object.hasOwn(types,nextType)) return;
+      type = nextType;
+      form.querySelectorAll('[name=requestType]').forEach(el => el.checked = el.value === type);
+      for (const key of Object.keys(types)) {
+        $(key+'-fields').hidden = key !== type;
+        $(key+'-fields').disabled = key !== type;
+      }
+      updatePackageChoices();
+      clearErrors();
+      showView('edit',false);
+      if (persist && window.openai?.setWidgetState) {
+        try {
+          const result = window.openai.setWidgetState({schemaVersion:2,requestType:type});
+          if (result?.catch) result.catch(() => {});
+        } catch (_) {}
+      }
+    }
+    function validate() {
+      clearErrors();
+      updateDateMinimums();
+      const errors = [];
+      for (const el of form.querySelectorAll('input,select,textarea')) {
+        if (!el.willValidate || el.type === 'radio' || el.type === 'checkbox') continue;
+        let message = '';
+        if (el.required && !el.value.trim()) message = 'Please fill in this detail.';
+        else if (el.id === 'phone' && (el.value.match(/\d/g)||[]).length < 7) message = 'Enter a valid phone number, including area code.';
+        else if (el.validity.typeMismatch) message = 'Enter a valid email address.';
+        else if (el.validity.rangeUnderflow) message = 'Choose today or a future date.';
+        else if (el.validity.stepMismatch || el.validity.badInput) message = 'Please check this detail.';
+        else if (!el.validity.valid) message = 'Please check this detail.';
+        if (message) {
+          el.setAttribute('aria-invalid','true');
+          const errorEl = $(el.id+'-error');
+          if (errorEl) errorEl.textContent = message;
+          errors.push(el);
+        }
+      }
+      if (errors.length) { $('error-banner').hidden = false; errors[0].focus(); return false; }
+      return true;
+    }
+    function formatDate(value) {
+      if (!value) return '';
+      const [year,month,day] = value.split('-').map(Number);
+      return new Date(year,month-1,day).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    }
+    function buildSummary() {
+      const value = id => $(id).value.trim();
+      summaryRows = [['Request',types[type]],['Name',value('fullName')],['Phone',value('phone')],['Can receive texts',value('canText')]];
+      if (value('email')) summaryRows.push(['Email',value('email')]);
+      const add = (label,id,format) => { if(value(id)) summaryRows.push([label,format ? format(value(id)) : value(id)]); };
+      if (type === 'service') {
+        add('Simcha','simcha'); add('Event date','eventDate',formatDate);
+        add('Guests','guests'); add('Package','packageLevel'); add('Location','location'); add('Special requests','eventNotes');
+      } else if (type === 'question') add('Question','question');
+      else { add('Call date','callDate',formatDate); summaryRows.push(['Call time',value('callTime') || 'Any time']); add('Discuss','callTopic'); }
+      const details = $('review-details'); details.replaceChildren();
+      for (const [label,valueText] of summaryRows) {
+        const row = document.createElement('div'); row.className = 'review-row';
+        const term = document.createElement('dt'); term.textContent = label;
+        const description = document.createElement('dd'); description.textContent = valueText;
+        row.append(term,description); details.append(row);
+      }
+      $('summary-type').textContent = types[type];
+      $('copy-status').textContent = '';
+    }
+    function reviewRequest() { if(validate()) { buildSummary(); showView('review'); } }
+    $('review-request-button').addEventListener('click',reviewRequest);
+    form.addEventListener('submit',event => { event.preventDefault(); reviewRequest(); });
+    form.addEventListener('keydown',event => {
+      if(event.key === 'Enter' && !event.isComposing && event.target.matches('input:not([type=radio]):not([type=checkbox])')) {
+        event.preventDefault(); reviewRequest();
+      }
+    });
+    form.addEventListener('change',event => {
+      if (event.target.name === 'requestType') selectType(event.target.value,true);
+      if (event.target.id === 'packageLevel') updatePackageChoices();
+    });
+    form.addEventListener('input',event => {
+      if(event.target.hasAttribute('aria-invalid')) {
+        event.target.removeAttribute('aria-invalid');
+        const errorEl = $(event.target.id+'-error'); if(errorEl) errorEl.textContent = '';
+      }
+    });
+    $('edit-button').addEventListener('click',() => showView('edit'));
+    $('finish-button').addEventListener('click',() => showView('finish'));
+    $('view-button').addEventListener('click',() => showView('review'));
+    $('restart-button').addEventListener('click',() => {
+      form.reset(); selectType('service',true); showView('edit'); summaryRows = []; $('copy-status').textContent = '';
+    });
+    document.querySelectorAll('[data-package]').forEach(button => button.addEventListener('click',() => {
+      selectType('service',true); $('packageLevel').value = button.dataset.package; updatePackageChoices(); $('packageLevel').focus();
+    }));
+    $('sample-button').addEventListener('click',() => {
+      const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 14);
+      const sample = {fullName:'Sample Customer',phone:'+1 212 555 0123',canText:'Yes',email:'sample@example.com',simcha:'Kiddush',eventDate:localDate(nextDate),guests:'About 40',packageLevel:'Classic Package',location:'Sample shul / venue',eventNotes:'Please contact me to discuss the menu.',question:'What is included in the Classic Package for about 40 guests?',callDate:localDate(nextDate),callTime:'Afternoon',callTopic:'I’d like to discuss a Kiddush for about 40 guests.'};
+      Object.entries(sample).forEach(([id,value]) => $(id).value = value);
+      clearErrors(); updatePackageChoices(); showView('edit');
+    });
+    $('copy-button').addEventListener('click',async () => {
+      const text = 'SIMCHA KING REQUEST PREVIEW. Nothing has been sent.\n\n' + summaryRows.map(([label,value]) => label+': '+value).join('\n');
+      let copied = false;
+      try { await navigator.clipboard.writeText(text); copied = true; } catch (_) {
+        const area = document.createElement('textarea'); area.value = text; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.append(area); area.select();
+        try { copied = document.execCommand('copy'); } catch (_) {} area.remove(); $('copy-button').focus();
+      }
+      $('copy-status').textContent = copied ? 'Request details copied. Nothing has been sent.' : 'Copy is unavailable here. Open “View request details” and select the text to copy.';
+    });
+    function applyWidgetState(state) {
+      if (!state || ![1,2].includes(state.schemaVersion)) return;
+      const nextType = state.requestType === 'kiddush' ? 'service' : state.requestType;
+      if(Object.hasOwn(types,nextType)) selectType(nextType);
+    }
+    window.addEventListener('openai:set_globals', event => { if(event.detail?.globals?.widgetState) applyWidgetState(event.detail.globals.widgetState); });
+    updateDateMinimums(); updatePackageChoices();
+    applyWidgetState(window.openai?.widgetState);
+  })();
+  </script>
+  <script src="/assets/cj-refresh.js" defer></script>
+</body>
+</html>

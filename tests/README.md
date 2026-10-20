@@ -1,5 +1,15 @@
 # Tests
 
+## Simcha King
+
+Run `CJ_BASE_URL=http://127.0.0.1:8771 node simcha-king-test.mjs` after serving the
+repository root on a fresh port. This suite checks the three preview request paths,
+required and optional fields, safe review text, the manifest and icon, readable
+labels with the shared styles, the portal card, Back and Forward, and access to
+the bottom button at 375, 393, 412 and 1280 pixels. It also checks that the preview
+sends no POST requests and preserves unrelated browser data. `CJ_TEST_PROXY` can
+select the session HTTP proxy for browser font requests when needed.
+
 ## Existing Horizon suites
 
 Browser tests, because every bug in this repo that mattered was a browser bug. They
