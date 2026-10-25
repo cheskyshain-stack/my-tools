@@ -104,9 +104,7 @@ try {
     await page.waitForURL(`${BASE}/simcha-king/`);
     frame = page.frames().find(frame => frame !== page.mainFrame() && /\/simcha-king\//.test(frame.url()));
     check(await frame.locator("#request-form").isVisible(), "Forward restores the Simcha King page.");
-    await frame.locator(".portal-home").click();
-    await page.waitForURL(`${BASE}/`);
-    check(await page.locator("#shellFrame").count() === 1 && await page.frameLocator("#shellFrame").locator("#shellFrame").count() === 0, "Portal home does not nest the shell.");
+    check(await frame.locator('a[href="/"], a[href="/home/"], .portal-home, [aria-label="CJ Portal home"]').count() === 0, "Simcha King has no controls linking back to the portal.");
     check(errors.length === 0, errors.join("\n"));
     check(posts.length === 0, "No live request, notification or payment is sent.");
     console.log(`  ok ${width}x${height}: standalone form, all request paths, shared styles, portal card, Back, Forward, and bottom button visibility`);
