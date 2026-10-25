@@ -51,6 +51,18 @@ try {
     check(summary.includes("Kiddush") && summary.includes("About 40") && summary.includes("Classic Package"), "The service, guest size and package reach the review.");
     await page.getByRole("button", { name: "Back to editing" }).click();
 
+    await page.locator("#simcha").selectOption("Bris");
+    await page.locator("#guests").selectOption("About 100");
+    check(await page.locator("#bris-menu").isVisible() && await page.locator("#packageLevel").isDisabled(), "Bris shows its own catering reference without requiring a generic package.");
+    await page.locator("#bris-menu details").evaluateAll(items => items.forEach(item => { item.open = true; }));
+    check(await page.locator("#bris-menu").evaluate(el => el.scrollWidth <= el.clientWidth), "The expanded Bris menu and price tables fit the phone width.");
+    await page.getByRole("button", { name: "Send Request", exact: true }).click();
+    summary = await page.locator("#review-details").innerText();
+    check(summary.includes("Bris") && summary.includes("Bagel Nosh") && !summary.includes("Classic Package"), "Bris review uses the supplier reference and excludes a previously selected generic package.");
+    await page.getByRole("button", { name: "Back to editing" }).click();
+    await page.locator("#simcha").selectOption("Kiddush");
+    check(await page.locator("#bris-menu").isHidden() && await page.locator("#packageLevel").isEnabled() && await page.locator("#packageLevel").inputValue() === "Classic Package", "Switching back restores the original package selection.");
+
     await page.locator('input[value="question"]').check();
     await page.locator("#question").fill("");
     await page.getByRole("button", { name: "Send Request", exact: true }).click();
