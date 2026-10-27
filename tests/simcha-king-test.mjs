@@ -40,6 +40,17 @@ try {
     check(size.overflow === 0 && size.headerFits, `${width}px: direct page and navigation fit.`);
     check(size.label === "rgb(20, 36, 58)" && size.card === "rgb(255, 255, 255)", "Labels stay dark on white cards with the shared portal stylesheet.");
 
+    for (const simcha of ["Kiddush", "Vacht Nacht", "Shalom Zachor", "Bris"]) {
+      await page.getByRole("button", { name: simcha, exact: true }).click();
+      check(await page.locator("#simcha").inputValue() === simcha && await page.locator('input[value="service"]').isChecked(), `${simcha} button selects the matching service.`);
+      check(await page.getByRole("button", { name: simcha, exact: true }).getAttribute("aria-pressed") === "true" && await page.locator('.service-list [aria-pressed="true"]').count() === 1, "The selected service button is marked consistently.");
+    }
+    check(await page.locator("#bris-menu").isVisible(), "The Bris button opens its menu.");
+    const target = await page.locator("#simcha").boundingBox();
+    check(target.y >= 0 && target.y + target.height <= height && await page.locator("#simcha").evaluate(el => document.activeElement === el), "A service button brings the simcha details into view and moves keyboard focus there.");
+    await page.locator("#simcha").selectOption("Other");
+    check(await page.locator('.service-list [aria-pressed="true"]').count() === 0, "Changing the dropdown clears a previous quick selection.");
+
     await page.getByRole("button", { name: "Send Request", exact: true }).click();
     check(await page.locator("#error-banner").isVisible(), "Missing contact and event details are rejected.");
     check(await page.locator("#canText").getAttribute("aria-invalid") === "true", "Text capability requires a choice.");
@@ -51,7 +62,10 @@ try {
     check(summary.includes("Kiddush") && summary.includes("About 40") && summary.includes("Classic Package"), "The service, guest size and package reach the review.");
     await page.getByRole("button", { name: "Back to editing" }).click();
 
-    await page.locator("#simcha").selectOption("Bris");
+    const brisButton = page.getByRole("button", { name: "Bris", exact: true });
+    await brisButton.focus();
+    await brisButton.press("Enter");
+    check(await page.locator("#simcha").inputValue() === "Bris" && await page.locator("#fullName").inputValue() === "Sample Customer", "Service shortcuts work from the keyboard and preserve contact details.");
     await page.locator("#guests").selectOption("About 100");
     check(await page.locator("#bris-menu").isVisible() && await page.locator("#packageLevel").isDisabled(), "Bris shows its own catering reference without requiring a generic package.");
     await page.locator("#bris-menu details").evaluateAll(items => items.forEach(item => { item.open = true; }));
