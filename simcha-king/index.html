@@ -61,20 +61,6 @@
     .fields{display:grid;grid-template-columns:1fr 1fr;gap:17px 16px}
     .full{grid-column:1/-1}
     .field{min-width:0}
-    .bris-menu{border:1px solid #e6d8b9;border-radius:10px;background:#fffcf4;padding:17px;color:var(--ink);font-size:12px;line-height:1.6}
-    .bris-menu h3{font-size:18px;line-height:1.3;margin:0 0 8px;color:var(--ink)}
-    .bris-menu p{margin:8px 0}
-    .bris-rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-    .bris-rates p{margin:0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:8px}
-    .bris-rates strong{display:block;font-size:23px;color:var(--ink);line-height:1.3}
-    .bris-menu details{border-top:1px solid var(--line);margin-top:12px}
-    .bris-menu summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:700;color:var(--ink)}
-    .bris-menu ul{margin:5px 0 13px;padding-left:19px}
-    .bris-menu h4{font-size:12px;margin:13px 0 5px;color:var(--ink)}
-    .bris-menu table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;color:var(--ink)}
-    .bris-menu th,.bris-menu td{padding:9px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
-    .bris-menu th:last-child,.bris-menu td:last-child{width:37%;padding-left:12px}
-    .bris-menu .bris-note{color:#5a4930;background:#fff4d9;border-radius:6px;padding:10px 12px;margin:12px 0}
     .field>label{display:block;font-size:12px;font-weight:650;margin-bottom:7px}
     .optional{color:var(--muted);font-weight:400;font-size:11px}
     input:not([type=radio]):not([type=checkbox]),select,textarea{width:100%;min-width:0;padding:11px 12px;min-height:44px;border:1px solid #d0d5cc;border-radius:7px;background:#fff;color:var(--ink);font-size:14px;box-shadow:0 1px 1px #00000002}
@@ -215,61 +201,9 @@
                 <legend>Plan Your Simcha</legend>
                 <div class="fields">
                   <div class="field full"><label for="simcha">Which simcha is this for? *</label><select id="simcha" name="simcha" required aria-describedby="simcha-error"><option value="">Choose your simcha</option><option>Kiddush</option><option>Vacht Nacht</option><option>Shalom Zachor</option><option>Bris</option><option>Other</option></select><span class="field-error" id="simcha-error"></span></div>
-                  <section class="field full bris-menu" id="bris-menu" hidden aria-labelledby="bris-menu-title">
-                    <p class="eyebrow">Bris catering reference</p>
-                    <h3 id="bris-menu-title">Bagel Nosh Bris menu</h3>
-                    <p>Minimum <strong>65 adults</strong>. Confirm pricing, availability, and all charges before booking.</p>
-                    <div class="bris-rates"><p><strong>$14.99</strong>per adult</p><p><strong>$9.50</strong>per child</p></div>
-                    <p>Adult tables: minimum 10. Children’s tables: minimum 10. Head table: minimum 5.</p>
-                    <details>
-                      <summary>What’s included</summary>
-                      <h4>Adults</h4>
-                      <ul><li>1½ bagels and 1 donut per person</li><li>Lox and cream cheese platters</li><li>Tuna and egg platters</li><li>Israeli salad</li><li>Orange juice and water</li><li>Seuda challah</li><li>Hot coffee table between the sides</li><li>Paper goods</li></ul>
-                      <h4>Children</h4>
-                      <ul><li>1 bagel and 1 donut per child</li><li>Cream cheese</li><li>Chocolate milk or orange juice</li><li>Cereal and milk</li></ul>
-                    </details>
-                    <details>
-                      <summary>Waiter fees</summary>
-                      <table aria-label="Bris waiter fees"><thead><tr><th scope="col">People</th><th scope="col">Fee</th></tr></thead><tbody><tr><td>65 to 100</td><td>$150</td></tr><tr><td>101 to 200</td><td>$250</td></tr></tbody></table>
-                      <p>Waiter fees are included in Bagel Nosh’s total and paid to Bagel Nosh.</p>
-                      <p class="bris-note">Davening in the same room as the seuda requires an additional waiter. Confirm that extra charge, and fees for more than 200 people, with Bagel Nosh.</p>
-                    </details>
-                    <details>
-                      <summary>Extras and upgrades</summary>
-                      <table aria-label="Bris extras and upgrades"><thead><tr><th scope="col">Item</th><th scope="col">Price</th></tr></thead><tbody>
-                        <tr><td>Extra donuts</td><td>$17.60 per dozen</td></tr><tr><td>Extra bagels</td><td>$11.99 per dozen</td></tr><tr><td>Large danish platter for the coffee table</td><td>$51.00</td></tr><tr><td>Mini donut platter for the coffee table</td><td>$32.80</td></tr>
-                        <tr><td>10 inch cheesecake</td><td>$80</td></tr><tr><td>Iced coffee</td><td>$10 per bottle</td></tr><tr><td>Additional hot coffee urn</td><td>$80</td></tr>
-                        <tr><td>Cheese platter</td><td>$45</td></tr><tr><td>Crudités platter</td><td>$45</td></tr><tr><td>Fruit platter</td><td>$45</td></tr><tr><td>Yogurt and granola cups, on the buffet or center of the table</td><td>$3.50 each</td></tr>
-                        <tr><td>Large wrap platter</td><td>$90</td></tr><tr><td>Small wrap platter</td><td>$46.50</td></tr><tr><td>Large Greek or Caesar salad, iceberg</td><td>$50</td></tr><tr><td>Large Greek or Caesar salad, romaine</td><td>$60</td></tr>
-                        <tr><td>Extra tuna with less egg salad, or all tuna instead of egg salad</td><td>$0.50 per person</td></tr>
-                      </tbody></table>
-                      <p>Cheesecake flavors: Oreo, chocolate, caramel, strawberry, and carrot.</p>
-                    </details>
-                    <details>
-                      <summary>Hot dishes and omelette station</summary>
-                      <table aria-label="Bris hot dishes"><thead><tr><th scope="col">Item</th><th scope="col">Price</th></tr></thead><tbody><tr><td>Scrambled eggs</td><td>$3.00 per adult</td></tr><tr><td>Pancakes</td><td>$3.00 per adult</td></tr><tr><td>Hash browns</td><td>$2.50 per adult</td></tr><tr><td>Cheese blintzes</td><td>$2.25 per blintze</td></tr><tr><td>Pasta</td><td>$4.00 per adult</td></tr></tbody></table>
-                      <p class="bris-note">Hot food is charged for the full adult count, not children. Confirm the number of blintzes with Bagel Nosh.</p>
-                      <p><strong>Omelette station:</strong> $500 per station for up to 65 people per station. $3 per person over 65, including children. An additional $150 Mashgiach charge applies to the omelette station only. Confirm station quantities and the final charge with Bagel Nosh.</p>
-                    </details>
-                    <details>
-                      <summary>Tablecloths, seating, and halls</summary>
-                      <p>Cloth tablecloths: $20 each. Colors: charcoal grey, navy, baby blue, royal blue, and black. Velvet: $22 each.</p>
-                      <p>Adult tables require at least 10, children’s tables require at least 10, and the head table requires at least 5. Empty tables are not set up. Outside food and outside cloth tablecloths are not allowed.</p>
-                      <p>Catering is available at a hall of your choice. Bagel Nosh can also arrange Ateres Yeshaya for $350 or Bais Shabsi for $400.</p>
-                    </details>
-                    <details>
-                      <summary>Booking and payment terms</summary>
-                      <p>Booking with Bagel Nosh is a verbal commitment. Tentative bookings are not accepted. A simcha is confirmed only after Bagel Nosh responds with confirmation.</p>
-                      <p>For medical cancellations or jaundice, keep Bagel Nosh informed. You must notify them at least 36 hours before the scheduled Bris or the waiter fee will be charged.</p>
-                      <p>Provide the simcha date, your name, location, two phone numbers, and a credit card on file when arranging the booking directly. Final simcha details are needed two days before the event. Card details are arranged directly with Bagel Nosh and are not collected in this form.</p>
-                      <p>Cash, check, and credit card are accepted. Credit card payments have a 2% charge. The card on file is charged the day after the simcha unless you pay in the store with cash or check.</p>
-                      <p>Bagel Nosh handles booking by call or text, not email. Yossi can help you discuss the Bris arrangements.</p>
-                    </details>
-                    <p class="hint">This menu is a reference for your request. No total is calculated and no booking or payment is made through this preview.</p>
-                  </section>
                   <div class="field"><label for="eventDate">Event date *</label><input id="eventDate" name="eventDate" type="date" required aria-describedby="eventDate-error"><span class="field-error" id="eventDate-error"></span></div>
                   <div class="field"><label for="guests">Estimated number of guests *</label><select id="guests" name="guests" required aria-describedby="guests-error"><option value="">Choose a guest size</option><option>About 40</option><option>About 100</option><option>About 200</option><option>Other or not sure</option></select><span class="field-error" id="guests-error"></span></div>
-                  <div class="field full" id="package-field"><label for="packageLevel">Which package level are you interested in? *</label><select id="packageLevel" name="packageLevel" required aria-describedby="packageLevel-error"><option value="">Choose a package</option><option>Classic Package</option><option>Royal Package</option><option>King Package</option></select><span class="field-error" id="packageLevel-error"></span><p class="hint">Yossi will confirm the menu, price, and availability with you.</p></div>
+                  <div class="field full"><label for="packageLevel">Which package level are you interested in? *</label><select id="packageLevel" name="packageLevel" required aria-describedby="packageLevel-error"><option value="">Choose a package</option><option>Classic Package</option><option>Royal Package</option><option>King Package</option></select><span class="field-error" id="packageLevel-error"></span><p class="hint">Yossi will confirm the menu, price, and availability with you.</p></div>
                   <div class="field full"><label for="location">Delivery address or simcha location <span class="optional">(optional)</span></label><input id="location" name="location" autocomplete="street-address" maxlength="400" placeholder="Shul, venue, or address"></div>
                   <div class="field full"><label for="eventNotes">Anything else we should know? <span class="optional">(optional)</span></label><textarea id="eventNotes" name="eventNotes" maxlength="3000" placeholder="Timing, food preferences, allergies, or special requests"></textarea></div>
                 </div>
@@ -297,13 +231,10 @@
         <section id="finish-view" class="finish" hidden aria-labelledby="finish-title"><div class="finish-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></div><p class="eyebrow">Preview complete</p><h2 id="finish-title" tabindex="-1">Your request preview is ready.</h2><p>Nothing has been sent to Yossi. For assistance, call or text <a href="tel:+17324514254">(732) 451 4254</a>.</p><div class="finish-actions"><button class="button" type="button" id="copy-button">Copy request</button><button class="button secondary" type="button" id="restart-button">Start again</button></div><button class="text-button" type="button" id="view-button" style="margin-top:16px">View request details</button><div class="status" id="copy-status" role="status" aria-live="polite"></div></section>
       </div>
       <aside class="aside" aria-label="Packages and contact information">
-        <div id="standard-packages">
         <p class="eyebrow">A package for your simcha</p><h2>Start with<br>what suits you.</h2><p>Choose a package to include it in your request. Yossi will help with the details.</p>
         <div class="package-list"><button type="button" class="package-choice" data-package="Classic Package" aria-pressed="false">Classic Package<span aria-hidden="true">I</span></button><button type="button" class="package-choice" data-package="Royal Package" aria-pressed="false">Royal Package<span aria-hidden="true">II</span></button><button type="button" class="package-choice" data-package="King Package" aria-pressed="false">King Package<span aria-hidden="true">III</span></button></div>
         <p>Planning for about 40, 100, or 200 guests? Choose a size, or let us know if you are still deciding.</p>
         <div class="aside-foot">Menus and prices will be added once confirmed. Requests are subject to availability and confirmation.</div>
-        </div>
-        <div id="bris-aside" hidden><p class="eyebrow">Planning a Bris</p><h2>Start with<br>the menu.</h2><p>View the Bagel Nosh prices, menu, and booking terms in the form. Minimum 65 adults.</p><div class="aside-foot">Yossi can help with the arrangements. The event requires confirmation from Bagel Nosh.</div></div>
         <div class="contact-card"><p class="tagline">Your simcha,<br>handled.</p><p>Call or text Yossi</p><a href="tel:+17324514254">(732) 451 4254</a></div>
       </aside>
     </div>
@@ -338,14 +269,8 @@
       $('error-banner').hidden = true;
     }
     function updatePackageChoices() {
-      const bris = type === 'service' && $('simcha').value === 'Bris';
-      $('bris-menu').hidden = !bris;
-      $('package-field').hidden = bris;
-      $('packageLevel').disabled = bris;
-      $('standard-packages').hidden = bris;
-      $('bris-aside').hidden = !bris;
       document.querySelectorAll('[data-simcha]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.simcha === $('simcha').value && type === 'service')));
-      document.querySelectorAll('[data-package]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.package === $('packageLevel').value && type === 'service' && !bris)));
+      document.querySelectorAll('[data-package]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.package === $('packageLevel').value && type === 'service')));
     }
     function selectType(nextType, persist = false) {
       if (!Object.hasOwn(types,nextType)) return;
@@ -401,8 +326,7 @@
       if (type === 'service') {
         add('Simcha','simcha'); add('Event date','eventDate',formatDate);
         add('Guests','guests');
-        if (value('simcha') === 'Bris') summaryRows.push(['Catering reference','Bagel Nosh Bris menu. Minimum 65 adults. Pricing and booking require confirmation.']);
-        else add('Package','packageLevel');
+        add('Package','packageLevel');
         add('Location','location'); add('Special requests','eventNotes');
       } else if (type === 'question') add('Question','question');
       else { add('Call date','callDate',formatDate); summaryRows.push(['Call time',value('callTime') || 'Any time']); add('Discuss','callTopic'); }

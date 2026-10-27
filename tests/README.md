@@ -6,8 +6,8 @@ Run `CJ_BASE_URL=http://127.0.0.1:8771 node simcha-king-test.mjs` after serving 
 repository root on a fresh port. This suite checks the three preview request paths,
 required and optional fields, safe review text, the manifest and icon, readable
 labels with the shared styles, the portal card, Back and Forward, and access to
-the bottom button at 375, 393, 412 and 1280 pixels. Bris checks cover the expanded
-menu layout, its review summary, and switching back to the original packages.
+the bottom button at 375, 393, 412 and 1280 pixels. Bris remains selectable and
+uses the standard request fields, with no supplier menu or pricing information.
 Service shortcuts select the matching simcha, update their selected state, and
 preserve entered contact information without scrolling past the contact fields.
 It also checks that the preview

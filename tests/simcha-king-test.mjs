@@ -49,7 +49,7 @@ try {
       check(await page.getByRole("button", { name: simcha, exact: true }).getAttribute("aria-pressed") === "true" && await page.locator('.service-list [aria-pressed="true"]').count() === 1, "The selected service button is marked consistently.");
       check(await page.evaluate(() => scrollY) === scrollBefore, "Selecting a service keeps the form in place.");
     }
-    check(await page.locator("#bris-menu").isVisible(), "The Bris button opens its menu.");
+    check(await page.locator("#bris-menu").count() === 0, "Bris remains an option without a menu panel.");
     check(await page.locator("#simcha").evaluate(el => document.activeElement !== el), "Service buttons do not move focus past the contact fields.");
     await page.locator("#simcha").selectOption("Other");
     check(await page.locator('.service-list [aria-pressed="true"]').count() === 0, "Changing the dropdown clears a previous quick selection.");
@@ -71,15 +71,13 @@ try {
     await brisButton.press("Enter");
     check(await page.locator("#simcha").inputValue() === "Bris" && await page.locator("#fullName").inputValue() === "Sample Customer" && await page.evaluate(() => scrollY) === keyboardScrollBefore, "Keyboard shortcuts select the service, preserve contact details, and keep the form in place.");
     await page.locator("#guests").selectOption("About 100");
-    check(await page.locator("#bris-menu").isVisible() && await page.locator("#packageLevel").isDisabled(), "Bris shows its own catering reference without requiring a generic package.");
-    await page.locator("#bris-menu details").evaluateAll(items => items.forEach(item => { item.open = true; }));
-    check(await page.locator("#bris-menu").evaluate(el => el.scrollWidth <= el.clientWidth), "The expanded Bris menu and price tables fit the phone width.");
+    check(await page.locator("#packageLevel").isEnabled(), "Bris uses the standard request fields.");
     await page.getByRole("button", { name: "Send Request", exact: true }).click();
     summary = await page.locator("#review-details").innerText();
-    check(summary.includes("Bris") && summary.includes("Bagel Nosh") && !summary.includes("Classic Package"), "Bris review uses the supplier reference and excludes a previously selected generic package.");
+    check(summary.includes("Bris") && summary.includes("Classic Package") && !summary.includes("Bagel Nosh"), "Bris can be reviewed without supplier menu or pricing information.");
     await page.getByRole("button", { name: "Back to editing" }).click();
     await page.locator("#simcha").selectOption("Kiddush");
-    check(await page.locator("#bris-menu").isHidden() && await page.locator("#packageLevel").isEnabled() && await page.locator("#packageLevel").inputValue() === "Classic Package", "Switching back restores the original package selection.");
+    check(await page.locator("#packageLevel").isEnabled() && await page.locator("#packageLevel").inputValue() === "Classic Package", "Switching services preserves the package selection.");
 
     await page.locator('input[value="question"]').check();
     await page.locator("#question").fill("");
