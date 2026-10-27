@@ -446,8 +446,6 @@
     document.querySelectorAll('[data-simcha]').forEach(button => button.addEventListener('click',() => {
       $('simcha').value = button.dataset.simcha;
       selectType('service',true);
-      $('simcha').focus({preventScroll:true});
-      $('service-fields').scrollIntoView({block:'start',behavior:'auto'});
     }));
     $('sample-button').addEventListener('click',() => {
       const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 14);

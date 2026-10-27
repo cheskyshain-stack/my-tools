@@ -8,8 +8,8 @@ required and optional fields, safe review text, the manifest and icon, readable
 labels with the shared styles, the portal card, Back and Forward, and access to
 the bottom button at 375, 393, 412 and 1280 pixels. Bris checks cover the expanded
 menu layout, its review summary, and switching back to the original packages.
-Service shortcuts select the matching simcha, update their selected state, bring
-the details into view, and preserve entered contact information.
+Service shortcuts select the matching simcha, update their selected state, and
+preserve entered contact information without scrolling past the contact fields.
 It also checks that the preview
 sends no POST requests and preserves unrelated browser data. `CJ_TEST_PROXY` can
 select the session HTTP proxy for browser font requests when needed.

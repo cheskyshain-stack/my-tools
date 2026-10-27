@@ -41,13 +41,16 @@ try {
     check(size.label === "rgb(20, 36, 58)" && size.card === "rgb(255, 255, 255)", "Labels stay dark on white cards with the shared portal stylesheet.");
 
     for (const simcha of ["Kiddush", "Vacht Nacht", "Shalom Zachor", "Bris"]) {
-      await page.getByRole("button", { name: simcha, exact: true }).click();
+      const shortcut = page.getByRole("button", { name: simcha, exact: true });
+      await shortcut.scrollIntoViewIfNeeded();
+      const scrollBefore = await page.evaluate(() => scrollY);
+      await shortcut.click();
       check(await page.locator("#simcha").inputValue() === simcha && await page.locator('input[value="service"]').isChecked(), `${simcha} button selects the matching service.`);
       check(await page.getByRole("button", { name: simcha, exact: true }).getAttribute("aria-pressed") === "true" && await page.locator('.service-list [aria-pressed="true"]').count() === 1, "The selected service button is marked consistently.");
+      check(await page.evaluate(() => scrollY) === scrollBefore, "Selecting a service keeps the form in place.");
     }
     check(await page.locator("#bris-menu").isVisible(), "The Bris button opens its menu.");
-    const target = await page.locator("#simcha").boundingBox();
-    check(target.y >= 0 && target.y + target.height <= height && await page.locator("#simcha").evaluate(el => document.activeElement === el), "A service button brings the simcha details into view and moves keyboard focus there.");
+    check(await page.locator("#simcha").evaluate(el => document.activeElement !== el), "Service buttons do not move focus past the contact fields.");
     await page.locator("#simcha").selectOption("Other");
     check(await page.locator('.service-list [aria-pressed="true"]').count() === 0, "Changing the dropdown clears a previous quick selection.");
 
@@ -64,8 +67,9 @@ try {
 
     const brisButton = page.getByRole("button", { name: "Bris", exact: true });
     await brisButton.focus();
+    const keyboardScrollBefore = await page.evaluate(() => scrollY);
     await brisButton.press("Enter");
-    check(await page.locator("#simcha").inputValue() === "Bris" && await page.locator("#fullName").inputValue() === "Sample Customer", "Service shortcuts work from the keyboard and preserve contact details.");
+    check(await page.locator("#simcha").inputValue() === "Bris" && await page.locator("#fullName").inputValue() === "Sample Customer" && await page.evaluate(() => scrollY) === keyboardScrollBefore, "Keyboard shortcuts select the service, preserve contact details, and keep the form in place.");
     await page.locator("#guests").selectOption("About 100");
     check(await page.locator("#bris-menu").isVisible() && await page.locator("#packageLevel").isDisabled(), "Bris shows its own catering reference without requiring a generic package.");
     await page.locator("#bris-menu details").evaluateAll(items => items.forEach(item => { item.open = true; }));
