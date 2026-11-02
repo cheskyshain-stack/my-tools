@@ -1,11 +1,11 @@
 {
-  "name": "Sunset & Weather",
-  "short_name": "Sunset Weather",
-  "description": "Compare standard and weather adjusted sea-level sunset using current temperature and air pressure.",
+  "name": "Sunrise & Sunset Weather",
+  "short_name": "Sun Times",
+  "description": "Compare standard and weather adjusted sea-level sunrise (netz) and sunset using atmospheric temperature and pressure profiles.",
   "start_url": "/sunset-weather/",
   "scope": "/sunset-weather/",
   "display": "standalone",
   "background_color": "#080b12",
   "theme_color": "#080b12",
-  "icons": [{ "src": "/sunset-weather/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+  "icons": [{ "src": "/sunset-weather/icon.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
 }

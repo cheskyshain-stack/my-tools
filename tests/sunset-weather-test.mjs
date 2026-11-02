@@ -33,7 +33,9 @@ await ctx.route("**/api.open-meteo.com/**", async r => {
   if (chosen === "slow") await new Promise(resolve => { release = resolve; });
   if (chosen === "error") return r.fulfill({ status: 503, body: "Service unavailable" });
   const data = Array.from({ length: 8 }, reading);
-  if (chosen === "missing") data[4].current.temperature_500hPa = null;
+  const lons = url.searchParams.get("longitude").split(",").map(Number);
+  const east = ((lons[1] - lons[0] + 540) % 360) - 180 > 0;
+  if (chosen === "missing" || chosen === "eastmissing" && east) data[4].current.temperature_500hPa = null;
   if (chosen === "stale") for (const d of data) d.current.time -= 14400;
   if (chosen === "inconsistent") data[3].current.time -= 900;
   if (chosen === "badpressure") data[0].current.pressure_msl = -1;
@@ -58,6 +60,10 @@ try {
   eq(lookupQueries[0], "08701");
   ok((await page.locator("#placeName").innerText()).includes("08701"));
   ok((await page.locator("#adjusted").innerText()).includes("PM"));
+  ok((await page.locator("#riseAdjusted").innerText()).includes("AM"));
+  eq(await page.locator("#riseDifference").getAttribute("data-seconds"), String(((await utc("#riseAdjusted")) - (await utc("#riseStandard"))) / 1000));
+  ok(requests.some(u => +u.searchParams.get("longitude").split(",")[1] > +u.searchParams.get("longitude").split(",")[0]), "sunrise requests weather east of the observer");
+  ok(requests.some(u => +u.searchParams.get("longitude").split(",")[1] < +u.searchParams.get("longitude").split(",")[0]), "sunset requests weather west of the observer");
   ok((await page.locator("#temperature").innerText()).includes("59.0°F"));
   ok((await page.locator("#pressure").innerText()).includes("1013.3 hPa"));
   ok((await page.locator("#weatherSource").innerText()).includes("NOAA GFS"));
@@ -78,8 +84,18 @@ try {
   await page.selectOption("#profilePoint", "7");
   eq(await page.locator("#profilePoint").inputValue(), "7");
   const baseline = await utc("#adjusted");
+  const riseBaseline = await utc("#riseAdjusted");
   mode = "warmremote"; await page.locator("#refresh").click(); await settled();
   ok(Math.abs((await utc("#adjusted")) - baseline) >= 1000, "distant air layers affect the shown sunset with identical local weather");
+  ok((await utc("#riseAdjusted")) < riseBaseline, "stronger refraction brings sunrise earlier");
+  ok((await utc("#adjusted")) > baseline, "stronger refraction pushes sunset later");
+  mode = "eastmissing"; await page.locator("#refresh").click(); await settled();
+  eq(await page.locator("#riseAdjusted").innerText(), "Unavailable");
+  ok((await page.locator("#adjusted").innerText()).includes("PM"), "missing eastern layers do not discard the western result");
+  await page.locator('[data-side="rise"]').click();
+  ok((await page.locator("#weatherStatus").innerText()).includes("unavailable"));
+  await page.locator('[data-side="set"]').click();
+  ok(!(await page.locator("#weatherStatus").innerText()).includes("unavailable"));
   mode = "good";
   await select("350 Fifth Avenue, New York", { display_name: "350, Fifth Avenue, New York, United States", lat: "40.7484", lon: "-73.9857" });
   eq(lookupQueries.at(-1), "350 Fifth Avenue, New York");
@@ -118,6 +134,10 @@ try {
       const ref = Date.parse(date + "T00:00:00Z") / 1000 + sunEvent(false, new Date(date + "T00:00:00Z"), 5/6, { latitude:lat, longitude:lon, elevation:0, timezone:UTC }, false) * 86400;
       const delta = Math.abs(((got - ref + 43200) % 86400 + 86400) % 86400 - 43200);
       ok(delta < 1.6, `${name} ${date}: ${delta}s from the reference`);
+      const riseGot = (await utc("#riseStandard")) / 1000;
+      const riseRef = Date.parse(date + "T00:00:00Z") / 1000 + sunEvent(true, new Date(date + "T00:00:00Z"), 5/6, { latitude:lat, longitude:lon, elevation:0, timezone:UTC }, false) * 86400;
+      const riseDelta = Math.abs(((riseGot - riseRef + 43200) % 86400 + 86400) % 86400 - 43200);
+      ok(riseDelta < 1.6, `${name} ${date} sunrise: ${riseDelta}s from reference`);
     }
   }
   await settled();
@@ -126,9 +146,12 @@ try {
   eq(await page.inputValue("#date"), "2026-11-03");
   const local = await page.evaluate(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Kiritimati", year:"numeric",month:"2-digit",day:"2-digit" }).format(new Date(Number(document.getElementById("standard").dataset.utc))));
   eq(local, "2026-11-03");
+  const riseLocal = await page.evaluate(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Kiritimati", year:"numeric",month:"2-digit",day:"2-digit" }).format(new Date(Number(document.getElementById("riseStandard").dataset.utc))));
+  eq(riseLocal, "2026-11-03");
   await select("Tromso", { display_name: "Tromso", lat: "69.6492", lon: "18.9553" });
   await page.fill("#date", "2026-06-21"); await page.dispatchEvent("#date", "change"); await settled();
   eq(await page.locator("#standard").innerText(), "No sunset");
+  eq(await page.locator("#riseStandard").innerText(), "No sunrise");
   eq(await page.locator("#difference").innerText(), "Unavailable");
 
   await select("Lakewood", { display_name: "Lakewood, New Jersey", lat: "40.0959", lon: "-74.2176" });
@@ -139,6 +162,12 @@ try {
     eq(await page.locator(".time").evaluateAll(ns => ns.filter(n=>n.scrollWidth>n.clientWidth+1).length), 0);
     await page.locator("#profileDetails").evaluate(n=>{n.open=true;});
     eq(await page.evaluate(() => document.documentElement.scrollWidth-document.documentElement.clientWidth), 0);
+    for (const side of ["rise", "set"]) {
+      await page.locator(`[data-side="${side}"]`).click();
+      eq(await page.locator(`[data-side="${side}"]`).getAttribute("aria-pressed"), "true");
+      ok((await page.locator("#pathSummary").innerText()).includes(side === "rise" ? "toward sunrise" : "toward sunset"));
+      eq(await page.evaluate(() => document.documentElement.scrollWidth-document.documentElement.clientWidth), 0);
+    }
     await page.screenshot({path:`sunset-weather-${width}.png`,fullPage:true});
   }
   await page.setViewportSize({width:393,height:852});
@@ -149,6 +178,7 @@ try {
   const frame=page.frames().find(f=>f!==page.mainFrame()&&/\/sunset-weather\//.test(f.url())); ok(frame);
   await frame.waitForFunction(()=>!document.getElementById("refresh").disabled);
   ok((await frame.locator("#adjusted").innerText()).includes("PM"));
+  ok((await frame.locator("#riseAdjusted").innerText()).includes("AM"));
   eq(await frame.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
   await page.goBack(); await page.waitForURL(`${BASE}/`);
   await page.goForward(); await page.waitForURL(`${BASE}/sunset-weather/`);

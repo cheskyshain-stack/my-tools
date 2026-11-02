@@ -7,6 +7,6 @@
   <path d="M56 265h400M110 289h292M163 310h185" fill="none" stroke="#f5b841" stroke-width="7" stroke-linecap="round"/>
   <g fill="#d9edff"><path d="M326 152c-26-38-90-21-91 26-37-2-51 48-13 58h169c36-12 28-59-9-62-10-29-36-35-56-22Z"/></g>
   <path d="M413 109v141m0-141-17 19m17-19 17 19m-17 122-17-19m17 19 17-19" fill="none" stroke="#44b4ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="256" y="393" text-anchor="middle" fill="#f5b841" font-family="DejaVu Sans, sans-serif" font-size="70" font-weight="bold">SUNSET</text>
+  <text x="256" y="393" text-anchor="middle" fill="#f5b841" font-family="DejaVu Sans, sans-serif" font-size="54" font-weight="bold">SUN TIMES</text>
   <text x="256" y="452" text-anchor="middle" fill="#9dd5ff" font-family="DejaVu Sans, sans-serif" font-size="43" font-weight="bold" letter-spacing="4">WEATHER</text>
 </svg>

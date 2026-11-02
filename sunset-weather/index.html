@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080b12">
-<meta name="description" content="Compare standard sunset with an estimate tracing light through weather-model temperature and pressure layers along the sunset direction, at sea level.">
-<title>Sunset &amp; Weather | CJ Portal</title>
+<meta name="description" content="Compare standard and weather adjusted sunrise (netz) and sunset, with atmospheric profiles in each direction and elevation fixed at sea level.">
+<title>Sunrise &amp; Sunset Weather | CJ Portal</title>
 <link rel="manifest" href="/sunset-weather/manifest.json">
-<link rel="icon" type="image/png" href="/sunset-weather/icon.png?v=1">
-<link rel="apple-touch-icon" href="/sunset-weather/icon.png?v=1">
+<link rel="icon" type="image/png" href="/sunset-weather/icon.png?v=2">
+<link rel="apple-touch-icon" href="/sunset-weather/icon.png?v=2">
 <style>
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;overscroll-behavior-y:none}
@@ -46,7 +46,12 @@
   .time-note{font-size:11px;line-height:1.5;color:var(--cj-muted);margin:7px 0 0;min-height:17px}
   .difference{margin-top:12px;border-radius:15px;padding:14px;background:rgba(37,131,247,.09);border:1px solid rgba(37,131,247,.22)}
   .difference span{display:block;font-size:11px;color:var(--cj-muted);margin-bottom:4px}
-  #difference{font:700 23px var(--cj-mono);margin:0;color:var(--cj-text)}
+  #difference,#riseDifference{font:700 23px var(--cj-mono);margin:0;color:var(--cj-text)}
+  .event-heading{margin:22px 0 0;font:600 18px var(--cj-display)}
+  .event-heading span{font:600 12px var(--cj-body);color:var(--cj-muted);margin-left:8px}
+  .weather-sides{display:flex;gap:6px;margin-top:15px}
+  .weather-sides button{flex:1;min-width:0;min-height:44px;padding:9px 6px;font:600 12px var(--cj-body);color:var(--cj-muted);border:1px solid var(--cj-line);border-radius:11px;background:rgba(255,255,255,.04);cursor:pointer}
+  .weather-sides button[aria-pressed="true"]{background:var(--cj-accent);color:#fff}
   .notice{border-left:3px solid var(--cj-accent);padding-left:11px;margin-top:15px}
   .weather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:17px 0}
   dt{font-size:12px;color:var(--cj-muted);margin-bottom:5px}
@@ -64,17 +69,17 @@
   details p{font-size:13px;color:var(--cj-muted)}
   code{font-size:12px;overflow-wrap:anywhere}
   .back{display:block;text-align:center;font-size:13px;margin:20px}
-  @media(max-width:430px){.card{padding:14px}.times{gap:8px}.time-card{padding:13px 9px}.time-card h3{font-size:12px}.time{font-size:17px}.cj-btn{padding-left:15px;padding-right:15px}#difference{font-size:21px}}
+  @media(max-width:430px){.card{padding:14px}.times{gap:8px}.time-card{padding:13px 9px}.time-card h3{font-size:12px}.time{font-size:17px}.cj-btn{padding-left:15px;padding-right:15px}#difference,#riseDifference{font-size:21px}}
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
 </head>
 <body>
 <header class="cj-page-header">
-  <div class="cj-brand"><img src="/sunset-weather/icon.png?v=1" alt="Sunset and Weather"></div>
-  <h1>Sunset &amp; Weather</h1>
+  <div class="cj-brand"><img src="/sunset-weather/icon.png?v=2" alt="Sunrise and Sunset Weather"></div>
+  <h1>Sunrise &amp; Sunset Weather</h1>
 </header>
 <main>
-  <p class="intro">See how air layers along the light's path could shift sunset. Both times use sea level and a clear, unobstructed horizon.</p>
+  <p class="intro">See how air layers along the light's path could shift sunrise and sunset. All times use sea level and a clear, unobstructed horizon.</p>
   <section class="card" aria-labelledby="locationTitle">
     <h2 id="locationTitle">Choose your location</h2>
     <form id="searchForm">
@@ -89,43 +94,51 @@
   </section>
   <section class="card" aria-labelledby="resultsTitle">
     <span class="badge">Sea level: 0 ft · Unobstructed horizon</span>
-    <label for="date">Sunset date at this location</label>
+    <label for="date">Date at this location</label>
     <div class="date-row"><input id="date" type="date" min="1900-01-01" max="2100-12-31"><button id="today" class="cj-btn cj-btn-ghost" type="button">Today</button></div>
     <p id="zoneLabel" class="hint">Choose a location for its local time zone.</p>
     <p id="inputError" class="hint error" role="status" hidden></p>
-    <h2 id="resultsTitle" style="margin-top:20px">Your sunset times</h2>
+    <h2 id="resultsTitle" style="margin-top:20px">Your sunrise and sunset times</h2>
+    <h3 class="event-heading">Sunrise <span>Netz</span></h3>
+    <div class="times">
+      <section class="time-card"><h3>Standard sunrise</h3><div id="riseStandard" class="time unavailable">Choose a location</div><p id="riseStandardNote" class="time-note">Usual atmospheric refraction</p></section>
+      <section class="time-card adjusted"><h3>Weather adjusted</h3><div id="riseAdjusted" class="time unavailable">Choose a location</div><p id="riseAdjustedNote" class="time-note">Using current weather</p></section>
+    </div>
+    <div class="difference" role="status" aria-live="polite"><span>Difference from standard sunrise</span><p id="riseDifference">Not calculated yet</p></div>
+    <h3 class="event-heading">Sunset <span>Shkiya</span></h3>
     <div class="times">
       <section class="time-card"><h3>Standard sunset</h3><div id="standard" class="time unavailable">Choose a location</div><p id="standardNote" class="time-note">Usual atmospheric refraction</p></section>
       <section class="time-card adjusted"><h3>Weather adjusted</h3><div id="adjusted" class="time unavailable">Choose a location</div><p id="adjustedNote" class="time-note">Using current weather</p></section>
     </div>
     <div class="difference" role="status" aria-live="polite"><span>Difference from standard sunset</span><p id="difference">Not calculated yet</p></div>
-    <p id="dateNotice" class="hint notice">Uses the current modeled atmosphere. Actual conditions at sunset may differ.</p>
+    <p id="dateNotice" class="hint notice">Uses the current modeled atmosphere. Actual conditions at sunrise and sunset may differ.</p>
   </section>
   <section class="card" aria-labelledby="weatherTitle">
     <div class="heading-row"><h2 id="weatherTitle">Weather used</h2><button id="refresh" class="cj-btn cj-btn-ghost" type="button" disabled>Refresh weather</button></div>
+    <div id="weatherSides" class="weather-sides" aria-label="Weather profile direction"><button type="button" data-side="rise" aria-pressed="false">Sunrise, east</button><button type="button" data-side="set" aria-pressed="true">Sunset, west</button></div>
     <p id="weatherStatus" class="hint" role="status" aria-live="polite">Choose a location to load current weather.</p>
-    <p id="pathSummary" class="hint">Uses temperature and pressure layers at several points toward sunset. It is a model of the light path, not a measurement of every part of the atmosphere.</p>
+    <p id="pathSummary" class="hint">Sunrise and sunset use separate atmospheric profiles in their own directions. Each is a model of the light path, not a measurement of every part of the atmosphere.</p>
     <dl class="weather-grid"><div><dt>Sea-level air temperature</dt><dd id="temperature">Unavailable</dd></div><div><dt>Sea-level air pressure</dt><dd id="pressure">Unavailable</dd></div></dl>
     <div class="weather-meta">
       <p>Source: <a id="weatherSource" href="https://open-meteo.com/en/docs/gfs-api" target="_blank" rel="noopener">NOAA GFS via Open-Meteo</a> · Current weather model data.</p>
       <p>Weather reading: <time id="readingTime">Not loaded</time></p>
       <p>Last fetched: <time id="fetchedTime">Not loaded</time></p>
     </div>
-    <details id="profileDetails" hidden><summary>See the air layers used</summary><label for="profilePoint">Position along the sunset direction</label><select id="profilePoint"></select><table><thead><tr><th>Height (ft)</th><th>Temp (°F)</th><th>Pressure (hPa)</th></tr></thead><tbody id="profileRows"></tbody></table><p class="hint">Rows show modeled layers. Values between them are interpolated; the atmosphere above the highest row is extrapolated. These are not measurements at every point.</p></details>
+    <details id="profileDetails" hidden><summary>See the air layers used</summary><label id="profilePointLabel" for="profilePoint">Position along the sunset direction</label><select id="profilePoint"></select><table><thead><tr><th>Height (ft)</th><th>Temp (°F)</th><th>Pressure (hPa)</th></tr></thead><tbody id="profileRows"></tbody></table><p class="hint">Rows show modeled layers. Values between them are interpolated; the atmosphere above the highest row is extrapolated. These are not measurements at every point.</p></details>
   </section>
   <section class="card" aria-labelledby="accuracyTitle">
-    <h2 id="accuracyTitle">An estimate, not an exact observation</h2>
-    <p class="hint">Actual observed sunset may vary. The weather model can miss small temperature inversions and sudden changes along the horizon. Humidity, mirages and conditions above the available data add uncertainty. Clouds may hide the sun before sunset. Seconds shown here are estimates, not a promise of second-by-second accuracy.</p>
+    <h2 id="accuracyTitle">Observed times may vary</h2>
+    <p class="hint">Actual observed sunrise and sunset may vary. The weather model can miss small temperature inversions and sudden changes along the horizon. Humidity, mirages and conditions above the available data add uncertainty. Clouds may hide the sun. Seconds shown here are estimates, not a promise of second-by-second accuracy.</p>
   </section>
   <section class="card">
     <details><summary>How the comparison works</summary>
-      <p>Both times mark the upper edge of the sun reaching an unobstructed sea-level horizon. Elevation is fixed at 0 ft, with no hills, buildings or height correction.</p>
-      <p>Standard sunset uses a 16-arcminute solar radius and a fixed 34 arcminutes of atmospheric refraction.</p>
-      <p>The weather estimate traces a horizontal ray backward from the sea-level observer through a curved-Earth vertical plane toward sunset. It uses pressure, temperature and layer heights from 27 model pressure levels at eight positions, from your location to about 621 miles away. Refraction depends on vertical layers and horizontal changes along that plane, not just local temperature and pressure.</p>
+      <p>Sunrise (netz) marks the first appearance of the sun's upper edge; sunset marks its disappearance at an unobstructed sea-level horizon. Elevation is fixed at 0 ft, with no hills, buildings or height correction.</p>
+      <p>Standard sunrise and sunset use a 16-arcminute solar radius and a fixed 34 arcminutes of atmospheric refraction.</p>
+      <p>Each weather estimate traces a horizontal ray backward from the sea-level observer through a curved-Earth vertical plane in the sun's direction. Sunrise samples its eastern path and sunset its western path independently. Each uses pressure, temperature and layer heights from 27 model pressure levels at eight positions, from your location to about 621 miles away. Refraction depends on vertical layers and horizontal changes along that plane, not just local temperature and pressure.</p>
       <p>Dry-air refractivity at 550nm uses a standard-air dispersion relation with pressure/temperature density scaling. Humidity, sideways ray bending and sub-grid inversions are not resolved. This is an approximate two-dimensional model, not a complete 3D measurement of the atmosphere.</p>
       <p>The highest weather level is 10 hPa, usually around 100,000 ft. Above that, an isothermal hydrostatic tail is extrapolated, and the ray is followed to about 262,000 ft where refraction is very small. Beyond the last horizontal sample, the final column is extended. These estimates do not add real upper-atmosphere observations.</p>
       <p>Open-Meteo is requested with observer elevation fixed at sea level. Its current values come from NOAA GFS model data, not necessarily a nearby station. Reading time is the valid time of the data; last fetched is when this page retrieved it.</p>
-      <p>Changing the date samples a new sunset direction using current model conditions. For past or future dates, this is a what-if estimate, not historical weather or a forecast for that date. If the modeled ray bends back into the surface, the adjusted result is unavailable.</p>
+      <p>Changing the date samples new sunrise and sunset directions using current model conditions. For past or future dates, this is a what-if estimate, not historical weather or a forecast for that date. If one modeled path is unavailable, that result is marked unavailable while the other path can still be used.</p>
       <p>References: <a href="https://aa.usno.navy.mil/faq/RST_defs" target="_blank" rel="noopener">US Naval Observatory sunset definition</a>, <a href="https://gml.noaa.gov/grad/solcalc/calcdetails.html" target="_blank" rel="noopener">NOAA solar calculations</a>, <a href="https://aty.sdsu.edu/explain/thermal/thermal.html" target="_blank" rel="noopener">SDSU atmospheric profiles and refraction</a>, and <a href="https://open-meteo.com/en/docs/gfs-api" target="_blank" rel="noopener">Open-Meteo GFS documentation</a>.</p>
     </details>
   </section>
@@ -294,8 +307,9 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
   }
   /* ATMOSPHERE_MODEL_END */
 
-  var KEY = "cjSunsetWeatherV1", state = { place: null, date: null, datePinned: false };
+  var KEY = "cjSunsetWeatherV1", state = { place: null, date: null, datePinned: false, weatherSide: "set" };
   var weather = null, weatherBusy = false, weatherSeq = 0, weatherController = null, weatherTimer = null;
+  var readings = { rise: null, set: null }, weatherErrors = { rise: "", set: "" };
   var searchSeq = 0, searchController = null, lastSearch = 0, gpsSeq = 0, matches = [];
   var zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   function validPlace(p) { return p && typeof p.name === "string" && p.name.trim() && Number.isFinite(p.lat) && Math.abs(p.lat) <= 90 && Number.isFinite(p.lon) && Math.abs(p.lon) <= 180; }
@@ -308,7 +322,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     parts.forEach(function (p) { out[p.type] = p.value; }); return out.year + "-" + out.month + "-" + out.day;
   }
   function setZone() { if (state.place) { try { zone = new Intl.DateTimeFormat("en", { timeZone: tzlookup(state.place.lat, state.place.lon) }).resolvedOptions().timeZone; } catch (e) { zone = "UTC"; } } }
-  try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) { if (validPlace(saved.place)) { state.place = saved.place; } if (validDate(saved.date)) { state.date = saved.date; state.datePinned = saved.datePinned === true; } } } catch (e) {}
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) { if (validPlace(saved.place)) { state.place = saved.place; } if (validDate(saved.date)) { state.date = saved.date; state.datePinned = saved.datePinned === true; } if (saved.weatherSide === "rise") { state.weatherSide = "rise"; } } } catch (e) {}
   setZone();
   if (!state.datePinned || !state.date) { state.date = dateAt(new Date(), zone); }
   el("date").value = state.date;
@@ -316,17 +330,18 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
   function formatted(t, full) {
     return new Intl.DateTimeFormat("en-US", full ? { timeZone: zone, dateStyle: "medium", timeStyle: "short" } : { timeZone: zone, hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true }).format(new Date(t)).replace(/[\u00a0\u202f]/g, " ");
   }
-  function sunsetCycle(day, refraction) {
+  function eventCycle(day, refraction, rising) {
     var p = state.place, noon = solarNoon(new Date(day), p.lat, p.lon).getTime();
-    var a = noon, b = noon + 43200000, target = -(16 + refraction) / 60;
+    var a = rising ? noon - 43200000 : noon, b = rising ? noon : noon + 43200000, target = -(16 + refraction) / 60;
     function g(t) { return sunAt(new Date(t), p.lat, p.lon).alt - target; }
-    if (g(a) < 0 || g(b) > 0) { return null; }
-    for (var i = 0; i < 42; i++) { var mid = (a + b) / 2; if (g(mid) > 0) { a = mid; } else { b = mid; } }
+    var ga = g(a), gb = g(b);
+    if (rising ? ga > 0 || gb < 0 : ga < 0 || gb > 0) { return null; }
+    for (var i = 0; i < 42; i++) { var mid = (a + b) / 2; if ((g(mid) < 0) === (ga < 0)) { a = mid; } else { b = mid; } }
     return { time: Math.round((a + b) / 2000) * 1000, day: day };
   }
-  function forDate(date, refraction) {
+  function forDate(date, refraction, rising) {
     var base = new Date(date + "T00:00:00Z").getTime();
-    for (var shift = -1; shift <= 1; shift++) { var result = sunsetCycle(base + shift * 86400000, refraction); if (result && dateAt(new Date(result.time), zone) === date) { return result; } }
+    for (var shift = -1; shift <= 1; shift++) { var result = eventCycle(base + shift * 86400000, refraction, rising); if (result && dateAt(new Date(result.time), zone) === date) { return result; } }
     return null;
   }
   function showTime(id, result, fallback, noteId, normalNote) {
@@ -336,22 +351,30 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
   }
   function paint() {
     var date = el("date").value, valid = validDate(date), p = state.place;
+    var side = state.weatherSide, direction = side === "rise" ? "sunrise" : "sunset";
+    weather = readings[side];
+    el("weatherSides").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.side === side)); });
     el("inputError").hidden = valid;
     el("inputError").textContent = valid ? "" : "Choose a valid date between 1900 and 2100.";
     el("placeName").textContent = p ? p.name : "No location selected";
     el("zoneLabel").textContent = p ? "Local time: " + zone.replace(/_/g, " ") + ". Daylight saving is applied for the selected date." : "Choose a location for its local time zone.";
     el("refresh").disabled = !p || weatherBusy;
-    var standard = p && valid ? forDate(date, 34) : null;
-    var fresh = weather && Date.now() - weather.time <= 10800000 && weather.time - Date.now() <= 1800000;
-    var refraction = fresh ? weather.ray.refraction : null;
-    var adjusted = p && valid && fresh ? (standard ? sunsetCycle(standard.day, refraction) : forDate(date, refraction)) : null;
-    showTime("standard", standard, !p ? "Choose a location" : !valid ? "Choose a date" : "No sunset", "standardNote", "Usual atmospheric refraction");
-    showTime("adjusted", adjusted, !p ? "Choose a location" : !valid ? "Choose a date" : fresh ? "No sunset" : weatherBusy ? "Loading air layers" : "Unavailable", "adjustedNote", fresh ? "Using air layers along the light path" : "Using current weather");
-    el("difference").textContent = !p || !valid ? "Not calculated yet" : !standard || !adjusted ? "Unavailable" : (function () { var sec = (adjusted.time - standard.time) / 1000; return sec === 0 ? "0 seconds · no change" : Math.abs(sec) + " seconds " + (sec > 0 ? "later" : "earlier"); }());
-    if (standard && adjusted) { el("difference").dataset.seconds = String((adjusted.time - standard.time) / 1000); } else { delete el("difference").dataset.seconds; }
+    [true, false].forEach(function (rising) {
+      var key = rising ? "rise" : "set", reading = readings[key], name = rising ? "sunrise" : "sunset";
+      var standard = p && valid ? forDate(date, 34, rising) : null;
+      var fresh = reading && reading.date === date && Date.now() - reading.time <= 10800000 && reading.time - Date.now() <= 1800000;
+      var adjusted = p && valid && fresh ? (standard ? eventCycle(standard.day, reading.ray.refraction, rising) : forDate(date, reading.ray.refraction, rising)) : null;
+      var stdId = rising ? "riseStandard" : "standard", adjId = rising ? "riseAdjusted" : "adjusted", deltaId = rising ? "riseDifference" : "difference";
+      showTime(stdId, standard, !p ? "Choose a location" : !valid ? "Choose a date" : "No " + name, rising ? "riseStandardNote" : "standardNote", "Usual atmospheric refraction");
+      showTime(adjId, adjusted, !p ? "Choose a location" : !valid ? "Choose a date" : fresh ? "No " + name : weatherBusy && !weatherErrors[key] ? "Loading air layers" : "Unavailable", rising ? "riseAdjustedNote" : "adjustedNote", fresh ? "Using air layers along the light path" : "Using current weather");
+      el(deltaId).textContent = !p || !valid ? "Not calculated yet" : !standard || !adjusted ? "Unavailable" : (function () { var sec = (adjusted.time - standard.time) / 1000; return sec === 0 ? "0 seconds · no change" : Math.abs(sec) + " seconds " + (sec > 0 ? "later" : "earlier"); }());
+      if (standard && adjusted) { el(deltaId).dataset.seconds = String((adjusted.time - standard.time) / 1000); } else { delete el(deltaId).dataset.seconds; }
+    });
     var currentDate = dateAt(new Date(weather ? weather.time : Date.now()), zone);
-    el("dateNotice").textContent = valid && date !== currentDate ? "Current atmosphere from " + currentDate + " is applied to " + date + ". This is a what-if estimate, not historical weather or a forecast for that date." : "Uses the current modeled atmosphere. Actual conditions at sunset may differ.";
+    el("dateNotice").textContent = valid && date !== currentDate ? "Current atmosphere from " + currentDate + " is applied to " + date + ". This is a what-if estimate, not historical weather or a forecast for that date." : "Uses the current modeled atmosphere. Actual conditions at sunrise and sunset may differ.";
     el("profileDetails").hidden = !weather;
+    el("profilePointLabel").textContent = "Position along the " + direction + " direction";
+    status("weatherStatus", !p ? "Choose a location to load current weather." : !valid ? "Choose a valid date to load the atmospheric paths." : weatherErrors[side] || (weather ? "Current weather-model layers have been traced along the " + direction + " direction." : weatherBusy ? "Loading atmospheric layers along the " + direction + " direction." : "Atmospheric data are unavailable. Try Refresh weather."), !!weatherErrors[side]);
     if (weather) {
       el("temperature").textContent = (weather.temperature * 9 / 5 + 32).toFixed(1) + "°F";
       var c = document.createElement("small"); c.textContent = weather.temperature.toFixed(1) + "°C"; el("temperature").appendChild(c);
@@ -362,18 +385,19 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
       el("fetchedTime").textContent = formatted(weather.fetched, true) + " (" + zone.replace(/_/g, " ") + ")";
       el("fetchedTime").dateTime = new Date(weather.fetched).toISOString();
       var top = Math.min.apply(null, weather.profiles.map(function (p) { return p.nodes[p.nodes.length - 1].h; }));
-      el("pathSummary").textContent = "Uses layers at 8 positions toward sunset, out to 621 miles. Model layers reach at least " + Math.round(top / 0.3048).toLocaleString("en-US") + " ft; the air above that is extrapolated. Small inversions and sideways changes can be missed.";
+      el("pathSummary").textContent = "Uses layers at 8 positions toward " + direction + ", out to 621 miles. Model layers reach at least " + Math.round(top / 0.3048).toLocaleString("en-US") + " ft; the air above that is extrapolated. Small inversions and sideways changes can be missed.";
       var selected = el("profilePoint").value;
-      el("profilePoint").replaceChildren(); weather.profiles.forEach(function (p, i) { var o = new Option(i === 0 ? "Your location" : (p.distance / 1609.344).toFixed(1) + " miles toward sunset", String(i)); el("profilePoint").add(o); });
+      el("profilePoint").replaceChildren(); weather.profiles.forEach(function (p, i) { var o = new Option(i === 0 ? "Your location" : (p.distance / 1609.344).toFixed(1) + " miles toward " + direction, String(i)); el("profilePoint").add(o); });
       el("profilePoint").value = selected || "0"; renderLayers();
-      if (!fresh && !weatherBusy) { status("weatherStatus", "This weather reading is out of date. Refresh weather to calculate an adjusted sunset.", true); }
-    } else { el("pathSummary").textContent = "Uses temperature and pressure layers at several points toward sunset. It is a model of the light path, not a measurement of every part of the atmosphere."; ["temperature", "pressure"].forEach(function (id) { el(id).textContent = "Unavailable"; }); ["readingTime", "fetchedTime"].forEach(function (id) { el(id).textContent = "Not loaded"; el(id).removeAttribute("datetime"); }); }
+      if (Date.now() - weather.time > 10800000 && !weatherBusy) { status("weatherStatus", "This weather reading is out of date. Refresh weather to calculate an adjusted time.", true); }
+    } else { el("pathSummary").textContent = "Sunrise and sunset use separate atmospheric profiles in their own directions. Each is a model of the light path, not a measurement of every part of the atmosphere."; ["temperature", "pressure"].forEach(function (id) { el(id).textContent = "Unavailable"; }); ["readingTime", "fetchedTime"].forEach(function (id) { el(id).textContent = "Not loaded"; el(id).removeAttribute("datetime"); }); }
   }
   function renderLayers() {
     if (!weather) { return; } var p = weather.profiles[+el("profilePoint").value || 0]; el("profileRows").replaceChildren();
     p.nodes.forEach(function (n) { var tr = document.createElement("tr"); [Math.round(n.h / 0.3048).toLocaleString("en-US"), ((n.t - 273.15) * 9 / 5 + 32).toFixed(1), n.p.toFixed(1)].forEach(function (s) { var td = document.createElement("td"); td.textContent = s; tr.appendChild(td); }); el("profileRows").appendChild(tr); });
   }
   el("profilePoint").addEventListener("change", renderLayers);
+  el("weatherSides").addEventListener("click", function (e) { var b = e.target.closest("[data-side]"); if (b) { state.weatherSide = b.dataset.side; save(); paint(); } });
   function status(id, text, error) { el(id).textContent = text; el(id).classList.toggle("error", !!error); }
   async function loadWeather() {
     if (!state.place || !validDate(el("date").value)) { return; }
@@ -381,10 +405,12 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     var mine = ++weatherSeq, p = state.place; if (weatherController) { weatherController.abort(); }
     var controller = weatherController = new AbortController(), timedOut = false;
     var timer = setTimeout(function () { timedOut = true; controller.abort(); }, 45000);
-    weatherBusy = true; weather = null; status("weatherStatus", "Loading atmospheric layers along the sunset direction.", false); paint();
-    try {
-      var standard = forDate(el("date").value, 34);
-      if (!standard) { throw new Error("There is no standard sea-level sunset on this date"); }
+    var date = el("date").value;
+    weatherBusy = true; weather = null; readings = { rise: null, set: null }; weatherErrors = { rise: "", set: "" }; paint();
+    async function loadPath(rising) {
+      var name = rising ? "sunrise" : "sunset";
+      var standard = forDate(date, 34, rising);
+      if (!standard) { throw new Error("There is no standard sea-level " + name + " on this date"); }
       var bearing = sunAt(new Date(standard.time), p.lat, p.lon).az;
       var fields = ["temperature_2m", "pressure_msl"]; PRESSURE_LEVELS.forEach(function (level) { fields.push("temperature_" + level + "hPa", "geopotential_height_" + level + "hPa"); });
       for (var round = 0; round < 3; round++) {
@@ -392,22 +418,27 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
         var url = new URL("https://api.open-meteo.com/v1/gfs");
         Object.entries({ latitude: points.map(function (p) { return p.lat.toFixed(5); }).join(","), longitude: points.map(function (p) { return p.lon.toFixed(5); }).join(","), current: fields.join(","), temperature_unit: "celsius", elevation: points.map(function () { return "0"; }).join(","), models: "gfs_global", timezone: "GMT", timeformat: "unixtime", forecast_days: "1" }).forEach(function (pair) { url.searchParams.set(pair[0], pair[1]); });
         var res = await fetch(url.href, { signal: controller.signal }); if (!res.ok) { throw new Error("Atmosphere service returned " + res.status); }
-        var data = await res.json(); if (mine !== weatherSeq) { return; }
+        var data = await res.json(); if (mine !== weatherSeq) { throw new Error("Superseded location or date"); }
         if (!Array.isArray(data) || data.length !== points.length) { throw new Error("Atmospheric path data are incomplete"); }
         var profiles = data.map(function (d, i) { return profileFrom(d, PROFILE_DISTANCES[i]); });
         var time = profiles[0].time;
         if (profiles.some(function (p) { return p.time !== time; }) || Date.now() - time > 10800000 || time - Date.now() > 1800000) { throw new Error("The atmospheric readings are out of date or not time-aligned"); }
-        var ray = atmosphericRay(profiles), adjusted = sunsetCycle(standard.day, ray.refraction);
+        var ray = atmosphericRay(profiles), adjusted = eventCycle(standard.day, ray.refraction, rising);
         var newBearing = adjusted ? sunAt(new Date(adjusted.time), p.lat, p.lon).az : bearing;
         var turn = Math.abs(((newBearing - bearing + 540) % 360) - 180);
         if (turn > 0.2 && round < 2) { bearing = newBearing; continue; }
-        if (turn > 0.2) { throw new Error("The sunset direction did not settle in the atmosphere model"); }
-        weather = { temperature: data[0].current.temperature_2m, pressure: data[0].current.pressure_msl, time: time, fetched: Date.now(), profiles: profiles, ray: ray };
-        break;
+        if (turn > 0.2) { throw new Error("The " + name + " direction did not settle in the atmosphere model"); }
+        return { date: date, temperature: data[0].current.temperature_2m, pressure: data[0].current.pressure_msl, time: time, fetched: Date.now(), profiles: profiles, ray: ray };
       }
-      status("weatherStatus", "Current weather-model layers have been traced along the sunset direction.", false);
-    } catch (e) { if (mine !== weatherSeq) { return; } weather = null; status("weatherStatus", (timedOut ? "The atmosphere request timed out. " : "The atmosphere estimate is unavailable: " + e.message + ". ") + "Standard sunset is still available when it occurs. Try Refresh weather.", true); }
-    finally { clearTimeout(timer); if (mine === weatherSeq) { weatherBusy = false; paint(); } }
+    }
+    try {
+      await Promise.all([true, false].map(async function (rising) {
+        var side = rising ? "rise" : "set";
+        try { var result = await loadPath(rising); if (mine === weatherSeq) { readings[side] = result; } }
+        catch (e) { if (mine === weatherSeq) { weatherErrors[side] = (timedOut ? "The atmosphere request timed out. " : "The " + (rising ? "sunrise" : "sunset") + " atmosphere estimate is unavailable: " + e.message + ". ") + "Standard times remain available when they occur. Try Refresh weather."; } }
+        if (mine === weatherSeq) { paint(); }
+      }));
+    } finally { clearTimeout(timer); if (mine === weatherSeq) { weatherBusy = false; paint(); } }
   }
   function choose(p) {
     if (!validPlace(p)) { return; } state.place = p; ++gpsSeq; ++searchSeq; if (searchController) { searchController.abort(); }
@@ -439,7 +470,7 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     el("gps").disabled = true; el("gps").textContent = "Finding your location";
     navigator.geolocation.getCurrentPosition(function (pos) { if (mine !== gpsSeq) { return; } choose({ name: "My location (" + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5) + ")", lat: pos.coords.latitude, lon: pos.coords.longitude }); }, function () { if (mine !== gpsSeq) { return; } el("gps").disabled = false; el("gps").textContent = "Use my location"; status("searchStatus", "Location could not be read. Allow location access, or search by ZIP code or address.", true); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   });
-  function dateChanged() { clearTimeout(weatherTimer); ++weatherSeq; if (weatherController) { weatherController.abort(); } weather = null; weatherBusy = false; paint(); if (state.place && validDate(el("date").value)) { weatherBusy = true; paint(); weatherTimer = setTimeout(loadWeather, 300); } }
+  function dateChanged() { clearTimeout(weatherTimer); ++weatherSeq; if (weatherController) { weatherController.abort(); } weather = null; readings = { rise: null, set: null }; weatherErrors = { rise: "", set: "" }; weatherBusy = false; paint(); if (state.place && validDate(el("date").value)) { weatherBusy = true; paint(); weatherTimer = setTimeout(loadWeather, 300); } }
   el("date").addEventListener("change", function () { state.datePinned = true; save(); dateChanged(); });
   el("today").addEventListener("click", function () { state.datePinned = false; el("date").value = dateAt(new Date(), zone); save(); dateChanged(); });
   el("refresh").addEventListener("click", loadWeather);
@@ -447,10 +478,10 @@ function tzlookup(Y,W){"use strict";var U="XIXHXHXGXGXQXQXPXPXOXOXN##U6U6UW#$U%U
     if (document.hidden) { return; }
     var today = dateAt(new Date(), zone);
     if (!state.datePinned && el("date").value !== today) { el("date").value = today; save(); dateChanged(); return; }
-    if (state.place && !weatherBusy && (!weather || Date.now() - weather.fetched >= 600000)) { loadWeather(); } else { paint(); }
+    if (state.place && !weatherBusy && ["rise", "set"].some(function (side) { return !readings[side] || Date.now() - readings[side].fetched >= 900000; })) { loadWeather(); } else { paint(); }
   }
   document.addEventListener("visibilitychange", refreshIfNeeded);
-  setInterval(refreshIfNeeded, 600000);
+  setInterval(refreshIfNeeded, 900000);
   paint(); if (state.place) { el("query").value = state.place.name; loadWeather(); }
 }());
 </script>
