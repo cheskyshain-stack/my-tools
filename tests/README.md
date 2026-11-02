@@ -1,5 +1,17 @@
 # Tests
 
+## Sunset & Weather
+
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:sunset` runs the new
+sea-level weather comparison tests. `sunset-model-test.mjs` checks the ray tracer
+against an independent spherical refraction integral, zero bending in uniform
+media, convergence, surface-intersecting rays and distant temperature changes.
+`sunset-weather-test.mjs` exercises ZIP/address/GPS selection, full atmospheric
+layer requests, source/timestamps, error handling, civil dates, 24 reference solar
+times, four viewport widths and portal Back/Forward. The reference `zmanim-tool`
+checkout is required beside this repository. See `sunset-weather/README.md` for
+the physical model and its observational limits.
+
 ## Simcha King
 
 Run `CJ_BASE_URL=http://127.0.0.1:8771 node simcha-king-test.mjs` after serving the
