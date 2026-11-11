@@ -167,6 +167,8 @@ try{
   await go(p,'neighborhoods');await button(p,'+ Add neighborhood').click();await button(p,'+ Add adjustment').click();await fits(p,`${width}px neighborhood editor`);await button(p,'Cancel').click();
   await go(p,'bookings');await button(p,'+ New booking').click();await fits(p,`${width}px booking editor`);await button(p,'Cancel').click();
   await reopen(p,second);await fits(p,`${width}px supply list`);await button(p,'Feedback').last().click();await p.locator('#feedback-form details summary').click();await fits(p,`${width}px feedback editor`);
+  await p.locator('.cj-brand img').click();
+  check(p.url()===BASE+'/catering/'&&await p.locator('#feedback-form').isVisible(),`${width}px: tapping the header icon keeps the current planner screen open.`);
  }
  await go(p,'bookings');
  await p.goto(BASE+'/');await p.frameLocator('#shellFrame').locator('.tab[data-page="1"]').click();
@@ -177,6 +179,8 @@ try{
  await home.locator('a[href="/catering/"]').click();await p.waitForURL(BASE+'/catering/');
  let frame=p.frames().find(f=>f!==p.mainFrame()&&f.url().includes('/catering/'));
  await fits(frame,'Portal iframe');
+ await frame.locator('.cj-brand img').click();
+ check(p.url()===BASE+'/catering/'&&await frame.locator('#main').isVisible(),'Tapping the framed header icon does not navigate to the portal menu.');
  const fit=await p.locator('#shellFrame').evaluate(e=>({bottom:e.getBoundingClientRect().bottom,height:visualViewport.height}));
  check(Math.abs(fit.bottom-fit.height)<1,'The portal iframe fits the visible viewport.');
  await p.goBack();await p.waitForURL(BASE+'/');await p.goForward();await p.waitForURL(BASE+'/catering/');

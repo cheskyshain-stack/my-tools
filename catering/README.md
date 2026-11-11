@@ -9,6 +9,9 @@ provided. Restore validates the complete data before replacing anything and
 downloads the old readable records first. Unreadable stored data is preserved
 instead of silently starting over.
 
+The header logo is decorative. At the owner's request, tapping it must keep the
+current planner screen open rather than navigating to the portal's main menu.
+
 ## Supply rules
 
 The starter rates are transcribed from Sheet3 of the supplied `template.xlsx`.
