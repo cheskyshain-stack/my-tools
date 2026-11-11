@@ -1,5 +1,14 @@
 # Tests
 
+## Catering Planner
+
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
+whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
+adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,
+offline reopening and edits, corrupt-data protection, phone layouts, and portal
+navigation. Serve the repository root and install this directory's dependencies
+first. See `catering/README.md` for the data and offline contracts.
+
 ## Sunrise & Sunset Weather
 
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:sunset` runs the new

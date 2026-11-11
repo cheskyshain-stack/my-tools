@@ -1,0 +1,12 @@
+{
+  "name": "Catering Planner",
+  "short_name": "Catering",
+  "description": "Offline bris and kiddush bookings, supply calculations, packing lists, and feedback.",
+  "id": "/catering/",
+  "start_url": "/catering/",
+  "scope": "/catering/",
+  "display": "standalone",
+  "background_color": "#050a18",
+  "theme_color": "#080b12",
+  "icons": [{"src": "/catering/icon.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any"}]
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs><radialGradient id="bg"><stop stop-color="#102e4c"/><stop offset="1" stop-color="#000"/></radialGradient><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+<rect width="512" height="512" fill="#000"/><rect x="12" y="12" width="488" height="488" rx="60" fill="url(#bg)"/>
+<g fill="none" stroke="#19bcff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" opacity=".8"><path d="M87 273h278M106 259a120 120 0 0 1 240 0M215 132v-15h23v15"/><rect x="323" y="135" width="98" height="152" rx="15"/></g>
+<path d="M87 273h278M106 259a120 120 0 0 1 240 0M215 132v-15h23v15" fill="none" stroke="#65d5ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M131 227a97 97 0 0 1 50-64" fill="none" stroke="#d3f4ff" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<rect x="323" y="135" width="98" height="152" rx="15" fill="#0d1c31" stroke="#71b8ff" stroke-width="6"/>
+<rect x="345" y="124" width="53" height="21" rx="7" fill="#326396" stroke="#95ccff" stroke-width="4"/>
+<g fill="none" stroke="#f5c462" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="m338 175 6 6 11-14M338 209l6 6 11-14M338 243l6 6 11-14"/></g>
+<g stroke="#b4d6f5" stroke-width="4" stroke-linecap="round"><path d="M368 176h35M368 210h35M368 244h35"/></g>
+<path d="M119 292h210" stroke="#2489d0" stroke-width="4" stroke-linecap="round"/>
+<text x="256" y="377" text-anchor="middle" font-family="Arial,sans-serif" font-size="52" font-weight="800" letter-spacing="4" fill="#299eff" filter="url(#glow)">CATERING</text>
+<text x="256" y="377" text-anchor="middle" font-family="Arial,sans-serif" font-size="52" font-weight="800" letter-spacing="4" fill="#8edbff">CATERING</text>
+<text x="256" y="424" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="600" letter-spacing="12" fill="#e5f4ff">PLANNER</text>
+</svg>
