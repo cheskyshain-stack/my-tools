@@ -66,7 +66,7 @@ try{
  check(await supply(p,'Forks').locator('.needed-cell strong').innerText()==='180','Template edits preserve past booking quantities.');
  check(await supply(p,'Forks').locator('.cost-cell').innerText()==='$7.16','Template edits preserve past booking prices.');
  check(await supply(p,'Forks').locator('input').isChecked(),'Editing a template does not clear past packing progress.');
- check(await supply(p,'Service fee').count()===0,'New template items do not silently appear in existing bookings.');
+ check(await supply(p,'Service fee').count()===1,'New template items are appended to existing open bookings without replacing their saved supplies.');
 
  await go(p,'neighborhoods');await button(p,'+ Add neighborhood').click();
  await p.locator('#area-form [name=name]').fill('North Lakewood');

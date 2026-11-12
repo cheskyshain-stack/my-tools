@@ -1,0 +1,3 @@
+[functions.catering-invite]
+# The function explicitly verifies the Auth user and platform administrator role.
+verify_jwt = false

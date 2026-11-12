@@ -5,12 +5,14 @@
   "main": "horizon-check.js",
   "scripts": {
     "test": "node horizon-test.mjs && node feat-test.mjs && node auto-test.mjs && node keep-test.mjs && node addr-test.mjs && node icon-check.mjs && node accuracy-test.mjs && node layout-test.mjs && node usability-test.mjs",
-    "test:sunset": "node sunset-model-test.mjs && node sunset-weather-test.mjs"
+    "test:sunset": "node sunset-model-test.mjs && node sunset-weather-test.mjs",
+    "test:catering": "node catering-test.mjs && node catering-operations-test.mjs && node catering-database-test.mjs && node catering-cloud-test.mjs && node catering-invite-test.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "playwright": "^1.63.0"
   }
 }

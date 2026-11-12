@@ -2,6 +2,18 @@
 
 ## Catering Planner
 
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:catering` runs the complete
+planner group after serving the repository root. The operations suite covers
+stock counts, reusable reservations, booking-linked dispatch/returns/damage,
+supplier purchases and unsent email drafts, partial receipts, service/waiter fees,
+and appending supplies to existing bookings. The database suite runs the actual
+Supabase deployment SQL in PostgreSQL through PGlite, checking tenant isolation,
+approval/revocation, read-only roles, revision races, idempotency and inventory
+limits. The cloud suite uses that same database and two independent browser
+contexts; only managed email/password endpoints are simulated. It starts its
+server on a fresh ephemeral port. The invitation suite tests authorization and
+server-key separation without sending email.
+
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
 adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,

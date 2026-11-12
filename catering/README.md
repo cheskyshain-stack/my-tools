@@ -1,73 +1,113 @@
 # Catering Planner
 
-An offline-capable tool at `/catering/`. The portal card is in the personal tools
-group, revealed by three clicks on the home logo. Customer records never enter
-the repository or a server. The app stores one device's records in
-`localStorage.cjCateringV1`, plus a previous readable copy in
-`cjCateringLastGoodV1`. Full JSON backup/restore and a per-booking CSV download are
-provided. Restore validates the complete data before replacing anything and
-downloads the old readable records first. Unreadable stored data is preserved
-instead of silently starting over.
+The workspace at /catering/ remains buildless HTML/JS on GitHub Pages. Its portal
+card stays in the personal tools group. The header logo is decorative at the
+owner's explicit request: tapping it must keep the current screen open.
 
-The header logo is decorative. At the owner's request, tapping it must keep the
-current planner screen open rather than navigating to the portal's main menu.
+## Records and supplies
 
-## Supply rules
+State version 2 adds inventory, suppliers, purchases, and fees. The original
+cjCateringV1 key and version 1 JSON backups are upgraded without deleting records.
+Unreadable data is preserved; malformed backups never replace valid records.
 
-The starter rates are transcribed from Sheet3 of the supplied `template.xlsx`.
-Sheet1 supplies matching prices and package sizes. The workbook's customer
-sample, phone number, address, unrelated numbers, and original broken formulas
-are deliberately absent. Empty or unexplained zero prices are unknown, not free.
-The kiddush herring rate of three 2 lb containers per table conflicts with the
-other sheet's example; the template review notice explicitly asks the owner to
-confirm it. Zero-rate paper goods remain editable but inactive. Items with no
-per-table rule in the workbook, such as service fees and event-wide food, must
-be deliberately added using the Event basis.
+Existing booking quantities and prices remain snapshots. Adding a new template
+item defaults to appending it to matching OPEN bookings without replacing other
+supplies, overrides or packing checks; the checkbox can be turned off. Completed
+and cancelled bookings remain unchanged. Each booking also has Add supply for
+custom or missing template supplies, plus Add missing template supplies without
+a full refresh.
 
-Regular, kids, and head counts are separate and add up to dining tables. Coffee
-stations are additional. An item may alternatively use only one table type,
-an adult/child/all-guest count, or once per event. Required units are retained
-at their calculated precision. Purchase packs round up, and cost is pack count
-times price per pack. Unpriced rows make the estimate explicitly incomplete.
+Starter quantities come from Sheet3 of the supplied workbook. Sheet1 supplies
+matching package sizes and prices. Sample customer contact details and unrelated
+figures are absent. Unexplained zero prices remain unknown. The template notice
+asks the owner to confirm the conflicting herring portion of three 2 lb containers
+per table. Review starter food portions and prices before real use.
 
-Neighborhoods replace selected template rates. A booking snapshots its template
-and neighborhood rates, pack sizes, and prices. Later template edits never
-rewrite a booking. Editing its event type/neighborhood or explicitly requesting
-a refresh replaces those snapshots and clears booking overrides. Changing
-counts recalculates supplies using saved rules and clears packing checks for
-changed quantities. A booking can override total units and pack prices without
-touching its template. Zero overrides are available under omitted items so they
-can be reversed. Feedback records shortages and leftovers in units and never
-changes a template automatically.
+Dining tables add regular, kids and head counts; coffee stations are additional.
+Rules also support individual table types, adults, children, guests and once per
+event. Purchases round up to whole packs. Missing prices make totals incomplete.
+Service fees apply once. Waiter fees use count, per-event or hourly rates, hours,
+and assignment notes. Calculated charges are supplies + service + waiters;
+an agreed charge, if entered, controls the balance.
 
-## Offline behavior
+## Inventory and supplier orders
 
-`sw.js` controls `/catering/` only. It precaches the HTML, manifest, icon, logo,
-and shared CSS/refresh script. It does not claim the portal root or other apps.
-“Ready offline” appears only after the worker becomes ready. Open the direct
-URL once online and bookmark or install it. Records, calculations, editing,
-feedback, and downloads work without a connection. Remote fonts are optional;
-system fonts remain available offline. Clearing site data removes local records
-and the local recovery copy, so keep downloaded backups separately. Devices do
-not sync automatically.
+Physical supplies link stable catalog IDs across templates and bookings. Set
+opening counts, units, supplier, pack sizes, prices, reorder levels and locations.
+Starter catalog entries still need opening counts. Stock units cannot change
+after movements exist.
 
-When changing app resources, bump the cache version in `sw.js` so the worker
-installs a coherent new set of core resources. Preserve every other tool's
-storage and service-worker scope.
+Stock on hand comes from a movement ledger. Counts record adjustments; packing
+checks do not deduct stock. Issue stock supports partial dispatch and supplies
+added later. Returns / damage records unused supplies, equipment returns and
+losses. Damaged equipment already issued does not go back on hand. Issued stock
+cannot exceed booking requirements; returns plus damage cannot exceed issues.
+
+Open bookings reserve unissued requirements. Consumables reserve across open
+bookings; reusable equipment reserves overlapping event/return dates only.
+The inventory date picker selects reusable reservation dates. Stock already issued
+is off hand and is not reserved twice.
+
+Supplier purchases can be draft, ordered, partially received, received or
+cancelled. Only ordered unreceived quantities count as incoming. Receipts use
+UNITS and cannot exceed the purchase. Stock history and linked bookings must be
+retained. The database enforces these rules inside each shared commit.
+
+Assign supplier contacts to inventory, then create purchases directly or from a
+booking. Booking drafts start with shortages after stock, other reservations and
+incoming orders. Review all quantities. Edit and save email subjects/bodies,
+copy them, open a mail client, or download an unsent EML. No order, message,
+notification or payment is automatically sent. Opening email does not mark a
+purchase ordered.
+
+## Company accounts and offline use
+
+Empty public settings deliberately leave the app in local-only mode, explicitly
+labeled This device only. Existing records and all local operations remain usable.
+
+After configuring Supabase, managed Auth owns logins and email verification.
+The platform owner approves every company and user. Staff can edit; viewers can
+read. Database row-level security and procedures enforce isolation independently
+of the interface. Company admins cannot approve users themselves. See the backend
+README for setup and manually shared activation links that send no email.
+
+Caches are separate per user and company. Existing local records migrate only
+after review and a downloaded backup. Original records are removed only after a
+successful online save. Shared backup import adds missing records and retains
+existing records and permanent stock history; a backup tagged for another company
+is refused in the wrong workspace. Sign-out removes the user's cached company
+copies, warning before discarding unsynchronized changes.
+
+Edits save locally and sync approximately every five seconds while visible, after
+saves, and on reconnect/focus. A server revision check and idempotent operation
+receipt prevent lost or duplicated commits. Three-way merge keeps independent
+changes; conflicts in the same field require a choice. Stock checks run in the
+same database transaction, preventing competing dispatches or receipts from
+overdrawing inventory or overreceiving purchases. Unconfirmed movements can be
+reviewed; accepted history is permanent. Offline booking/notes edits queue, while
+shared stock confirmations require a connection and synchronization first.
+
+The service worker controls /catering/ only. It precaches the app and PUBLIC cloud
+configuration, plus shared appearance assets. It never caches private API data.
+Fonts are optional offline. Bump its cache version when app resources change.
+Never claim the portal root or attach a Worker in front of tools.cjaffa.com.
 
 ## Verification
 
-Serve the repository root on a fresh port, then run:
+From tests/, install npm dependencies and serve the repo root on a fresh port:
 
-```sh
-cd tests
-npm ci
-CJ_BASE_URL=http://127.0.0.1:8847 node catering-test.mjs
-CJ_BASE_URL=http://127.0.0.1:8847 node simcha-king-test.mjs
-```
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-operations-test.mjs
+    node catering-database-test.mjs
+    node catering-cloud-test.mjs
+    node catering-invite-test.mjs
 
-The suite uses real Chromium to check independent supply arithmetic, historical
-snapshots, table types, neighborhood rates, event overrides, feedback, downloads,
-restore, offline reopening and edits, storage corruption, print styles, all
-sections/dialogs at 375/393/412/1280px, and portal Back/Forward. It also produces
-a checklist PDF in the execution workspace's `/tmp` for inspection.
+Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
+offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
+checks run the actual deployment SQL in PGlite. The two-device suite uses the same
+database and authorization; only managed password/verification endpoints are
+simulated. It covers isolation, approvals, offline queues, independent merges,
+explicit conflicts and sign-out. Actual Supabase Auth and email delivery must be
+verified against the configured project before production accounts are claimed.
+Invitation tests check authentication, administrator and recipient approval,
+redirects, unsent activation links and separation of the server key.

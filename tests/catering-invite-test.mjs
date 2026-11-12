@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {inviteHandler} from '../catering/backend/functions/catering-invite/index.ts';
+
+let checks=0;const settings={url:'https://project.supabase.co',publicKey:'public-test-key',serviceKey:'server-test-key',origin:'https://tools.cjaffa.com'};
+const check=(value,message)=>{assert.ok(value,message);checks++;};
+const request=(body={},headers={},method='POST')=>new Request(settings.origin+'/api/invite',{method,headers:{Origin:settings.origin,Authorization:'Bearer caller',...headers},body:method==='POST'?JSON.stringify(body):undefined});
+const response=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
+const body={email:'approved@caterer.test',companyId:'10000000-0000-0000-0000-000000000001'};
+let calls=[];
+const provider=async(url,options={})=>{calls.push({url:String(url),options});if(String(url).endsWith('/auth/v1/user'))return response({id:'operator'});if(String(url).endsWith('catering_is_admin'))return response(true);if(String(url).includes('catering_members'))return response([{email:body.email}]);if(String(url).includes('/admin/generate_link'))return response({properties:{action_link:settings.url+'/auth/v1/verify?token=one-time'}});throw Error('Unexpected endpoint');};
+check((await inviteHandler(request(body,{Authorization:''}),settings,provider)).status===401,'An invitation requires a login.');
+check(calls.length===0,'Unauthenticated requests never reach the provider.');
+check((await inviteHandler(request(body,{Origin:'https://unrelated.test'}),settings,provider)).status===403,'Unrelated origins cannot request invitations.');
+const nonAdmin=async(url,options)=>String(url).endsWith('catering_is_admin')?response(false):provider(url,options);
+check((await inviteHandler(request(body),settings,nonAdmin)).status===403,'A staff login cannot generate invitations.');
+const unapproved=async(url,options)=>String(url).includes('catering_members')?response([]):provider(url,options);
+check((await inviteHandler(request(body),settings,unapproved)).status===403,'An email must already have explicit company approval.');
+calls=[];const result=await inviteHandler(request(body),settings,provider),data=await result.json();
+check(result.status===200&&data.email===body.email&&data.link.includes('one-time'),'An approved user receives an activation link for manual delivery.');
+const generation=calls.find(c=>c.url.includes('/admin/generate_link'));
+check(JSON.parse(generation.options.body).type==='invite','The provider generates a link instead of sending an email.');
+check(new URL(generation.url).searchParams.get('redirect_to')===settings.origin+'/catering/','Activation returns only to the configured app origin.');
+check(calls.filter(c=>!c.url.includes('/admin/generate_link')).every(c=>c.options.headers.apikey===settings.publicKey),'The service key is only sent to the managed Auth administration endpoint.');
+check(!JSON.stringify(data).includes(settings.serviceKey),'The service key never appears in the client response.');
+check(result.headers.get('Cache-Control')==='no-store','Activation links cannot be cached.');
+console.log(`${checks} login-invitation authorization checks passed.`);
