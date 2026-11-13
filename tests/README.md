@@ -1,5 +1,14 @@
 # Tests
 
+## PROSPR Plan
+
+Serve the repository root on a fresh port, then run
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:prospr` from `tests/`.
+The suite builds a small Excel workbook in the browser, imports it without a server
+write, checks dashboard, transaction, budget, plan, account and sheet views, reloads
+the saved browser copy, and verifies the hidden portal card. It measures 412x839 and
+375x667 layouts and requires zero horizontal overflow and zero console errors.
+
 ## Hours & Total
 
 Serve the repository root on a fresh port, then run
