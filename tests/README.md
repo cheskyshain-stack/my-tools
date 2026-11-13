@@ -1,6 +1,6 @@
 # Tests
 
-## Catering Planner
+## Simcha King planner
 
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:catering` runs the complete
 planner group after serving the repository root. The operations suite covers
@@ -13,6 +13,15 @@ limits. The cloud suite uses that same database and two independent browser
 contexts; only managed email/password endpoints are simulated. It starts its
 server on a fresh ephemeral port. The invitation suite tests authorization and
 server-key separation without sending email.
+
+The shopping suite checks inclusive date ranges, all or individual bookings,
+combined pack rounding, catalog prices, stock and incoming-order deductions,
+reusable overlap, independent shopping checkmarks, CSV, print and offline reopening.
+It also checks round/rectangular/mixed cloth quantities, separate inventory,
+preserved booking snapshots, issued-stock locks, migration 002 and phone layouts.
+The cloud suite checks a login's shopping selection and bought checks on two
+devices without changing stock counts. The separate Simcha King suite below
+covers the public request preview at `/simcha-king/`, rather than this planner.
 
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood

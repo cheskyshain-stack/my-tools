@@ -41,7 +41,7 @@ try{
  const ctx=await context();const p=await ctx.newPage();
  await p.goto(BASE+'/catering/');
  check((await p.locator('.empty').innerText()).includes('Your next simcha starts here'),'A fresh install starts with no customer records.');
- check(await p.title()==='Catering Planner | CJ Portal','The app has its own title.');
+ check(await p.title()==='Simcha King | CJ Portal','The app has its own title.');
  const unsafe='<img src=x onerror=alert(1)>';
  const first=await create(p,{name:unsafe});
  check(await p.locator('#main img').count()===0,'Customer content is escaped.');

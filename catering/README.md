@@ -1,4 +1,4 @@
-# Catering Planner
+# Simcha King
 
 The workspace at /catering/ remains buildless HTML/JS on GitHub Pages. Its portal
 card stays in the personal tools group. The header logo is decorative at the
@@ -29,6 +29,35 @@ event. Purchases round up to whole packs. Missing prices make totals incomplete.
 Service fees apply once. Waiter fees use count, per-event or hourly rates, hours,
 and assignment notes. Calculated charges are supplies + service + waiters;
 an agreed charge, if entered, controls the balance.
+
+## Combined shopping and tablecloth shapes
+
+Shopping list combines any selected parties. Use the next three/seven days, the
+current Sunday-to-Saturday week, a custom inclusive date range, or all open
+bookings. Uncheck individual parties or select all shown. Completed bookings can
+be included explicitly; cancelled bookings are excluded.
+
+Full combined supply list adds units before rounding once into purchase packs,
+using the current catalog pack size and price. Items with different saved units
+remain separate. Only what still needs buying deducts physical stock and confirmed
+incoming orders due in time, accounting for earlier open bookings. Reusable stock
+uses peak overlapping event/return dates. Issued stock stays unavailable until
+returned. Service and waiter fees are excluded. Print and CSV include the selected
+parties. Shopping checkmarks never change packing or inventory movements.
+
+Selections and bought checks survive reopening offline. They are local in
+device-only mode. Once company sync is activated, each approved editing login's
+shopping plan also synchronizes with that login on other devices through the same
+revision-controlled company document. Changing a shopping quantity requires a new
+checkmark. Apply migrations 001 and 002 before activating shared accounts.
+
+Each booking can choose round, rectangular, or mixed tablecloths. Mixed bookings
+enter round dining tables; the remainder are rectangular. Regular, kids and head
+tables are included. Round and rectangular cloths have separate inventory products,
+prices and shopping totals. Set each product's actual pack size, price and opening
+stock in Inventory. New shape prices start unknown rather than assuming that both
+cost the same. Existing bookings keep their generic cloth snapshot until a shape
+is selected. Cloth stock already issued locks the saved shape to preserve history.
 
 ## Inventory and supplier orders
 
@@ -101,6 +130,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     node catering-database-test.mjs
     node catering-cloud-test.mjs
     node catering-invite-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-shopping-test.mjs
 
 Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
 offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
@@ -111,3 +141,7 @@ explicit conflicts and sign-out. Actual Supabase Auth and email delivery must be
 verified against the configured project before production accounts are claimed.
 Invitation tests check authentication, administrator and recipient approval,
 redirects, unsent activation links and separation of the server key.
+Shopping tests cover combined pack rounding, date boundaries, specific selections,
+incoming order timing, reusable overlap, print/CSV/offline reopening, tablecloth
+splits, shape inventory, legacy snapshots and the deployment migration. The cloud
+suite also checks shopping selections and bought checks across two devices.

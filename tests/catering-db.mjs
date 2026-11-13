@@ -24,6 +24,7 @@ export async function createDatabase({documents=true}={}){
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to authenticated;`);
  await db.exec(await fs.readFile(new URL('../catering/backend/001_companies.sql',import.meta.url),'utf8'));
+ await db.exec(await fs.readFile(new URL('../catering/backend/002_tablecloth_shapes.sql',import.meta.url),'utf8'));
  for(const [name,u] of Object.entries(USERS))await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,$3)',[u.id,u.email,name==='unverified'?null:'2026-11-12T12:00:00Z']);
  await db.query('insert into public.catering_platform_admins(email) values($1)',[USERS.owner.email]);
  await db.query("insert into public.catering_companies(id,name) values($1,'Company A'),($2,'Company B')",[COMPANIES.a,COMPANIES.b]);

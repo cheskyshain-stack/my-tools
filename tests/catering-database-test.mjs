@@ -67,6 +67,8 @@ try{
  await denied(()=>commit(USERS.alice,COMPANIES.a,6,stringVersion),/Unsupported/,'A malformed document version is rejected.');
  const duplicateSupply=structuredClone(purchase);duplicateSupply.events[0].items.push(structuredClone(duplicateSupply.events[0].items[0]));
  await denied(()=>commit(USERS.alice,COMPANIES.a,6,duplicateSupply),/Duplicate/,'Duplicate booking supplies cannot break other devices.');
+ const badShopping=structuredClone(purchase);badShopping.shoppingPlans=[{id:'shopping-test',preset:'all',from:'',to:'',mode:'full',updatedAt:'2026-11-13T12:00:00Z',includeCompleted:false,showCovered:false,selected:['booking-test'],checks:'invalid'}];
+ await denied(()=>commit(USERS.alice,COMPANIES.a,6,badShopping),/shopping/i,'Malformed shopping preferences cannot poison a shared document.');
 
  const request=(await store.as(USERS.pending,"select public.catering_request_access('New Caterer') result")).rows[0].result;
  await denied(()=>store.as(USERS.pending,'select public.catering_admin_approve_request($1::uuid,null,\'admin\')',[request.id]),/Administrator access/,'A user cannot approve their own request.');

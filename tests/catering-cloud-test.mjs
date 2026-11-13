@@ -27,6 +27,14 @@ try{
  await button(viewer.p,'Cancel').click();
  check(!(await viewer.p.evaluate(()=>state.customers)).some(c=>c.name==='Forbidden customer'),'A viewer’s attempted save does not modify the device copy.');
 
+ const shoppingPhone=await client(USERS.alice);
+ await nav(shoppingPhone.p,'shopping');await nav(alice.p,'shopping');await button(alice.p,'All open bookings').click();await synced(alice.p);await forceSync(shoppingPhone.p);
+ check(await shoppingPhone.p.locator('[data-shopping-booking="booking-test"]').isChecked(),'The same login can prepare its shopping selection on one device and open it on another.');
+ await shoppingPhone.p.locator('.shopping-table input[data-shopping-check]').first().check();await synced(shoppingPhone.p);await forceSync(alice.p);
+ check(await alice.p.locator('.shopping-table input[data-shopping-check]').first().isChecked(),'Shopping checkmarks synchronize between devices after the company save.');
+ check((await alice.p.evaluate(()=>state.movements)).length===1,'Shared shopping checkmarks do not post stock receipts or issues.');
+ await shoppingPhone.c.close();
+
  await alice.p.waitForFunction(()=>navigator.serviceWorker.controller&&offlineReady);
  await alice.c.setOffline(true);await addCustomer(alice.p,'Offline Family');
  check((await alice.p.locator('#company-bar').innerText()).includes('Changes queued'),'Offline changes are labeled as waiting for sync.');
