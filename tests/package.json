@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node horizon-test.mjs && node feat-test.mjs && node auto-test.mjs && node keep-test.mjs && node addr-test.mjs && node icon-check.mjs && node accuracy-test.mjs && node layout-test.mjs && node usability-test.mjs",
     "test:sunset": "node sunset-model-test.mjs && node sunset-weather-test.mjs",
+    "test:hours": "node hours-test.mjs",
     "test:catering": "node catering-test.mjs && node catering-operations-test.mjs && node catering-database-test.mjs && node catering-cloud-test.mjs && node catering-invite-test.mjs && node catering-shopping-test.mjs && node catering-supplier-orders-test.mjs && node catering-pricing-test.mjs"
   },
   "keywords": [],

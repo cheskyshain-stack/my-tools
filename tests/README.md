@@ -1,5 +1,14 @@
 # Tests
 
+## Hours & Total
+
+Serve the repository root on a fresh port, then run
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:hours` from `tests/`.
+This suite exercises native clipboard paste, the 30.5-hour / 610.00 example,
+adjustable rates, exact decimal rounding, invalid and duplicate entries, actual
+clipboard output, manual copy fallback, saved inputs, four viewport widths,
+maximum totals and portal navigation/copying inside the iframe.
+
 ## Simcha King planner
 
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:catering` runs the complete

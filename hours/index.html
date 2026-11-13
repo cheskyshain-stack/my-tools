@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Paste daily hours, change the hourly rate, see the breakdown and total, and copy the grand total.">
+<title>Hours &amp; Total | CJ Portal</title>
+<link rel="manifest" href="/hours/manifest.json">
+<link rel="icon" type="image/png" href="/hours/icon.png?v=1">
+<link rel="apple-touch-icon" href="/hours/icon.png?v=1">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;overscroll-behavior-y:none}
+  body{max-width:760px;margin:auto;padding:10px 12px calc(28px + env(safe-area-inset-bottom));line-height:1.5}
+  body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
+  .intro{font-size:13px;color:var(--cj-muted);margin:12px 0 16px}
+  .card{padding:18px;margin:0 0 14px;border:1px solid var(--cj-line);border-radius:var(--cj-r-lg);background:var(--cj-card);box-shadow:var(--cj-shadow)}
+  h2{font:600 19px var(--cj-display,Georgia,serif);margin:0}
+  label{display:block;font-size:13px;font-weight:700}
+  .input-heading,.total-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;min-height:40px}
+  .small-button{min-height:40px;padding:8px 12px;border:1px solid var(--cj-line);border-radius:11px;background:rgba(255,255,255,.04);color:var(--cj-muted);font:600 12px var(--cj-body);cursor:pointer;flex:none}
+  textarea,input{width:100%;min-width:0;background:rgba(255,255,255,.045);border:1px solid var(--cj-line);border-radius:12px;color:var(--cj-text);font:16px/1.5 var(--cj-body,system-ui,sans-serif);padding:11px 12px}
+  textarea{display:block;resize:vertical;min-height:106px;max-height:420px}
+  textarea::placeholder{color:var(--cj-dim,#67779C)}
+  .rate-row{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) 126px;gap:14px;align-items:center}
+  .rate-row input{text-align:right;font-variant-numeric:tabular-nums}
+  .hint{font-size:12px;color:var(--cj-muted);margin:6px 0 0;overflow-wrap:anywhere}
+  #parseStatus{min-height:18px}
+  .error{color:#ffb4b4}
+  [aria-invalid="true"]{border-color:#ffb4b4}
+  .grand-card{border-color:rgba(245,184,65,.28);background:linear-gradient(140deg,rgba(245,184,65,.055),transparent),var(--cj-card)}
+  #grandTotal{display:block;font:700 clamp(25px,8vw,46px)/1.2 var(--cj-mono,monospace);font-variant-numeric:tabular-nums;color:var(--cj-gold);user-select:text}
+  #grandTotal.unavailable{font:600 20px/1.5 var(--cj-body);color:var(--cj-muted)}
+  .calculation{font-size:14px;margin:12px 0 0;color:var(--cj-muted);overflow-wrap:anywhere}
+  .calculation strong{color:var(--cj-text)}
+  #copyStatus{min-height:18px}
+  button:disabled{opacity:.45;cursor:default}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cj-accent);outline-offset:3px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+  th,td{text-align:right;padding:11px 6px;border-bottom:1px solid var(--cj-line);font-variant-numeric:tabular-nums}
+  th{font-size:11px;color:var(--cj-muted);font-weight:600}
+  th:first-child,td:first-child{text-align:left;padding-left:0}
+  th:last-child,td:last-child{padding-right:0}
+  td:last-child{font-family:var(--cj-mono,monospace)}
+  tfoot th,tfoot td{font-weight:800;color:var(--cj-text);border-bottom:0}
+  #roundingRow th,#roundingRow td{font-size:11px;color:var(--cj-muted);font-weight:500}
+  .back{display:block;text-align:center;margin:20px;font-size:13px;color:var(--cj-cyan)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:430px){.card{padding:14px}.rate-row{grid-template-columns:minmax(0,1fr) 110px;gap:10px}table{font-size:13px}th,td{padding:10px 4px}.total-heading .cj-btn{padding:0 15px}}
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+<header class="cj-page-header"><div class="cj-brand"><img src="/hours/icon.png?v=1" alt="Hours and Total"></div><h1>Hours &amp; Total</h1></header>
+<main>
+  <p class="intro">Paste your daily hours. Set your rate. Get the breakdown and grand total.</p>
+  <section class="card" aria-label="Hours and rate">
+    <div class="input-heading"><label for="hoursInput">Paste your hours</label><button id="example" class="small-button" type="button">Use example</button><button id="clear" class="small-button" type="button" hidden>Clear hours</button></div>
+    <textarea id="hoursInput" rows="3" maxlength="3000" spellcheck="false" aria-describedby="parseStatus formatHelp" placeholder="Monday 6, Tuesday 7.5, Wednesday 6, Thursday 5.5, Friday 5.5"></textarea>
+    <p id="parseStatus" class="hint" role="status" aria-live="polite">Paste a list to calculate automatically.</p>
+    <p id="formatHelp" class="hint">Commas or one day per line. 7.5 means 7 hours 30 minutes.</p>
+    <div class="rate-row"><div><label for="rate">Rate per hour</label><p class="hint">Multiply total hours by this number.</p></div><input id="rate" type="text" inputmode="decimal" autocomplete="off" maxlength="24" value="20" aria-describedby="rateError"></div>
+    <p id="rateError" class="hint error" role="status" hidden></p>
+  </section>
+  <section class="card grand-card" aria-labelledby="grandTitle">
+    <div class="total-heading"><h2 id="grandTitle">Grand total</h2><button id="copy" class="cj-btn cj-btn-primary" type="button" aria-label="Copy grand total" disabled>Copy total</button></div>
+    <output id="grandTotal" aria-live="polite">0.00</output>
+    <p id="calculation" class="calculation">Paste your hours above to calculate.</p>
+    <p id="copyStatus" class="hint" role="status" aria-live="polite"></p>
+  </section>
+  <section class="card" aria-labelledby="breakdownTitle">
+    <h2 id="breakdownTitle">Daily breakdown</h2>
+    <p id="empty" class="hint">Each day's hours and total will appear here.</p>
+    <table id="breakdown" hidden>
+      <caption class="sr-only">Daily hours multiplied by the hourly rate</caption>
+      <thead><tr><th scope="col">Day</th><th scope="col">Hours</th><th scope="col">Total</th></tr></thead>
+      <tbody id="rows"></tbody>
+      <tfoot><tr id="roundingRow" hidden><th scope="row">Rounding adjustment</th><td></td><td id="roundingAmount"></td></tr><tr><th scope="row">Grand total</th><td id="hoursTotal"></td><td id="tableTotal"></td></tr></tfoot>
+    </table>
+    <p id="roundingHelp" class="hint" hidden>Grand total is total hours × rate, rounded once to two decimal places.</p>
+  </section>
+  <p id="saveStatus" class="hint" style="text-align:center">Calculates in your browser.</p>
+  <div id="cj-share"></div><a href="/" class="back">Back to CJ Portal</a>
+</main>
+<script src="/assets/share-widget.js" defer></script>
+<script src="/assets/cj-refresh.js" defer></script>
+<script>
+(function () {
+  "use strict";
+  var el = function (id) { return document.getElementById(id); };
+  var KEY = "cjHoursCalculatorV1";
+  var EXAMPLE = "Monday 6, Tuesday 7.5, Wednesday 6, Thursday 5.5, Friday 5.5";
+  var DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  var ALIASES = { monday:0, mon:0, tuesday:1, tue:1, tues:1, wednesday:2, wed:2, weds:2, thursday:3, thu:3, thur:3, thurs:3, friday:4, fri:4, saturday:5, sat:5, sunday:6, sun:6 };
+  var numberFormat = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var copyValue = null, copyVersion = 0;
+  function hundredths(raw, max) {
+    var s = raw.trim().replace(/^\+/, "");
+    if (!/^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(s)) { return null; }
+    var parts = s.split("."), value = Number(parts[0] || "0") * 100 + Number(((parts[1] || "") + "00").slice(0, 2));
+    return Number.isSafeInteger(value) && value <= max * 100 ? value : null;
+  }
+  function compact(value) { return (value / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1"); }
+  function amount(cents) { return numberFormat.format(cents / 100); }
+  function roundCents(numerator) { return Math.floor((numerator + 50) / 100); }
+  function parse(text) {
+    var entries = text.split(/[,;\n\r]+/).map(function (s) { return s.trim().replace(/^[•*\-]\s+/, ""); }).filter(Boolean);
+    var rows = [], seen = new Set();
+    for (var i = 0; i < entries.length; i++) {
+      var m = /^([a-z]+)\.?\s*:?\s*([+\-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:hours?|hrs?\.?|h)?$/i.exec(entries[i]);
+      if (!m || !Object.prototype.hasOwnProperty.call(ALIASES, m[1].toLowerCase())) { return { error: "Could not read entry " + (i + 1) + ". Use a day and hours, like Monday 6 or Tuesday 7.5." }; }
+      var day = ALIASES[m[1].toLowerCase()], hours = hundredths(m[2], 24);
+      if (hours === null) { return { error: "Hours for " + DAYS[day] + " must be between 0 and 24, with up to two decimal places." }; }
+      if (seen.has(day)) { return { error: DAYS[day] + " appears more than once. Enter one total for that day." }; }
+      seen.add(day); rows.push({ day: day, hours: hours });
+    }
+    rows.sort(function (a, b) { return a.day - b.day; }); return { rows: rows };
+  }
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && typeof saved.text === "string" && saved.text.length <= 3000) { el("hoursInput").value = saved.text; }
+    if (saved && typeof saved.rate === "string" && saved.rate.length <= 24) { el("rate").value = saved.rate; }
+  } catch (e) {}
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ text: el("hoursInput").value, rate: el("rate").value })); el("saveStatus").textContent = "Saved in this browser. Calculates on your device."; }
+    catch (e) { el("saveStatus").textContent = "Browser saving is unavailable. You can still calculate and copy."; }
+  }
+  function render() {
+    ++copyVersion; copyValue = null; el("copyStatus").textContent = "";
+    var parsed = parse(el("hoursInput").value), rate = hundredths(el("rate").value, 1000000), rows = parsed.rows || [];
+    var valid = !parsed.error && rate !== null, hasRows = rows.length > 0;
+    el("hoursInput").setAttribute("aria-invalid", String(!!parsed.error));
+    el("parseStatus").classList.toggle("error", !!parsed.error);
+    el("parseStatus").textContent = parsed.error || (hasRows ? rows.length + (rows.length === 1 ? " day" : " days") + " read. Calculated automatically." : "Paste a list to calculate automatically.");
+    el("rate").setAttribute("aria-invalid", String(rate === null));
+    el("rateError").hidden = rate !== null;
+    el("rateError").textContent = rate === null ? "Enter a rate from 0 to 1,000,000, with up to two decimal places, like 20 or 20.50." : "";
+    el("example").hidden = !!el("hoursInput").value.trim(); el("clear").hidden = !el("example").hidden;
+    var totalHours = rows.reduce(function (sum, row) { return sum + row.hours; }, 0);
+    var grand = valid ? roundCents(totalHours * rate) : null, sumLines = 0;
+    el("rows").replaceChildren();
+    rows.forEach(function (row) {
+      var line = rate === null ? null : roundCents(row.hours * rate); if (line !== null) { sumLines += line; }
+      var tr = document.createElement("tr"); tr.dataset.day = DAYS[row.day];
+      [DAYS[row.day], compact(row.hours), line === null ? "Not available" : amount(line)].forEach(function (s) { var td = document.createElement("td"); td.textContent = s; tr.appendChild(td); }); el("rows").appendChild(tr);
+    });
+    el("grandTotal").textContent = valid ? amount(grand) : "Check your input";
+    el("grandTotal").classList.toggle("unavailable", !valid);
+    el("grandTotal").dataset.cents = valid ? String(grand) : "";
+    el("copy").disabled = !valid || !hasRows;
+    if (valid && hasRows) { copyValue = (grand / 100).toFixed(2); }
+    el("calculation").replaceChildren();
+    if (hasRows) {
+      var hours = document.createElement("strong"); hours.id = "totalHours"; hours.textContent = compact(totalHours); el("calculation").appendChild(hours);
+      el("calculation").appendChild(document.createTextNode(" hours × " + (rate === null ? "your rate" : compact(rate)) + (valid ? " = " + amount(grand) : "")));
+    } else { el("calculation").textContent = parsed.error ? "Correct the hours above to calculate the total." : "Paste your hours above to calculate."; }
+    el("breakdown").hidden = !hasRows;
+    el("empty").hidden = hasRows;
+    el("empty").textContent = parsed.error ? "Correct the hours above to see the breakdown." : "Each day's hours and total will appear here.";
+    el("hoursTotal").textContent = compact(totalHours);
+    el("tableTotal").textContent = valid ? amount(grand) : "Not available";
+    var adjustment = valid ? grand - sumLines : 0;
+    el("roundingRow").hidden = !hasRows || !valid || adjustment === 0;
+    el("roundingAmount").textContent = (adjustment > 0 ? "+" : "") + amount(adjustment);
+    el("roundingHelp").hidden = !hasRows || !valid;
+    save();
+  }
+  el("hoursInput").addEventListener("input", render); el("rate").addEventListener("input", render);
+  el("example").addEventListener("click", function () { el("hoursInput").value = EXAMPLE; render(); el("copy").focus(); });
+  el("clear").addEventListener("click", function () { el("hoursInput").value = ""; render(); el("hoursInput").focus(); });
+  el("copy").addEventListener("click", async function () {
+    if (copyValue === null) { return; } var text = copyValue, version = copyVersion, copied = false;
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); copied = true; } } catch (e) {}
+    if (!copied) {
+      var temp = document.createElement("textarea"); temp.value = text; temp.readOnly = true;
+      temp.style.cssText = "position:fixed;left:-9999px;top:0;font-size:16px"; document.body.appendChild(temp); temp.select();
+      try { copied = document.execCommand("copy"); } catch (e) {} temp.remove(); el("copy").focus();
+    }
+    if (version !== copyVersion) { return; }
+    if (copied) { el("copyStatus").textContent = "Copied " + text; }
+    else { var range = document.createRange(); range.selectNodeContents(el("grandTotal")); var selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); el("copyStatus").textContent = "Copy is unavailable here. The grand total is selected for you to copy manually."; }
+  });
+  render();
+}());
+</script>
+</body>
+</html>

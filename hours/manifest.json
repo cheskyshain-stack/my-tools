@@ -1,0 +1,11 @@
+{
+  "name": "Hours & Total",
+  "short_name": "Hours",
+  "description": "Paste daily hours, set an hourly rate, see the breakdown and copy the grand total.",
+  "start_url": "/hours/",
+  "scope": "/hours/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [{ "src": "/hours/icon.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any" }]
+}
