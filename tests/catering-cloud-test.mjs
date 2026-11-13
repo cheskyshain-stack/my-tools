@@ -35,6 +35,11 @@ try{
  check((await alice.p.evaluate(()=>state.movements)).length===1,'Shared shopping checkmarks do not post stock receipts or issues.');
  await shoppingPhone.c.close();
 
+ await nav(alice.p,'inventory');await alice.p.locator('#inventory-results article').filter({has:alice.p.getByRole('heading',{name:'Cups',exact:true})}).getByRole('button',{name:'Edit',exact:true}).click();await alice.p.locator('#stock-form [name=price]').fill('6');await alice.p.locator('#stock-form [name=priceScope]').selectOption('all');await button(alice.p,'Save inventory item').click();await synced(alice.p);await forceSync(owner.p);
+ check(await owner.p.evaluate(()=>state.inventory[0].price===6&&state.events[0].items[0].price===6),'A chosen upcoming-booking price update synchronizes with the catalog on another device.');
+ check(await owner.p.evaluate(()=>state.movements.length===1&&state.events[0].counts.regular===2),'Synchronizing a price change preserves stock movements and booking quantities.');
+ await forceSync(bob.p);check(await bob.p.evaluate(()=>state.inventory[0].price===2&&state.events[0].items[0].price===2),'Price updates stay isolated from other companies.');
+
  await alice.p.waitForFunction(()=>navigator.serviceWorker.controller&&offlineReady);
  await alice.c.setOffline(true);await addCustomer(alice.p,'Offline Family');
  check((await alice.p.locator('#company-bar').innerText()).includes('Changes queued'),'Offline changes are labeled as waiting for sync.');

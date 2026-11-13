@@ -30,6 +30,28 @@ Service fees apply once. Waiter fees use count, per-event or hourly rates, hours
 and assignment notes. Calculated charges are supplies + service + waiters;
 an agreed charge, if entered, controls the balance.
 
+## Price changes and booking history
+
+Changing a catalog price or pack size in Inventory or Supply templates reveals a
+scope selector before saving. Each edit defaults to New bookings only. The other
+choices apply the new price and pack size to all upcoming booked events, or to
+specific upcoming bookings selected from a checklist. Each choice previews the
+matching supplies' estimated cost using that booking's own quantities.
+
+The three groups are explicit: completed/past/cancelled bookings keep their saved
+snapshots; already-booked events dated today or later can be opted in; bookings
+created later use the new catalog values. Saved supply units must match before
+applying an update. Linked inventory products can appear in both bris and kiddush
+bookings; the scope covers all matching saved lines. An unlinked template affects
+only its own item and event type.
+
+Repricing preserves saved quantity rules, overrides, agreed charges, payments,
+service and waiter fees, feedback, supplier orders and stock history. Packing
+checks remain unless the changed pack size changes the number of purchase packs.
+The scope choice applies to this edit only. Price updates work offline and use
+existing revision-controlled records without a new database migration. Direct
+booking adjustments and explicitly refreshing supplies remain separate actions.
+
 ## Combined shopping and tablecloth shapes
 
 Shopping list combines any selected parties. Use the next three/seven days, the
@@ -149,6 +171,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     node catering-invite-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-shopping-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-supplier-orders-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-pricing-test.mjs
 
 Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
 offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
@@ -166,3 +189,7 @@ suite also checks shopping selections and bought checks across two devices.
 Supplier-order tests cover repeated drafts, fresh identities, unchanged receipts,
 saved and unknown prices, inactive products, bulk quantities, filters, invalid
 hidden inputs, mobile and iframe layouts, and offline repeat orders.
+Pricing tests check all three groups, selected upcoming bookings, new bookings,
+linked/unlinked templates, incompatible saved units, pack rounding, preserved
+financial and stock records, deployment SQL, offline reopening and phone layouts.
+The cloud suite also checks selected price changes across devices and companies.

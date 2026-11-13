@@ -1,6 +1,6 @@
 'use strict';
 // This worker only controls /catering/. It never handles other portal tools.
-const CACHE='cj-catering-v5';
+const CACHE='cj-catering-v6';
 const CORE=['/catering/','/catering/index.html','/catering/manifest.json','/catering/cloud-config.js','/catering/icon.png','/catering/icon.png?v=2','/assets/cj.css','/assets/cj-refresh.js','/logo.png'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE.map(path=>new Request(path,{cache:'reload'})))).then(()=>self.skipWaiting()));

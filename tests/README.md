@@ -29,6 +29,12 @@ inactive products, multiple item selection with pack quantities, search/filter
 persistence, duplicate prevention, invalid hidden quantities, keyboard search,
 phone and iframe layouts, and offline repeating. It never sends supplier messages.
 
+The pricing suite checks the default future-only scope, all or selected upcoming
+bookings (including today), protected history/cancellations, cost previews, linked
+and unlinked templates, pack-size changes, financial and inventory preservation,
+unknown/free prices, actual deployment SQL, offline reopening, and phone/iframe
+layouts. The cloud suite checks synchronized price updates and tenant isolation.
+
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
 adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,
