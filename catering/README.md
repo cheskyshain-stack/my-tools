@@ -89,6 +89,23 @@ copy them, open a mail client, or download an unsent EML. No order, message,
 notification or payment is automatically sent. Opening email does not mark a
 purchase ordered.
 
+Supplier cards offer Repeat last order for the latest non-cancelled purchase.
+Any order also offers Repeat order, including orders with receipts. The new draft
+copies the supplier, delivery address, notes, items, quantities and saved pack
+prices. It requires a new delivery date and has fresh order/line IDs and reference.
+Previous booking links and receipts stay with the original order. The email draft
+is regenerated from the new details. Opening or cancelling a repeat saves nothing.
+
+New orders open a searchable inventory checklist. Select several products, enter
+whole PACK quantities beside each, then add them together or save the order.
+Search by item, SKU or supplier, filter to the current supplier, or select all
+shown. Selections and entered quantities survive filtering. Existing order items
+are marked and cannot be added again; their quantities, pack sizes and prices can
+be edited in the order lines. New selections use current catalog prices. Historical
+inactive products remain visible in repeated orders but cannot be newly selected.
+Repeating and selecting supplies work offline and use the existing backup/sync
+records without a new database migration.
+
 ## Company accounts and offline use
 
 Empty public settings deliberately leave the app in local-only mode, explicitly
@@ -131,6 +148,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     node catering-cloud-test.mjs
     node catering-invite-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-shopping-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-supplier-orders-test.mjs
 
 Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
 offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
@@ -145,3 +163,6 @@ Shopping tests cover combined pack rounding, date boundaries, specific selection
 incoming order timing, reusable overlap, print/CSV/offline reopening, tablecloth
 splits, shape inventory, legacy snapshots and the deployment migration. The cloud
 suite also checks shopping selections and bought checks across two devices.
+Supplier-order tests cover repeated drafts, fresh identities, unchanged receipts,
+saved and unknown prices, inactive products, bulk quantities, filters, invalid
+hidden inputs, mobile and iframe layouts, and offline repeat orders.

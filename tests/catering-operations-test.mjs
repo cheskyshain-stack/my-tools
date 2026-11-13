@@ -68,7 +68,7 @@ try{
  const afterReturns=await p.evaluate(id=>({onhand:stockOnHand(id),remaining:outstanding(state.events[0],id)}),stock.id);
  check(afterReturns.onhand===11&&afterReturns.remaining===0,'Three returned trays go on hand; one damaged tray does not.');
 
- await nav(p,'purchases');await button(p,'+ New supplier order').click();f=p.locator('#purchase-form');await f.locator('[name=supplierId]').selectOption(supplierId);await f.locator('[name=deliveryDate]').fill('2026-12-01');await f.locator('[name=deliveryAddress]').fill('Warehouse desk');await f.locator('[name=bookingIds]').selectOption(booking.id);await f.locator('[data-po-item]').selectOption(stock.id);await f.locator('[data-po-packs]').fill('3');await button(p,'Save supplier order').click();
+ await nav(p,'purchases');await button(p,'+ New supplier order').click();f=p.locator('#purchase-form');await f.locator('[name=supplierId]').selectOption(supplierId);await f.locator('[name=deliveryDate]').fill('2026-12-01');await f.locator('[name=deliveryAddress]').fill('Warehouse desk');await f.locator('[name=bookingIds]').selectOption(booking.id);await f.locator(`[data-po-pick="${stock.id}"]`).check();await f.locator(`[data-pick-id="${stock.id}"] [data-pick-packs]`).fill('3');await button(p,'Save supplier order').click();
  const po=(await saved(p)).purchaseOrders[0];
  check(po.status==='draft'&&po.bookingIds.includes(booking.id),'A supplier purchase starts as a draft linked to its booking.');
  check(po.body.includes('3 pack(s) x 2 trays = 6 trays')&&po.body.includes('Warehouse desk'),'The email draft includes package quantities and delivery details.');

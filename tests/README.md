@@ -23,6 +23,12 @@ The cloud suite checks a login's shopping selection and bought checks on two
 devices without changing stock counts. The separate Simcha King suite below
 covers the public request preview at `/simcha-king/`, rather than this planner.
 
+The supplier-order suite checks repeating the latest or a specific previous order,
+new dates and references, independent receipt history, saved/unknown prices,
+inactive products, multiple item selection with pack quantities, search/filter
+persistence, duplicate prevention, invalid hidden quantities, keyboard search,
+phone and iframe layouts, and offline repeating. It never sends supplier messages.
+
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
 adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,
