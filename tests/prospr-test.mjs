@@ -77,8 +77,6 @@ try {
   await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
   const home = page.frameLocator("#shellFrame");
   await home.locator('.tab[data-page="1"]').click();
-  eq(await home.locator('a.tool[href="/prospr/"]').isVisible(), false);
-  await home.locator("#secretLogo").click({ clickCount: 3 });
   eq(await home.locator('a.tool[href="/prospr/"]').isVisible(), true);
   await home.locator('a.tool[href="/prospr/"]').click();
   await page.waitForURL(`${BASE}/prospr/`);
