@@ -1,5 +1,15 @@
 # Tests
 
+## Sunrise and sunset weather history
+
+Serve the repository root on a fresh port, then run
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:sunset-history` from `tests/`.
+The suite checks the saved four extrema and ties, calendar coverage, missing and
+unavailable dates, real zero adjustments, broken graph lines across gaps, year
+selection, date inspection, touch and keyboard controls, four viewport sizes,
+CSV download and navigation from the calculator inside the portal iframe.
+It requires zero weather API requests and zero browser console errors.
+
 ## PROSPR Plan
 
 Serve the repository root on a fresh port, then run
