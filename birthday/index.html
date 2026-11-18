@@ -78,15 +78,41 @@
  .save-note{font-size:11px;text-align:center;color:var(--cj-muted);margin:20px 0 0;overflow-wrap:anywhere}
  .back{display:block;text-align:center;margin:20px;font-size:13px;color:var(--cj-cyan)}
  :focus-visible{outline:2px solid var(--cj-cyan);outline-offset:3px}
+ /* Keep the live list compact; editing and verification stay in setup. */
+ body{max-width:980px;padding:8px 12px calc(20px + env(safe-area-inset-bottom))}
+ body .cj-page-header{margin-bottom:12px;gap:9px;grid-template-columns:42px minmax(0,1fr) auto}
+ body .cj-brand{width:42px;height:42px;border-radius:11px}
+ body .cj-page-header h1{font-size:23px}
+ #addAnother{min-height:38px;padding:7px 11px}
+ .countdowns{gap:8px}
+ body .birthday{padding:8px 11px;border-top:1px solid var(--cj-line);border-left:3px solid var(--cj-cyan);border-radius:12px}
+ body .birthday.hebrew{border-left-color:var(--cj-gold)}
+ .birthday-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ body .birthday h3{font-size:19px;line-height:1.2;min-width:0}
+ .delete-birthday{min-height:28px;padding:3px 7px;font-size:10px;flex:none;background:none;border-color:transparent}
+ .countdown-row{display:flex;justify-content:space-between;align-items:center;gap:7px;min-height:30px;margin:2px 0}
+ body .count{display:flex;gap:8px;margin:0;flex-wrap:wrap;min-width:0}
+ body .time-unit{display:flex;align-items:baseline;gap:3px;text-align:left;padding:0;border:0;border-radius:0;background:none}
+ body .time-number{font-size:23px;line-height:1.15;letter-spacing:-.04em}
+ body .time-label{margin:0;font-size:11px}
+ body .birthday-message{font-size:20px;padding:2px 0}
+ .view-toggle{display:flex;gap:1px;padding:2px;border:1px solid var(--cj-line);border-radius:8px;flex:none}
+ .view-toggle button{min-height:26px;padding:3px 6px;border:0;border-radius:5px;background:none;color:var(--cj-muted);font:600 10px var(--cj-body);cursor:pointer}
+ .view-toggle [aria-pressed="true"]{background:rgba(0,200,255,.15);color:var(--cj-cyan)}
+ .hebrew .view-toggle [aria-pressed="true"]{background:rgba(245,184,65,.15);color:var(--cj-gold)}
+ .verify-date{display:block;min-height:24px;width:100%;padding:3px 0;border:0;background:none;color:var(--cj-muted);text-align:left;font:11px/1.4 var(--cj-body);cursor:pointer;overflow-wrap:anywhere}
+ .verify-date:hover{text-decoration:underline}
+ .review-link{display:block;margin:0 0 8px;padding:5px 0;border:0;background:none;color:var(--cj-gold);font:12px var(--cj-body);cursor:pointer;text-align:left}
  @media(max-width:650px){.countdowns{grid-template-columns:1fr}.birthday{padding:17px}.editor{padding:16px}.settings-content{padding:13px}.settings-content .editor{padding:13px}.settings-top{padding:13px}}
  @media(max-width:380px){.date-fields{gap:7px}.date-fields input,.date-fields select{padding:10px 7px;font-size:14px}.calendar-choice label{padding:10px 8px}}
 </style>
 <link rel="stylesheet" href="/assets/cj.css">
 </head>
 <body>
-<header class="cj-page-header"><div class="cj-brand"><img src="/birthday/icon.png?v=1" alt="Birthday Countdowns"></div><h1>Birthday countdowns</h1></header>
+<header class="cj-page-header"><div class="cj-brand"><img src="/birthday/icon.png?v=1" alt="Birthday Countdowns"></div><h1>Birthdays</h1><button type="button" id="addAnother" class="small-button" aria-haspopup="dialog" aria-controls="settings">Set up</button></header>
 <main>
- <div class="list-heading"><h2>Your birthdays</h2><button type="button" id="addAnother" class="cj-btn cj-btn-ghost" aria-haspopup="dialog" aria-controls="settings">Set up</button></div>
+ <button id="reviewDates" type="button" class="review-link" hidden></button>
+ <div id="mainNotice" class="notice" role="status" aria-live="polite" hidden><span id="mainNoticeText"></span><button type="button" id="mainUndo" class="small-button" hidden>Undo</button></div>
  <div id="empty" class="empty"><strong>Something to look forward to.</strong><p>Add a birthday in English or Hebrew to start your countdown.</p><button type="button" id="firstBirthday" class="cj-btn cj-btn-primary">Add a birthday</button></div>
  <div id="countdowns" class="countdowns" aria-label="Saved birthday countdowns"></div>
  <dialog id="settings" role="dialog" aria-labelledby="settingsTitle">
@@ -98,23 +124,25 @@
   <h2 id="editorTitle">Add a birthday</h2>
   <form id="birthdayForm" novalidate>
    <div class="field"><label for="name">Whose birthday?</label><input id="name" type="text" maxlength="80" autocomplete="off" placeholder="Name" required dir="auto"></div>
-   <fieldset class="calendar-choice"><legend>Birthday calendar</legend><label><input type="radio" name="calendar" value="english" checked>English date</label><label><input type="radio" name="calendar" value="hebrew">Hebrew date</label></fieldset>
+   <fieldset class="calendar-choice"><legend>Date of birth you know</legend><label><input type="radio" name="calendar" value="english" checked>English date</label><label><input type="radio" name="calendar" value="hebrew">Hebrew date</label></fieldset>
    <div class="date-fields">
     <div class="field"><label for="month">Month</label><select id="month" required></select></div>
     <div class="field"><label for="day">Day</label><select id="day" required></select></div>
     <div class="field"><label for="year">Birth year <span style="font-weight:400">(optional)</span></label><input id="year" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="YYYY" aria-describedby="yearHelp"></div>
    </div>
-   <p id="yearHelp" class="hint">Leave the year blank for a countdown only. Add it to show the age.</p>
+   <p id="yearHelp" class="hint">Add the original birth year to switch between English and Hebrew birthdays. Without a year, the entered calendar still works.</p>
+   <div class="field"><label for="birthTime">When was the birth?</label><select id="birthTime"><option value="">Not sure yet</option><option value="daytime">During the day</option><option value="evening">After sunset, before midnight</option><option value="afterMidnight">After midnight, before sunrise</option></select><p class="hint">The English date changes at midnight. The Hebrew date changes at sunset. This helps verify the matching birthday.</p></div>
+   <p id="birthDatePreview" class="hint"></p>
    <div id="adarField" class="field" hidden><label for="adar">In a Hebrew leap year, count down to</label><select id="adar"><option value="second">Adar II</option><option value="first">Adar I</option></select><p class="hint">A birthday entered as Adar can use either Adar in a leap year.</p></div>
    <div id="februaryField" class="field" hidden><label for="february">When February has no 29th</label><select id="february"><option value="feb28">Use February 28</option><option value="mar1">Use March 1</option></select></div>
-   <p id="hebrewHelp" class="hint" hidden>Use the Hebrew date of birth. For a birth after sunset, that is the following Hebrew day. The matching English date changes each year.</p>
+   <p id="hebrewHelp" class="hint" hidden>Enter the Hebrew date as recorded. If the birth was after sunset but before midnight, its matching English birth date is the previous day.</p>
    <p class="hint">The timer counts down to midnight at the start of the date shown, in your device's time zone. Hebrew birthdays begin at sunset the evening before.</p>
    <p id="datePreview" class="hint"></p>
    <p id="formError" class="error" role="alert" hidden></p>
    <div class="form-actions"><button type="submit" class="cj-btn cj-btn-primary" id="saveBirthday">Add countdown</button><button type="button" id="cancelEdit" class="cj-btn cj-btn-ghost" hidden>Cancel edit</button></div>
   </form>
  </section>
- <details class="help"><summary>How does the countdown work?</summary><p>Whole months follow the birthday's calendar (English or Hebrew), with the remaining time split into days. Under one month, the timer shows days, hours and minutes. Leading zero units disappear. A day here is 24 hours; daylight saving can change the hours remaining.</p><p>The timer updates automatically and ends at midnight at the start of the birthday date. On that date the card says “Happy birthday!” all day, then counts down to the following year. Months are measured from the current date and time, with short months clamped to their last day.</p><p>Hebrew birthdays begin at sunset the evening before. The daytime date and previous evening are listed in setup. This timer counts to midnight on the daytime date; it does not calculate the exact sunset.</p><p>A regular Adar birthday uses Adar II in a leap year unless you choose Adar I. Dates entered as Adar I or Adar II use Adar in a regular year. A 30 Adar I birthday uses 30 Shevat in a regular year. If 30 Cheshvan or 30 Kislev is absent, the countdown uses the first day of the next month. These adjustments appear in setup.</p><p>English February 29 birthdays can use February 28 or March 1 in other years. Adding a birth year shows the age in setup according to the calendar you selected.</p></details>
+ <details class="help"><summary>How does the countdown work?</summary><p>Whole months follow the selected calendar (English or Hebrew). Remaining days are split into weeks and days. Under one month, hours and minutes also appear. Zero month, week and day units disappear. A day here is 24 hours; daylight saving can change the hours remaining.</p><p>The timer updates automatically and ends at midnight at the start of the birthday date. On that date the card says “Happy birthday!” all day, then counts down to the following year. Months are measured from the current date and time, with short months clamped to their last day.</p><p>Hebrew birthdays begin at sunset the evening before. The daytime date and previous evening are listed in setup. This timer counts to midnight on the daytime date; it does not calculate the exact sunset.</p><p>A regular Adar birthday uses Adar II in a leap year unless you choose Adar I. Dates entered as Adar I or Adar II use Adar in a regular year. A 30 Adar I birthday uses 30 Shevat in a regular year. If 30 Cheshvan or 30 Kislev is absent, the countdown uses the first day of the next month. These adjustments appear in setup.</p><p>English February 29 birthdays can use February 28 or March 1 in other years. Add the original birth year and verify the time of birth to switch between calendars. Switching uses that original date of birth, so each calendar can have a different next birthday. An English birth date stays fixed; for a birth after sunset but before midnight, its matching Hebrew date is the next day. After midnight, both match the same daytime date.</p></details>
  <p id="saveStatus" class="save-note">Saved in this browser on this device.</p>
  </div></dialog>
  <div id="cj-share"></div><a href="/" class="back">Back to CJ Portal</a>
@@ -210,6 +238,19 @@ var BirthdayCalendar=(function(){
  function englishSerial(year,month,day){var d=new Date(Date.UTC(year,month-1,day));return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day?(d.getTime()-EPOCH)/DAY:null;}
  function hebrewDate(year,month,day){return index(year).dates.get(month+'/'+day)??null;}
  function hebrewText(s){var h=hebrewDateExtended(s);return h.dayOfMonth+' '+JEWISH_MONTHS_EN[h.month-1]+' '+h.year;}
+ function birthdayIn(item,calendar){
+  if(calendar===item.calendar)return Object.assign({},item);
+  if(item.year===null||!item.birthTime)return null;
+  var birth=item.calendar==='hebrew'?hebrewDate(item.year,item.month,item.day):englishSerial(item.year,item.month,item.day);
+  if(birth===null)return null;
+  if(calendar==='hebrew'){
+   var h=hebrewDateExtended(birth+(item.birthTime==='evening'?1:0));
+   return Object.assign({},item,{calendar:calendar,year:h.year,month:h.month,day:h.dayOfMonth});
+  }
+  var d=date(birth-(item.birthTime==='evening'?1:0));
+  return Object.assign({},item,{calendar:calendar,year:d.getUTCFullYear(),month:d.getUTCMonth()+1,day:d.getUTCDate()});
+ }
+ function selected(item){return birthdayIn(item,item.viewCalendar||item.calendar)||item;}
  function localDate(s,clock){
   var d=date(s);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),clock?clock.getHours():0,clock?clock.getMinutes():0,clock?clock.getSeconds():0,clock?clock.getMilliseconds():0);
  }
@@ -257,23 +298,25 @@ var BirthdayCalendar=(function(){
   if(!Number.isInteger(month)||!Number.isInteger(day)||day<1||month<1||month>(raw.calendar==='hebrew'?14:12))throw new Error('Choose the birthday month and day.');
   var max=raw.calendar==='english'?[31,29,31,30,31,30,31,31,30,31,30,31][month-1]:[30,29,30,29,30,29,30,30,30,29,30,29,30,29][month-1];
   if(day>max)throw new Error('That month does not have '+day+' days.');
-  var current=raw.calendar==='hebrew'?hebrewDateExtended(today).year:date(today).getUTCFullYear();
+  var birthTime=['daytime','evening','afterMidnight'].includes(raw.birthTime)?raw.birthTime:null;
+  var current=raw.calendar==='hebrew'?hebrewDateExtended(today+(birthTime==='evening'?1:0)).year:date(today).getUTCFullYear();
   if(year!==null){
    if(!Number.isInteger(year)||year<(raw.calendar==='hebrew'?5000:1600)||year>current)throw new Error('Enter a birth year from '+(raw.calendar==='hebrew'?'5000':'1600')+' to '+current+', or leave it blank.');
    var birth=raw.calendar==='hebrew'?hebrewDate(year,month,day):englishSerial(year,month,day);
    if(birth===null)throw new Error('That date does not exist in '+year+'. Check the day and month'+(raw.calendar==='hebrew'?' (including which Adar)':'')+'.');
-   if(birth>today)throw new Error('The date of birth must be today or earlier.');
+   if(birth-(raw.calendar==='hebrew'&&birthTime==='evening'?1:0)>today)throw new Error('The date of birth must be today or earlier.');
   }
-  var item={id:typeof raw.id==='string'?raw.id:'',name:raw.name.trim(),calendar:raw.calendar,month:month,day:day,year:year,adar:raw.adar==='first'?'first':'second',february:raw.february==='mar1'?'mar1':'feb28'};
+  var item={id:typeof raw.id==='string'?raw.id:'',name:raw.name.trim(),calendar:raw.calendar,month:month,day:day,year:year,birthTime:birthTime,viewCalendar:year!==null&&birthTime&&['english','hebrew'].includes(raw.viewCalendar)?raw.viewCalendar:raw.calendar,adar:raw.adar==='first'?'first':'second',february:raw.february==='mar1'?'mar1':'feb28'};
   next(item,today);return item;
  }
- return {serial:serial,date:date,index:index,englishSerial:englishSerial,hebrewDate:hebrewDate,hebrewText:hebrewText,hebrew:hebrewDateExtended,next:next,validate:validate,localDate:localDate,addMonths:addMonths,duration:duration,englishMonths:englishMonths,hebrewMonths:JEWISH_MONTHS_EN,hebrewLabels:JEWISH_MONTHS_HE};
+ return {serial:serial,date:date,index:index,englishSerial:englishSerial,hebrewDate:hebrewDate,hebrewText:hebrewText,hebrew:hebrewDateExtended,next:next,validate:validate,birthdayIn:birthdayIn,selected:selected,localDate:localDate,addMonths:addMonths,duration:duration,englishMonths:englishMonths,hebrewMonths:JEWISH_MONTHS_EN,hebrewLabels:JEWISH_MONTHS_HE};
 })();
 /* BIRTHDAY_CALENDAR_END */
 (function(){
  "use strict";
- var el=function(id){return document.getElementById(id);},C=BirthdayCalendar,KEY='cjBirthdayCountdownsV1',items=[],editing=null,deleted=null,lastDay=null,canSave=true,shown=[];
+ var el=function(id){return document.getElementById(id);},C=BirthdayCalendar,KEY='cjBirthdayCountdownsV1',items=[],editing=null,deleted=null,lastDay=null,canSave=true,shown=[],pendingView=null,legacyLoaded=false,noticeTimer=null;
  var dateFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',day:'numeric',year:'numeric'});
+ var targetFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'short',day:'numeric',year:'numeric'});
  var shortFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'short',day:'numeric'});
  function today(){return C.serial(new Date());}
  function calendar(){return document.querySelector('input[name="calendar"]:checked').value;}
@@ -290,16 +333,27 @@ var BirthdayCalendar=(function(){
   select.replaceChildren();option(select,'','Day');for(var day=1;day<=max;day++)option(select,day,day);
   if(previous&&Number(previous)<=max)select.value=previous;
  }
- function rawForm(){return {id:editing||'',name:el('name').value,calendar:calendar(),month:el('month').value,day:el('day').value,year:el('year').value,adar:el('adar').value,february:el('february').value};}
+ function rawForm(){return {id:editing||'',name:el('name').value,calendar:calendar(),month:el('month').value,day:el('day').value,year:el('year').value,birthTime:el('birthTime').value,viewCalendar:pendingView||calendar(),adar:el('adar').value,february:el('february').value};}
  function formHints(){
   var hebrew=calendar()==='hebrew',m=Number(el('month').value),d=Number(el('day').value);
   el('adarField').hidden=!(hebrew&&m===12);el('februaryField').hidden=!(!hebrew&&m===2&&d===29);el('hebrewHelp').hidden=!hebrew;
-  el('formError').hidden=true;el('datePreview').textContent='';
+  el('formError').hidden=true;el('datePreview').textContent='';el('birthDatePreview').textContent='';
   if(!m||!d)return;
-  try{var raw=rawForm();raw.name=raw.name.trim()||'Birthday';var item=C.validate(raw,today()),n=C.next(item,today());el('datePreview').textContent='Next birthday: '+dateFormat.format(C.date(n.serial))+(hebrew?' ('+C.hebrewText(n.serial)+')':'')+'.'+(n.note?' '+n.note:'');}
-  catch(error){el('datePreview').textContent=error.message;}
+  try{
+   var raw=rawForm();raw.name=raw.name.trim()||'Birthday';var item=C.validate(raw,today()),birthday=C.selected(item),n=C.next(birthday,today()),english=C.birthdayIn(item,'english'),jewish=C.birthdayIn(item,'hebrew');
+   el('datePreview').textContent='Counting to: '+dateFormat.format(C.date(n.serial))+' · '+C.hebrewText(n.serial)+'.'+(n.note?' '+n.note:'');
+   if(item.year!==null&&english&&jewish){
+    el('birthDatePreview').textContent='Birth dates to verify: '+dateFormat.format(C.date(C.englishSerial(english.year,english.month,english.day)))+' · '+jewish.day+' '+C.hebrewMonths[jewish.month-1]+' '+jewish.year+'.';
+    el('adarField').hidden=jewish.month!==12;el('februaryField').hidden=!(english.month===2&&english.day===29);
+   }else{el('birthDatePreview').textContent='Add the birth year and choose when the birth happened to verify both birth dates.';}
+  }catch(error){el('datePreview').textContent=error.message;}
  }
- function announce(text,undo){el('notice').hidden=false;el('noticeText').textContent=text;el('undo').hidden=!undo;}
+ function announce(text,undo){
+  clearTimeout(noticeTimer);
+  var inSetup=el('settings').open;el('notice').hidden=true;el('mainNotice').hidden=true;
+  el(inSetup?'notice':'mainNotice').hidden=false;el(inSetup?'noticeText':'mainNoticeText').textContent=text;el(inSetup?'undo':'mainUndo').hidden=!undo;
+  if(!inSetup&&!undo)noticeTimer=setTimeout(function(){el('mainNotice').hidden=true;},4000);
+ }
  function save(){
   if(!canSave)return false;
   try{localStorage.setItem(KEY,JSON.stringify({version:1,birthdays:items}));el('saveStatus').textContent='Saved in this browser on this device.';return true;}
@@ -308,59 +362,84 @@ var BirthdayCalendar=(function(){
  function read(text){
   if(!text)return [];
   var data=JSON.parse(text);if(data.version!==1||!Array.isArray(data.birthdays))throw new Error('Invalid saved list');
+  if(data.birthdays.some(function(raw){return raw.birthTime===undefined;}))legacyLoaded=true;
   var ids=new Set();return data.birthdays.map(function(raw){var item=C.validate(raw,today());if(!item.id||ids.has(item.id))throw new Error('Invalid saved birthday');ids.add(item.id);return item;});
  }
  function node(tag,className,text,parent){var n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;if(parent)parent.appendChild(n);return n;}
  function paint(entry,now){
-  var value=C.duration(entry.item,entry.next,now),card=entry.card,count=card.querySelector('.count'),signature=JSON.stringify(value);
-  card.dataset.months=value.months;card.dataset.days=value.days;card.dataset.hours=value.hours;card.dataset.minutes=value.minutes;
+  var value=C.duration(entry.birthday,entry.next,now),card=entry.card,count=card.querySelector('.count'),signature=JSON.stringify(value);
+  var weeks=Math.floor(value.days/7),days=value.days%7;card.dataset.months=value.months;card.dataset.weeks=weeks;card.dataset.days=days;card.dataset.totalDays=value.days;card.dataset.hours=value.hours;card.dataset.minutes=value.minutes;
   if(count.dataset.signature===signature)return;
   count.dataset.signature=signature;count.replaceChildren();
   if(value.today||value.underMinute){var message=value.today?'Happy birthday!':'Less than 1 minute';node('div','birthday-message',message,count);count.setAttribute('aria-label',entry.item.name+': '+message);return;}
-  var parts=value.months?[['month',value.months],['day',value.days]]:[];
-  if(!value.months){if(value.days)parts.push(['day',value.days]);if(value.hours||value.days)parts.push(['hour',value.hours]);parts.push(['minute',value.minutes]);}
-  var spoken=[];parts.forEach(function(part){var label=part[0]+(part[1]===1?'':'s'),unit=node('div','time-unit',undefined,count);unit.dataset.unit=part[0];node('span','time-number',String(part[1]),unit);node('span','time-label',label,unit);spoken.push(part[1]+' '+label);});
+  var parts=[];if(value.months)parts.push(['month',value.months]);if(weeks)parts.push(['week',weeks]);if(days)parts.push(['day',days]);
+  if(!value.months){if(value.hours||value.days)parts.push(['hour',value.hours]);parts.push(['minute',value.minutes]);}
+  var spoken=[];parts.forEach(function(part){var label=part[0]+(part[1]===1?'':'s'),unit=node('div','time-unit',undefined,count);unit.dataset.unit=part[0];node('span','time-number',String(part[1]),unit);node('span','time-label',part[0]==='hour'?'hr':part[0]==='minute'?'min':label,unit);spoken.push(part[1]+' '+label);});
   count.setAttribute('aria-label',entry.item.name+': '+spoken.join(', ')+' remaining');
  }
  function renderManager(){
   el('manageSection').hidden=!items.length;el('managedBirthdays').replaceChildren();
   items.forEach(function(item){
-   var n=C.next(item,today()),hebrew=item.calendar==='hebrew',row=node('article','managed-birthday',undefined,el('managedBirthdays'));
+   var birthday=C.selected(item),n=C.next(birthday,today()),hebrew=birthday.calendar==='hebrew',row=node('article','managed-birthday',undefined,el('managedBirthdays'));
    row.dataset.id=item.id;node('h3','',item.name,row).dir='auto';
-   node('p','birth-date',(hebrew?'Hebrew':'English')+' · '+item.day+' '+(hebrew?C.hebrewMonths:C.englishMonths)[item.month-1]+(item.year?' '+item.year:''),row);
+   node('p','birth-date',(item.calendar==='hebrew'?'Hebrew':'English')+' · '+item.day+' '+(item.calendar==='hebrew'?C.hebrewMonths:C.englishMonths)[item.month-1]+(item.year?' '+item.year:''),row);
    node('p','next-date','Next birthday: '+dateFormat.format(C.date(n.serial)),row);node('p','equivalent',C.hebrewText(n.serial),row);
    if(hebrew)node('p','begins','Begins at sunset '+shortFormat.format(C.date(n.serial-1))+' (evening before).',row);
    if(n.age!==null)node('p','age',(n.days===0?'Turning ':'Turns ')+n.age+(hebrew?' by the Hebrew calendar':''),row);
    if(n.note)node('p','adjustment',n.note,row);
-   var actions=node('div','card-actions',undefined,row),edit=node('button','small-button','Edit',actions),remove=node('button','small-button','Remove',actions);
-   edit.type=remove.type='button';edit.setAttribute('aria-label','Edit '+item.name);remove.setAttribute('aria-label','Remove '+item.name);
-   edit.addEventListener('click',function(){editBirthday(item);});remove.addEventListener('click',function(){deleted=item;items=items.filter(function(v){return v.id!==item.id;});save();render();if(editing===item.id)resetForm();announce(item.name+' removed.',true);el('undo').focus({preventScroll:true});});
+   var actions=node('div','card-actions',undefined,row),edit=node('button','small-button','Edit',actions),remove=node('button','small-button','Delete',actions);
+   edit.type=remove.type='button';edit.setAttribute('aria-label','Edit '+item.name);remove.setAttribute('aria-label','Delete '+item.name);
+   edit.addEventListener('click',function(){editBirthday(item);});remove.addEventListener('click',function(){deleteBirthday(item);});
   });
+ }
+ function needsReview(item){return item.year===null||!item.birthTime;}
+ function deleteBirthday(item){
+  deleted=item;items=items.filter(function(v){return v.id!==item.id;});var persisted=save();render();if(editing===item.id)resetForm();
+  announce(item.name+' deleted.'+(persisted?'':' Browser saving is unavailable; this change is for this visit.'),true);el(el('settings').open?'undo':'mainUndo').focus({preventScroll:true});
+ }
+ function switchCalendar(item,calendar){
+  if(item.viewCalendar===calendar)return;
+  if(!C.birthdayIn(item,calendar)){
+   openSettings();editBirthday(item,calendar);el('editorTitle').textContent='Verify birthday';el('saveBirthday').textContent='Save and switch';announce('To switch this saved birthday, add the original birth year and verify whether the birth was before or after midnight.',false);el(item.year===null?'year':'birthTime').focus();return;
+  }
+  item.viewCalendar=calendar;var persisted=save();render();
+  var entry=shown.find(function(e){return e.item.id===item.id;});if(entry)entry.card.querySelector('[data-calendar="'+calendar+'"]').focus({preventScroll:true});
+  if(!persisted)announce('The calendar changed for this visit, but browser saving is unavailable.',false);
  }
  function render(){
   var t=today();lastDay=t;shown=[];el('empty').hidden=items.length>0;el('countdowns').replaceChildren();
-  items.map(function(item){return {item:item,next:C.next(item,t)};}).sort(function(a,b){return a.next.days-b.next.days||a.item.name.localeCompare(b.item.name);}).forEach(function(entry){
-   var item=entry.item,n=entry.next,card=node('article','birthday'+(item.calendar==='hebrew'?' hebrew':'')+(n.days===0?' is-today':''),undefined,el('countdowns'));
-   card.dataset.id=item.id;card.dataset.date=C.date(n.serial).toISOString().slice(0,10);node('h3','',item.name,card).dir='auto';
-   var count=node('div','count',undefined,card);count.setAttribute('role','timer');count.setAttribute('aria-live','off');entry.card=card;shown.push(entry);paint(entry,new Date());
+  var unverified=items.filter(needsReview);el('reviewDates').hidden=!unverified.length;el('reviewDates').textContent='Check saved dates ('+unverified.length+')';
+  items.map(function(item){var birthday=C.selected(item);return {item:item,birthday:birthday,next:C.next(birthday,t)};}).sort(function(a,b){return a.next.days-b.next.days||a.item.name.localeCompare(b.item.name);}).forEach(function(entry){
+   var item=entry.item,n=entry.next,card=node('article','birthday'+(entry.birthday.calendar==='hebrew'?' hebrew':'')+(n.days===0?' is-today':''),undefined,el('countdowns'));
+   card.dataset.id=item.id;card.dataset.calendar=entry.birthday.calendar;card.dataset.date=C.date(n.serial).toISOString().slice(0,10);
+   var heading=node('div','birthday-heading',undefined,card);node('h3','',item.name,heading).dir='auto';
+   var remove=node('button','small-button delete-birthday','Delete',heading);remove.type='button';remove.setAttribute('aria-label','Delete '+item.name);remove.addEventListener('click',function(){deleteBirthday(item);});
+   var row=node('div','countdown-row',undefined,card),count=node('div','count',undefined,row);count.setAttribute('role','timer');count.setAttribute('aria-live','off');entry.card=card;shown.push(entry);paint(entry,new Date());
+   var toggle=node('div','view-toggle',undefined,row);toggle.setAttribute('role','group');toggle.setAttribute('aria-label','Birthday calendar for '+item.name);
+   ['english','hebrew'].forEach(function(calendar){var button=node('button','',calendar==='english'?'English':'Hebrew',toggle);button.type='button';button.dataset.calendar=calendar;button.setAttribute('aria-pressed',String(entry.birthday.calendar===calendar));button.addEventListener('click',function(){switchCalendar(item,calendar);});});
+   var verify=node('button','verify-date',undefined,card);verify.type='button';verify.setAttribute('aria-label','Verify date for '+item.name);
+   var target=node('time','', 'To: '+targetFormat.format(C.date(n.serial))+' · '+C.hebrewText(n.serial),verify);target.dateTime=C.localDate(n.serial).toISOString();verify.title='Countdown ends at midnight, local time. Tap to verify the original birthday.';
+   verify.addEventListener('click',function(){openSettings();editBirthday(item);});
   });
   renderManager();
  }
+ function reviewSavedDates(){var first=items.find(needsReview);if(first){openSettings();editBirthday(first);el('editorTitle').textContent='Verify saved birthday';announce('Your saved birthday is kept. Add its birth year and check the time of birth to verify both dates.',false);el(first.year===null?'year':'birthTime').focus();}}
  function openSettings(){if(!el('settings').open)el('settings').showModal();if(!items.length)el('name').focus();}
  function addBirthday(){resetForm();openSettings();el('name').focus();}
  function resetForm(){
-  editing=null;el('birthdayForm').reset();monthOptions();formHints();el('editorTitle').textContent='Add a birthday';el('saveBirthday').textContent='Add countdown';el('cancelEdit').hidden=true;
+  editing=null;pendingView=null;el('birthdayForm').reset();monthOptions();formHints();el('editorTitle').textContent='Add a birthday';el('saveBirthday').textContent='Add countdown';el('cancelEdit').hidden=true;
  }
- function editBirthday(item){
-  editing=item.id;document.querySelector('input[name="calendar"][value="'+item.calendar+'"]').checked=true;monthOptions();el('month').value=String(item.month);dayOptions();
-  el('day').value=String(item.day);el('name').value=item.name;el('year').value=item.year===null?'':String(item.year);el('adar').value=item.adar;el('february').value=item.february;
+ function editBirthday(item,requested){
+  editing=item.id;pendingView=requested||item.viewCalendar||item.calendar;document.querySelector('input[name="calendar"][value="'+item.calendar+'"]').checked=true;monthOptions();el('month').value=String(item.month);dayOptions();
+  el('day').value=String(item.day);el('name').value=item.name;el('year').value=item.year===null?'':String(item.year);el('adar').value=item.adar;el('february').value=item.february;el('birthTime').value=item.birthTime||'';
   el('editorTitle').textContent='Edit birthday';el('saveBirthday').textContent='Save changes';el('cancelEdit').hidden=false;formHints();el('name').focus();
  }
  el('birthdayForm').addEventListener('submit',function(event){
   event.preventDefault();
   try{
    if(el('year').value&&!/^\d{4}$/.test(el('year').value.trim()))throw new Error('Use a four-digit birth year, or leave it blank.');
-   var item=C.validate(rawForm(),today()),wasEditing=editing;
+   var raw=rawForm(),item=C.validate(raw,today()),wasEditing=editing;
+   if(raw.viewCalendar!==item.calendar&&!C.birthdayIn(item,raw.viewCalendar))throw new Error('Add the original birth year and choose when the birth happened to switch calendars.');
    if(editing){var found=items.findIndex(function(v){return v.id===editing;});if(found<0)throw new Error('This birthday was removed in another tab. Cancel the edit to add it again.');items[found]=item;}
    else{item.id=typeof crypto.randomUUID==='function'?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);items.push(item);}
    var persisted=save();render();resetForm();announce(persisted?item.name+(wasEditing?' updated.':' added.'):'This countdown is running for this visit, but browser saving is unavailable. Keep this page open.',false);
@@ -369,16 +448,20 @@ var BirthdayCalendar=(function(){
    var added=Array.from(el('countdowns').children).find(function(c){return c.dataset.id===item.id;});if(added){added.setAttribute('tabindex','-1');added.focus({preventScroll:true});added.scrollIntoView({block:'nearest',behavior:'auto'});}
   }catch(error){el('formError').textContent=error.message;el('formError').hidden=false;}
  });
- document.querySelectorAll('input[name="calendar"]').forEach(function(input){input.addEventListener('change',function(){monthOptions();formHints();});});
- el('month').addEventListener('change',function(){dayOptions();formHints();});el('day').addEventListener('change',formHints);el('year').addEventListener('input',formHints);el('adar').addEventListener('change',formHints);el('february').addEventListener('change',formHints);
+ document.querySelectorAll('input[name="calendar"]').forEach(function(input){input.addEventListener('change',function(){pendingView=calendar();monthOptions();formHints();});});
+ el('month').addEventListener('change',function(){dayOptions();formHints();});el('day').addEventListener('change',formHints);el('year').addEventListener('input',formHints);el('birthTime').addEventListener('change',formHints);el('adar').addEventListener('change',formHints);el('february').addEventListener('change',formHints);
  el('addAnother').addEventListener('click',openSettings);el('firstBirthday').addEventListener('click',addBirthday);el('newBirthday').addEventListener('click',addBirthday);el('closeSettings').addEventListener('click',function(){el('settings').close();});el('cancelEdit').addEventListener('click',function(){resetForm();el('name').focus();});
- el('undo').addEventListener('click',function(){if(deleted){items.push(deleted);save();render();announce(deleted.name+' restored.',false);deleted=null;el('newBirthday').focus({preventScroll:true});}});
+ function restoreDeleted(){if(deleted){if(!items.some(function(item){return item.id===deleted.id;}))items.push(deleted);save();render();announce(deleted.name+' restored.',false);deleted=null;el(el('settings').open?'newBirthday':'addAnother').focus({preventScroll:true});}}
+ el('undo').addEventListener('click',restoreDeleted);el('mainUndo').addEventListener('click',restoreDeleted);el('reviewDates').addEventListener('click',reviewSavedDates);
  function tick(){var now=new Date();if(C.serial(now)!==lastDay){render();formHints();}else{shown.forEach(function(entry){paint(entry,now);});}}
  window.addEventListener('focus',tick);window.addEventListener('pageshow',tick);document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});setInterval(tick,1000);
  el('settings').addEventListener('click',function(event){var r=this.getBoundingClientRect();if(event.target===this&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom))this.close();});
  window.addEventListener('storage',function(event){if(event.key===KEY){try{items=read(event.newValue);render();announce('Birthday list updated from another tab.',false);}catch(error){announce('Could not read the updated birthday list. This page was left unchanged.',false);}}});
  try{items=read(localStorage.getItem(KEY));}catch(error){canSave=false;el('saveStatus').textContent='Saved birthdays could not be read. They were left untouched. New countdowns stay on this page only.';}
  monthOptions();formHints();render();
+ if(legacyLoaded&&items.some(needsReview)){
+  try{if(localStorage.getItem('cjBirthdayNightReviewV1')!=='1'){localStorage.setItem('cjBirthdayNightReviewV1','1');reviewSavedDates();}}catch(error){}
+ }
 })();
 </script>
 </body>
