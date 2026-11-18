@@ -13,15 +13,15 @@
   "automation": {
     "enabled": true,
     "schedule": "Every 4 hours",
-    "lastCheckAt": "2026-11-18T00:42:31.081Z",
+    "lastCheckAt": "2026-11-18T00:47:21.573Z",
     "lastOutcome": "weather_service_unavailable",
     "nextCheckAfter": "2026-11-18T04:13:00.000Z",
     "retryAfter": "2026-11-18T01:02:31.002Z",
-    "keptResults": 1713,
-    "newResults": 9,
+    "keptResults": 1722,
+    "newResults": 0,
     "newUnavailable": 0,
-    "weatherRequests": 3,
-    "quotaUsed": 148.01,
+    "weatherRequests": 0,
+    "quotaUsed": 0,
     "knownDataIssues": 0
   },
   "unavailable": [
