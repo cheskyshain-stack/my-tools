@@ -38,16 +38,24 @@ for(const invalid of [{month:4,day:31},{month:2,day:29,year:2023},{year:2027},{c
 }
 eq(C.validate(item({name:'  Miriam  '}),serial('2026-11-18')).name,'Miriam');
 eq(C.validate(item({calendar:'hebrew',month:14,day:15,year:5784}),serial('2026-11-18')).year,5784);
+eq(C.hebrewText(C.hebrewDate(5787,14,9)),'ט׳ אדר ב׳ תשפ״ז');
+eq(C.hebrewText(C.hebrewDate(5787,13,15)),'ט״ו אדר א׳ תשפ״ז');
+eq(C.hebrewText(C.hebrewDate(5786,12,16)),'ט״ז אדר תשפ״ו');
+eq(C.hebrewText(C.hebrewDate(5787,7,30)),'ל׳ תשרי תשפ״ז');
 function duration(birthday,when){const now=new Date(when);return C.duration(birthday,C.next(birthday,C.serial(now)),now);}
 let split=duration(item({month:12,day:20}),'2026-11-18T10:00:00-05:00');
 eq(split.months,1);eq(split.days,1);eq(split.hours,14);
 split=duration(item({month:12,day:18}),'2026-11-18T00:00:00-05:00');eq(split.months,1);
 split=duration(item({month:12,day:18}),'2026-11-18T00:00:01-05:00');eq(split.months,0);eq(split.days,29);eq(split.hours,23);eq(split.minutes,59);
+eq(split.seconds,59);
+split=duration(item({month:12,day:20}),'2026-11-18T10:12:34-05:00');eq(split.months,1);eq(split.hours,13);eq(split.minutes,47);eq(split.seconds,26);
 eq(duration(item({month:2,day:28}),'2027-01-31T00:00:00-05:00').months,1);
 eq(duration(item({month:2,day:28}),'2027-01-31T12:00:00-05:00').months,0);
 split=duration(item({month:3,day:15}),'2027-03-13T12:00:00-05:00');eq(split.days,1);eq(split.hours,11);
 split=duration(item({month:11,day:8}),'2027-11-06T12:00:00-04:00');eq(split.days,1);eq(split.hours,13);
 eq(duration(item({day:19}),'2026-11-18T23:59:30-05:00').underMinute,true);
+eq(duration(item({day:19}),'2026-11-18T23:59:30-05:00').seconds,30);
+eq(duration(item({day:19}),'2026-11-18T23:59:59.999-05:00').seconds,0);
 eq(duration(item({day:19}),'2026-11-19T00:00:00-05:00').today,true);
 const shevat30=C.localDate(C.hebrewDate(5787,11,30));
 eq(C.serial(C.addMonths(shevat30,1,'hebrew')),C.hebrewDate(5787,13,30));

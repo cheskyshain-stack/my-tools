@@ -35,13 +35,13 @@ try{
  await edit('<img src=x onerror=alert(1)>');await page.selectOption('#february','mar1');await page.locator('#saveBirthday').click();await setup();ok((await managed('<img src=x onerror=alert(1)>').textContent()).includes('March 1'));
  await fresh();await page.fill('#name','Invalid leap day');await page.selectOption('#month','2');await page.selectOption('#day','29');await page.fill('#year','2023');await page.locator('#saveBirthday').click();ok((await page.locator('#formError').textContent()).includes('does not exist'));eq(await page.locator('.birthday').count(),4);
  await page.check('input[value="hebrew"]');await page.selectOption('#month','13');await page.selectOption('#day','10');await page.fill('#year','5786');await page.locator('#saveBirthday').click();ok((await page.locator('#formError').textContent()).includes('does not exist'));
- await add('December birthday',12,20);eq(await card('December birthday').getAttribute('data-months'),'1');eq(await card('December birthday').locator('[data-unit=month]').count(),1);eq(await card('December birthday').locator('[data-unit=hour],[data-unit=minute]').count(),0);
+ await add('December birthday',12,20);eq(await card('December birthday').getAttribute('data-months'),'1');eq(await card('December birthday').locator('[data-unit=month]').count(),1);eq(await card('December birthday').locator('[data-unit=hour],[data-unit=minute],[data-unit=second]').count(),3);
  await fresh();await page.fill('#name','Typing stays put');await page.fill('#year','200');await page.clock.runFor(30000);eq(await page.locator('#year').inputValue(),'200');eq(await page.locator('#name').inputValue(),'Typing stays put');
  // Midnight and the month boundary both update while the setup form is focused.
  await time('2026-11-19T05:00:00Z');ok((await card('Miriam').textContent()).includes('Happy birthday!'));eq(await page.locator('#year').inputValue(),'200');
  await time('2026-11-20T05:00:00Z');eq(await card('December birthday').getAttribute('data-months'),'0');eq(await card('December birthday').locator('[data-unit=month]').count(),0);eq(await card('December birthday').locator('[data-unit=hour],[data-unit=minute]').count(),2);
- await time('2026-12-20T04:54:00Z');eq(await card('December birthday').locator('.time-unit').count(),1);eq(await card('December birthday').locator('[data-unit=minute] .time-number').textContent(),'5');
- await time('2026-12-20T04:59:30Z');ok((await card('December birthday').textContent()).includes('Less than 1 minute'));
+ await time('2026-12-20T04:54:00Z');eq(await card('December birthday').locator('.time-unit').count(),3);eq(await card('December birthday').locator('[data-unit=minute] .time-number').textContent(),'05');
+ await time('2026-12-20T04:59:30Z');eq(await card('December birthday').locator('[data-unit=second] .time-number').textContent(),'29');
  await time('2026-12-20T05:00:00Z');ok((await card('December birthday').textContent()).includes('Happy birthday!'));eq(await page.locator('#name').inputValue(),'Typing stays put');
  await time('2026-11-18T15:00:00Z');
  eq(await page.locator('.birthday .birth-date,.birthday .card-actions,.birthday .age,.birthday .next-date').count(),0);

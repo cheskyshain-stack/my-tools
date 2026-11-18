@@ -176,7 +176,9 @@ still limit physical accuracy, especially for nearby obstructions.
 `npm run test:birthdays` runs the birthday calendar reference checks and a browser
 suite for multiple English/Hebrew countdowns, Adar/February adjustments, optional
 birth years, editing, Undo, saving, midnight rollover, focused inputs, other tabs,
-mobile layout and portal navigation. Set `CJ_BASE_URL` to a fresh local server.
+written Hebrew target dates, selected-date highlights, equal-sized live seconds
+on distant and near birthdays, mobile layout and portal navigation. Set
+`CJ_BASE_URL` to a fresh local server.
 
 `npm run test:labels` checks the PDF label cropper's fit/rotation geometry and its
 browser flow, using generated non-personal PDFs. It verifies original compressed

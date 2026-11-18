@@ -15,6 +15,11 @@ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()
 const card=name=>page.locator('.birthday').filter({has:page.getByRole('heading',{name,exact:true})});
 const stored=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)).birthdays,key);
 const toggle=(name,calendar)=>card(name).locator(`[data-calendar="${calendar}"]`).click();
+async function selectedDate(name,calendar){
+ const c=card(name);eq(await c.locator('.verify-date .is-selected').count(),1);eq(await c.locator('.target-'+calendar).evaluate(n=>n.classList.contains('is-selected')),true);
+ const other=calendar==='hebrew'?'english':'hebrew';ok(await c.locator('.target-'+calendar).evaluate((n,other)=>getComputedStyle(n).color!==getComputedStyle(n.closest('.verify-date').querySelector('.target-'+other)).color,other),'The selected target date has a visible highlight');
+ eq(await c.locator('.target-hebrew').getAttribute('dir'),'rtl');eq(await c.locator('.target-hebrew').getAttribute('lang'),'he');ok(/^[\u0590-\u05ff\s]+$/.test(await c.locator('.target-hebrew').textContent()),'Hebrew dates use Hebrew letters and numerals');
+}
 try{
  await page.goto(`${BASE}/birthday/`,{waitUntil:'networkidle'});
  // Existing V1 entries are kept and brought to their first date review once.
@@ -23,13 +28,16 @@ try{
  await page.locator('#closeSettings').click();await page.reload({waitUntil:'networkidle'});eq(await page.locator('#settings').isVisible(),false);eq(await page.locator('.birthday').count(),3);
  eq(await card('Nossi').getAttribute('data-months'),'5');eq(await card('Nossi').locator('[data-unit=day]').count(),0);
  eq(await card('Nossi').locator('.verify-date time').getAttribute('datetime'),'2027-04-19T04:00:00.000Z');
+ await selectedDate('Nossi','english');
  await toggle('Nossi','hebrew');eq(await page.locator('#settings').isVisible(),true);eq(await page.inputValue('#name'),'Nossi');eq(await page.inputValue('#month'),'4');
  await page.selectOption('#birthTime','evening');ok((await page.locator('#birthDatePreview').textContent()).includes('April 19, 2010'));
  await page.locator('#saveBirthday').click();eq(await card('Nossi').getAttribute('data-calendar'),'hebrew');
+ await selectedDate('Nossi','hebrew');
  const hebrewTarget=await card('Nossi').getAttribute('data-date');ok(hebrewTarget!=='2027-04-19','The other calendar has its own annual birthday');
  let record=(await stored()).find(r=>r.id==='nossi');eq([record.calendar,record.month,record.day,record.year,record.birthTime],['english',4,19,2010,'evening']);eq(record.viewCalendar,'hebrew');
  await page.reload({waitUntil:'networkidle'});eq(await card('Nossi').getAttribute('data-date'),hebrewTarget);eq(await card('Nossi').locator('[data-calendar=hebrew]').getAttribute('aria-pressed'),'true');
  await toggle('Nossi','english');eq(await card('Nossi').getAttribute('data-date'),'2027-04-19');
+ await selectedDate('Nossi','english');
  // For a known Hebrew date, an evening birth maps to the previous English day.
  await toggle('Ari','english');eq(await page.inputValue('#name'),'Ari');await page.selectOption('#birthTime','evening');
  const eveningPreview=await page.locator('#birthDatePreview').textContent();await page.locator('#saveBirthday').click();const eveningTarget=await card('Ari').getAttribute('data-date');
@@ -67,13 +75,22 @@ try{
  // Remainder days split into weeks; three normal rows should fit comfortably.
  await page.clock.setSystemTime(new Date('2026-12-01T15:00:00Z'));await page.clock.runFor(5001);
  const weekly=await page.locator('.birthday [data-unit=week]').count();ok(weekly>0,'The list shows weeks when a remainder contains them');
- eq(await card('Soon').locator('[data-unit=week],[data-unit=day],[data-unit=hour],[data-unit=minute]').count(),4);
+ eq(await card('Soon').locator('[data-unit=week],[data-unit=day],[data-unit=hour],[data-unit=minute],[data-unit=second]').count(),5);
+ // Seconds tick on distant and near birthdays without changing the selected date or focus.
+ const target=await card('Nossi').getAttribute('data-date'),farSecond=Number(await card('Nossi').getAttribute('data-seconds')),nearSecond=Number(await card('Soon').getAttribute('data-seconds'));
+ await card('Nossi').locator('[data-calendar=english]').focus();await page.clock.runFor(1000);
+ eq(Number(await card('Nossi').getAttribute('data-seconds')),(farSecond+59)%60);eq(Number(await card('Soon').getAttribute('data-seconds')),(nearSecond+59)%60);
+ eq(await card('Nossi').getAttribute('data-date'),target);eq(await page.evaluate(()=>document.activeElement.dataset.calendar),'english');
+ ok((await card('Soon').locator('.count').getAttribute('aria-label')).includes('seconds'));eq(await card('Soon').locator('.count').getAttribute('aria-live'),'off');
  for(const [width,height] of [[375,667],[393,852],[412,839],[1280,900]]){
   await page.setViewportSize({width,height});
   eq(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
   eq(await page.locator('.birthday').evaluateAll(ns=>ns.some(n=>n.scrollWidth>n.clientWidth+1)),false);
   if(width<500)ok(await page.locator('.birthday').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().height<=125)),'Compact rows stay at most 125px tall');
-  if(width<500)ok(await card('Soon').locator('.countdown-row').evaluate(n=>n.getBoundingClientRect().height<=35),'Weeks, days, hours and minutes fit in one compact row');
+  if(width<500)ok(await card('Soon').locator('.countdown-row').evaluate(n=>n.getBoundingClientRect().height<=58),'Calendar units and ticking clock fit in two compact lines');
+  eq(await card('Soon').locator('.time-number').evaluateAll(ns=>new Set(ns.map(n=>getComputedStyle(n).fontSize)).size),1);
+  eq(await card('Soon').locator('.time-label').evaluateAll(ns=>new Set(ns.map(n=>getComputedStyle(n).fontSize)).size),1);
+  eq(await page.locator('.verify-date time').evaluateAll(ns=>ns.some(n=>n.scrollWidth>n.clientWidth+1)),false);
   await page.screenshot({path:`birthday-compact-${width}.png`,fullPage:true});
   eq(await page.locator('.birthday').getByRole('button',{name:/Delete/}).count(),0);
   await page.locator('#addAnother').click();

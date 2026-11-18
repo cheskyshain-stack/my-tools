@@ -95,7 +95,8 @@
  .confirm-delete{color:#ffb4b4;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12)}
  .small-button:disabled{opacity:.5;cursor:default}
  .countdown-row{display:flex;justify-content:space-between;align-items:center;gap:7px;min-height:30px;margin:2px 0}
- body .count{display:flex;gap:8px;margin:0;flex-wrap:wrap;min-width:0}
+ body .count{display:flex;flex-direction:column;gap:2px;margin:0;min-width:0}
+ .calendar-units,.clock-units{display:flex;flex-wrap:wrap;gap:8px}
  body .time-unit{display:flex;align-items:baseline;gap:3px;text-align:left;padding:0;border:0;border-radius:0;background:none}
  body .time-number{font-size:23px;line-height:1.15;letter-spacing:-.04em}
  body .time-label{margin:0;font-size:11px}
@@ -106,6 +107,10 @@
  .hebrew .view-toggle [aria-pressed="true"]{background:rgba(245,184,65,.15);color:var(--cj-gold)}
  .verify-date{display:block;min-height:24px;width:100%;padding:3px 0;border:0;background:none;color:var(--cj-muted);text-align:left;font:11px/1.4 var(--cj-body);cursor:pointer;overflow-wrap:anywhere}
  .verify-date:hover{text-decoration:underline}
+ .verify-date time{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 4px}
+ .date-label{padding:1px 3px;border-radius:4px}
+ .date-label.is-selected{color:var(--cj-cyan);background:rgba(0,200,255,.13);font-weight:700}
+ .hebrew .date-label.is-selected{color:var(--cj-gold);background:rgba(245,184,65,.14)}
  .review-link{display:block;margin:0 0 8px;padding:5px 0;border:0;background:none;color:var(--cj-gold);font:12px var(--cj-body);cursor:pointer;text-align:left}
  @media(max-width:650px){.countdowns{grid-template-columns:1fr}.birthday{padding:17px}.editor{padding:16px}.settings-content{padding:13px}.settings-content .editor{padding:13px}.settings-top{padding:13px}}
  @media(max-width:380px){.date-fields{gap:7px}.date-fields input,.date-fields select{padding:10px 7px;font-size:14px}.calendar-choice label{padding:10px 8px}}
@@ -241,7 +246,13 @@ var BirthdayCalendar=(function(){
  }
  function englishSerial(year,month,day){var d=new Date(Date.UTC(year,month-1,day));return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day?(d.getTime()-EPOCH)/DAY:null;}
  function hebrewDate(year,month,day){return index(year).dates.get(month+'/'+day)??null;}
- function hebrewText(s){var h=hebrewDateExtended(s);return h.dayOfMonth+' '+JEWISH_MONTHS_EN[h.month-1]+' '+h.year;}
+ // Numeral forms follow the owner's zmanim-tool, including 15, 16 and short years.
+ function hebrewNumber(n){
+  var ones=['','א','ב','ג','ד','ה','ו','ז','ח','ט'],tens=['','י','כ','ל','מ','נ','ס','ע','פ','צ'],hundreds=['','ק','ר','ש','ת'],out='';
+  while(n>=400){out+='ת';n-=400;}out+=hundreds[Math.floor(n/100)];n%=100;out+=tens[Math.floor(n/10)];out+=ones[n%10];
+  out=out.replace('יה','טו').replace('יו','טז');return out.length<=1?out+'׳':out.slice(0,-1)+'״'+out.slice(-1);
+ }
+ function hebrewText(s){var h=hebrewDateExtended(s);return hebrewNumber(h.dayOfMonth)+' '+JEWISH_MONTHS_HE[h.month-1]+' '+hebrewNumber(h.year%1000||h.year);}
  function birthdayIn(item,calendar){
   if(calendar===item.calendar)return Object.assign({},item);
   if(item.year===null||!item.birthTime)return null;
@@ -272,10 +283,10 @@ var BirthdayCalendar=(function(){
  }
  function duration(item,occurrence,now){
   var target=localDate(occurrence.serial),months=0,anchor=now;
-  if(occurrence.serial===serial(now))return {today:true,months:0,days:0,hours:0,minutes:0,underMinute:false};
+  if(occurrence.serial===serial(now))return {today:true,months:0,days:0,hours:0,minutes:0,seconds:0,underMinute:false};
   for(var n=1;n<=14;n++){var candidate=addMonths(now,n,item.calendar);if(candidate>target)break;months=n;anchor=candidate;}
-  var remaining=Math.max(0,target-anchor),minutes=Math.floor(remaining/60000);
-  return {today:false,months:months,days:Math.floor(minutes/1440),hours:Math.floor(minutes%1440/60),minutes:minutes%60,underMinute:!months&&remaining<60000};
+  var remaining=Math.max(0,target-anchor),seconds=Math.floor(remaining/1000),minutes=Math.floor(seconds/60);
+  return {today:false,months:months,days:Math.floor(minutes/1440),hours:Math.floor(minutes%1440/60),minutes:minutes%60,seconds:seconds%60,underMinute:!months&&remaining<60000};
  }
  function next(item,today){
   var start=item.calendar==='hebrew'?hebrewDateExtended(today).year:date(today).getUTCFullYear();
@@ -372,13 +383,15 @@ var BirthdayCalendar=(function(){
  function node(tag,className,text,parent){var n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;if(parent)parent.appendChild(n);return n;}
  function paint(entry,now){
   var value=C.duration(entry.birthday,entry.next,now),card=entry.card,count=card.querySelector('.count'),signature=JSON.stringify(value);
-  var weeks=Math.floor(value.days/7),days=value.days%7;card.dataset.months=value.months;card.dataset.weeks=weeks;card.dataset.days=days;card.dataset.totalDays=value.days;card.dataset.hours=value.hours;card.dataset.minutes=value.minutes;
+  var weeks=Math.floor(value.days/7),days=value.days%7;card.dataset.months=value.months;card.dataset.weeks=weeks;card.dataset.days=days;card.dataset.totalDays=value.days;card.dataset.hours=value.hours;card.dataset.minutes=value.minutes;card.dataset.seconds=value.seconds;
   if(count.dataset.signature===signature)return;
   count.dataset.signature=signature;count.replaceChildren();
-  if(value.today||value.underMinute){var message=value.today?'Happy birthday!':'Less than 1 minute';node('div','birthday-message',message,count);count.setAttribute('aria-label',entry.item.name+': '+message);return;}
+  if(value.today){node('div','birthday-message','Happy birthday!',count);count.setAttribute('aria-label',entry.item.name+': Happy birthday!');return;}
   var parts=[];if(value.months)parts.push(['month',value.months]);if(weeks)parts.push(['week',weeks]);if(days)parts.push(['day',days]);
-  if(!value.months){if(value.hours||value.days)parts.push(['hour',value.hours]);parts.push(['minute',value.minutes]);}
-  var spoken=[];parts.forEach(function(part){var label=part[0]+(part[1]===1?'':'s'),unit=node('div','time-unit',undefined,count);unit.dataset.unit=part[0];node('span','time-number',String(part[1]),unit);node('span','time-label',part[0]==='hour'?'hr':part[0]==='minute'?'min':label,unit);spoken.push(part[1]+' '+label);});
+  var spoken=[];
+  function units(list,parent){list.forEach(function(part){var label=part[0]+(part[1]===1?'':'s'),unit=node('div','time-unit',undefined,parent);unit.dataset.unit=part[0];node('span','time-number',part[0]==='minute'||part[0]==='second'?String(part[1]).padStart(2,'0'):String(part[1]),unit);node('span','time-label',part[0]==='hour'?'hr':part[0]==='minute'?'min':part[0]==='second'?'sec':label,unit);spoken.push(part[1]+' '+label);});}
+  if(parts.length)units(parts,node('div','calendar-units',undefined,count));
+  units([['hour',value.hours],['minute',value.minutes],['second',value.seconds]],node('div','clock-units',undefined,count));
   count.setAttribute('aria-label',entry.item.name+': '+spoken.join(', ')+' remaining');
  }
  function renderManager(){
@@ -436,7 +449,11 @@ var BirthdayCalendar=(function(){
    var toggle=node('div','view-toggle',undefined,row);toggle.setAttribute('role','group');toggle.setAttribute('aria-label','Birthday calendar for '+item.name);
    ['english','hebrew'].forEach(function(calendar){var button=node('button','',calendar==='english'?'English':'Hebrew',toggle);button.type='button';button.dataset.calendar=calendar;button.setAttribute('aria-pressed',String(entry.birthday.calendar===calendar));button.addEventListener('click',function(){switchCalendar(item,calendar);});});
    var verify=node('button','verify-date',undefined,card);verify.type='button';verify.setAttribute('aria-label','Verify date for '+item.name);
-   var target=node('time','', 'To: '+targetFormat.format(C.date(n.serial))+' · '+C.hebrewText(n.serial),verify);target.dateTime=C.localDate(n.serial).toISOString();verify.title='Countdown ends at midnight, local time. Tap to verify the original birthday.';
+   var target=node('time','',undefined,verify);target.dateTime=C.localDate(n.serial).toISOString();node('span','','To:',target);
+   var englishDate=node('span','date-label target-english'+(entry.birthday.calendar==='english'?' is-selected':''),targetFormat.format(C.date(n.serial)),target);englishDate.lang='en';
+   node('span','','·',target).setAttribute('aria-hidden','true');
+   var hebrewDate=node('bdi','date-label target-hebrew'+(entry.birthday.calendar==='hebrew'?' is-selected':''),C.hebrewText(n.serial),target);hebrewDate.lang='he';hebrewDate.dir='rtl';
+   verify.title='Countdown ends at midnight, local time. Tap to verify the original birthday.';
    verify.addEventListener('click',function(){openSettings();editBirthday(item);});
   });
   renderManager();

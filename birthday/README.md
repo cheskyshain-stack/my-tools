@@ -4,7 +4,10 @@
 People can add, edit and remove multiple annual countdowns in the English
 (Gregorian) or Hebrew calendar. Birth year is optional and enables the age display.
 Cards sort by the next date, and removals have Undo. The main screen contains
-compact rows with a name, countdown, English/Hebrew toggle and the exact target date in both calendars. Tapping that date opens its verification form. The Set up button opens a native modal
+compact rows with a name, countdown, English/Hebrew toggle and the exact target date in both calendars. Hebrew target dates use Hebrew letters for the day, month and year,
+including the correct Adar I/II and 15/16 numeral forms. They are isolated with
+`bdi`, `dir="rtl"` and `lang="he"`. The target matching the selected calendar is
+highlighted in the same color as its toggle. Tapping that date opens its verification form. The Set up button opens a native modal
 with all dates, ages, adjustments, adding, editing and removal controls. The form
 starts hidden, including for an empty list. Saving returns to the countdowns;
 Done or Escape closes setup and preserves an unfinished draft for reopening.
@@ -12,10 +15,12 @@ Done or Escape closes setup and preserves an unfinished draft for reopening.
 Countdowns end at midnight at the start of the birthday's daytime date, in the
 device's time zone. Whole months use the selected calendar, anchored to the
 current date/time, and clamp the day to the last day of a short target month.
-The remaining elapsed time is divided into 24-hour days, hours and minutes, so
-daylight saving can change the hours shown. With at least one month remaining,
-cards show months, weeks and remaining days. Under one month, hours and minutes
-also appear. Zero month, week and day units are omitted. The last minute says "Less than 1 minute".
+The remaining elapsed time is divided into 24-hour days, hours, minutes and seconds,
+so daylight saving can change the hours shown. Cards show months, weeks and
+remaining days on one line and hours, minutes and seconds on the next, including
+distant birthdays. All unit numbers and labels use matching sizes. Zero month,
+week and day units are omitted; hours, minutes and seconds stay visible, with
+two-digit minutes and seconds. Under one day only the clock line remains.
 
 On the birthday date the card celebrates all day, then advances to next year's
 occurrence after midnight. A one-second timer plus focus, visibility and
@@ -77,4 +82,7 @@ other-tab updates, direct/portal navigation and measured main/modal geometry at
 records remain compatible; this interface update does not rewrite them on load.
 The switching suite also verifies original-date preservation, known birth-year
 conversion, both night cases, one-time review of legacy records, confirmation, cancellation, closing setup without deleting,
-Undo and compact rows (including four time units) at phone and desktop widths.
+Undo and compact rows with equally sized time units at phone and desktop widths.
+The suites also check written Hebrew dates, selected-date highlighting after
+switching and reloading, seconds ticking on distant and near birthdays without
+moving focus, the final minute and birthday rollover.
