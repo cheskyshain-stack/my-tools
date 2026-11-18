@@ -5,23 +5,23 @@
   "start_date": "2021-11-17",
   "end_date": "2026-11-16",
   "counts": {
-    "pending": 1930,
-    "ok": 1720,
+    "pending": 1804,
+    "ok": 1846,
     "unavailable": 2
   },
-  "created_utc": "2026-11-18T00:42:31.080Z",
+  "created_utc": "2026-11-18T13:01:56.926Z",
   "automation": {
     "enabled": true,
     "schedule": "Every 4 hours",
-    "lastCheckAt": "2026-11-18T00:47:21.573Z",
-    "lastOutcome": "weather_service_unavailable",
-    "nextCheckAfter": "2026-11-18T04:13:00.000Z",
-    "retryAfter": "2026-11-18T01:02:31.002Z",
+    "lastCheckAt": "2026-11-18T13:01:56.927Z",
+    "lastOutcome": "batch_budget",
+    "nextCheckAfter": "2026-11-18T16:13:00.000Z",
+    "retryAfter": null,
     "keptResults": 1722,
-    "newResults": 0,
+    "newResults": 126,
     "newUnavailable": 0,
-    "weatherRequests": 0,
-    "quotaUsed": 0,
+    "weatherRequests": 21,
+    "quotaUsed": 998.33,
     "knownDataIssues": 0
   },
   "unavailable": [
