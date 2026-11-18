@@ -4,7 +4,7 @@
 People can add, edit and remove multiple annual countdowns in the English
 (Gregorian) or Hebrew calendar. Birth year is optional and enables the age display.
 Cards sort by the next date, and removals have Undo. The main screen contains
-compact rows with a name, countdown, English/Hebrew toggle, Delete button and the exact target date in both calendars. Tapping that date opens its verification form. The Set up button opens a native modal
+compact rows with a name, countdown, English/Hebrew toggle and the exact target date in both calendars. Tapping that date opens its verification form. The Set up button opens a native modal
 with all dates, ages, adjustments, adding, editing and removal controls. The form
 starts hidden, including for an empty list. Saving returns to the countdowns;
 Done or Escape closes setup and preserves an unfinished draft for reopening.
@@ -56,8 +56,11 @@ V1 records stay in the same storage key. Older entries without `birthTime` open
 their first verification form once, tracked by `cjBirthdayNightReviewV1`; the
 birthday records themselves are not rewritten until saved. A Check saved dates
 button remains while information is missing. Each person's selected calendar is
-remembered. Delete on the row or in setup removes the whole birthday, and Undo
-restores the original date and selected view.
+remembered. Delete appears only in setup beside Edit. It first opens an inline confirmation
+for that named birthday, with Confirm delete and Cancel buttons. Nothing is
+removed or written to storage until Confirm delete is pressed. Cancel gets focus
+first; editing, closing setup or receiving another tab's update cancels pending
+confirmation. Undo still restores the original date and selected view afterward.
 
 Data lives only in `localStorage.cjBirthdayCountdownsV1` on that browser/device;
 there is no account, server, cross-device sync or birthday data in the URL. The
@@ -73,5 +76,5 @@ other-tab updates, direct/portal navigation and measured main/modal geometry at
 375, 393, 412 and 1280px. No calendar or location API is used. Saved V1 birthday
 records remain compatible; this interface update does not rewrite them on load.
 The switching suite also verifies original-date preservation, known birth-year
-conversion, both night cases, one-time review of legacy records, direct deletion,
+conversion, both night cases, one-time review of legacy records, confirmation, cancellation, closing setup without deleting,
 Undo and compact rows (including four time units) at phone and desktop widths.

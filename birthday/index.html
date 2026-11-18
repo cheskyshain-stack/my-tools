@@ -89,7 +89,11 @@
  body .birthday.hebrew{border-left-color:var(--cj-gold)}
  .birthday-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
  body .birthday h3{font-size:19px;line-height:1.2;min-width:0}
- .delete-birthday{min-height:28px;padding:3px 7px;font-size:10px;flex:none;background:none;border-color:transparent}
+ .delete-confirm{padding:12px;margin-top:10px;border:1px solid rgba(239,68,68,.35);border-radius:11px;background:rgba(239,68,68,.06);overflow-wrap:anywhere}
+ .delete-confirm p{color:var(--cj-text);margin:0 0 10px}
+ .delete-confirm-actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+ .confirm-delete{color:#ffb4b4;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12)}
+ .small-button:disabled{opacity:.5;cursor:default}
  .countdown-row{display:flex;justify-content:space-between;align-items:center;gap:7px;min-height:30px;margin:2px 0}
  body .count{display:flex;gap:8px;margin:0;flex-wrap:wrap;min-width:0}
  body .time-unit{display:flex;align-items:baseline;gap:3px;text-align:left;padding:0;border:0;border-radius:0;background:none}
@@ -314,7 +318,7 @@ var BirthdayCalendar=(function(){
 /* BIRTHDAY_CALENDAR_END */
 (function(){
  "use strict";
- var el=function(id){return document.getElementById(id);},C=BirthdayCalendar,KEY='cjBirthdayCountdownsV1',items=[],editing=null,deleted=null,lastDay=null,canSave=true,shown=[],pendingView=null,legacyLoaded=false,noticeTimer=null;
+ var el=function(id){return document.getElementById(id);},C=BirthdayCalendar,KEY='cjBirthdayCountdownsV1',items=[],editing=null,deleted=null,lastDay=null,canSave=true,shown=[],pendingView=null,legacyLoaded=false,noticeTimer=null,pendingDelete=null;
  var dateFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'long',day:'numeric',year:'numeric'});
  var targetFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'short',day:'numeric',year:'numeric'});
  var shortFormat=new Intl.DateTimeFormat('en-US',{timeZone:'UTC',month:'short',day:'numeric'});
@@ -389,11 +393,26 @@ var BirthdayCalendar=(function(){
    if(n.note)node('p','adjustment',n.note,row);
    var actions=node('div','card-actions',undefined,row),edit=node('button','small-button','Edit',actions),remove=node('button','small-button','Delete',actions);
    edit.type=remove.type='button';edit.setAttribute('aria-label','Edit '+item.name);remove.setAttribute('aria-label','Delete '+item.name);
-   edit.addEventListener('click',function(){editBirthday(item);});remove.addEventListener('click',function(){deleteBirthday(item);});
+   remove.dataset.deleteRequest='true';remove.setAttribute('aria-expanded',String(pendingDelete===item.id));remove.disabled=pendingDelete===item.id;
+   edit.addEventListener('click',function(){editBirthday(item);});remove.addEventListener('click',function(){requestDelete(item);});
+   if(pendingDelete===item.id){
+    var confirmation=node('div','delete-confirm',undefined,row);confirmation.setAttribute('role','group');
+    var question=node('p','','Delete the saved birthday for '+item.name+'?',confirmation);question.id='delete-question-'+item.id;confirmation.setAttribute('aria-labelledby',question.id);
+    var choices=node('div','delete-confirm-actions',undefined,confirmation),confirm=node('button','small-button confirm-delete','Confirm delete',choices),cancel=node('button','small-button','Cancel',choices);
+    confirm.type=cancel.type='button';cancel.dataset.deleteCancel='true';confirm.addEventListener('click',function(){deleteBirthday(item);});
+    cancel.addEventListener('click',function(){pendingDelete=null;renderManager();var current=Array.from(el('managedBirthdays').children).find(function(r){return r.dataset.id===item.id;});if(current)current.querySelector('[data-delete-request]').focus({preventScroll:true});});
+   }
   });
  }
  function needsReview(item){return item.year===null||!item.birthTime;}
+ function requestDelete(item){
+  if(!el('settings').open)return;
+  pendingDelete=item.id;renderManager();var confirmation=el('managedBirthdays').querySelector('.delete-confirm');
+  if(confirmation){confirmation.scrollIntoView({block:'nearest'});confirmation.querySelector('[data-delete-cancel]').focus({preventScroll:true});}
+ }
  function deleteBirthday(item){
+  if(!el('settings').open||pendingDelete!==item.id)return;
+  pendingDelete=null;
   deleted=item;items=items.filter(function(v){return v.id!==item.id;});var persisted=save();render();if(editing===item.id)resetForm();
   announce(item.name+' deleted.'+(persisted?'':' Browser saving is unavailable; this change is for this visit.'),true);el(el('settings').open?'undo':'mainUndo').focus({preventScroll:true});
  }
@@ -413,7 +432,6 @@ var BirthdayCalendar=(function(){
    var item=entry.item,n=entry.next,card=node('article','birthday'+(entry.birthday.calendar==='hebrew'?' hebrew':'')+(n.days===0?' is-today':''),undefined,el('countdowns'));
    card.dataset.id=item.id;card.dataset.calendar=entry.birthday.calendar;card.dataset.date=C.date(n.serial).toISOString().slice(0,10);
    var heading=node('div','birthday-heading',undefined,card);node('h3','',item.name,heading).dir='auto';
-   var remove=node('button','small-button delete-birthday','Delete',heading);remove.type='button';remove.setAttribute('aria-label','Delete '+item.name);remove.addEventListener('click',function(){deleteBirthday(item);});
    var row=node('div','countdown-row',undefined,card),count=node('div','count',undefined,row);count.setAttribute('role','timer');count.setAttribute('aria-live','off');entry.card=card;shown.push(entry);paint(entry,new Date());
    var toggle=node('div','view-toggle',undefined,row);toggle.setAttribute('role','group');toggle.setAttribute('aria-label','Birthday calendar for '+item.name);
    ['english','hebrew'].forEach(function(calendar){var button=node('button','',calendar==='english'?'English':'Hebrew',toggle);button.type='button';button.dataset.calendar=calendar;button.setAttribute('aria-pressed',String(entry.birthday.calendar===calendar));button.addEventListener('click',function(){switchCalendar(item,calendar);});});
@@ -427,9 +445,10 @@ var BirthdayCalendar=(function(){
  function openSettings(){if(!el('settings').open)el('settings').showModal();if(!items.length)el('name').focus();}
  function addBirthday(){resetForm();openSettings();el('name').focus();}
  function resetForm(){
-  editing=null;pendingView=null;el('birthdayForm').reset();monthOptions();formHints();el('editorTitle').textContent='Add a birthday';el('saveBirthday').textContent='Add countdown';el('cancelEdit').hidden=true;
+  editing=null;pendingView=null;pendingDelete=null;renderManager();el('birthdayForm').reset();monthOptions();formHints();el('editorTitle').textContent='Add a birthday';el('saveBirthday').textContent='Add countdown';el('cancelEdit').hidden=true;
  }
  function editBirthday(item,requested){
+  pendingDelete=null;renderManager();
   editing=item.id;pendingView=requested||item.viewCalendar||item.calendar;document.querySelector('input[name="calendar"][value="'+item.calendar+'"]').checked=true;monthOptions();el('month').value=String(item.month);dayOptions();
   el('day').value=String(item.day);el('name').value=item.name;el('year').value=item.year===null?'':String(item.year);el('adar').value=item.adar;el('february').value=item.february;el('birthTime').value=item.birthTime||'';
   el('editorTitle').textContent='Edit birthday';el('saveBirthday').textContent='Save changes';el('cancelEdit').hidden=false;formHints();el('name').focus();
@@ -456,7 +475,8 @@ var BirthdayCalendar=(function(){
  function tick(){var now=new Date();if(C.serial(now)!==lastDay){render();formHints();}else{shown.forEach(function(entry){paint(entry,now);});}}
  window.addEventListener('focus',tick);window.addEventListener('pageshow',tick);document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});setInterval(tick,1000);
  el('settings').addEventListener('click',function(event){var r=this.getBoundingClientRect();if(event.target===this&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom))this.close();});
- window.addEventListener('storage',function(event){if(event.key===KEY){try{items=read(event.newValue);render();announce('Birthday list updated from another tab.',false);}catch(error){announce('Could not read the updated birthday list. This page was left unchanged.',false);}}});
+ el('settings').addEventListener('close',function(){pendingDelete=null;renderManager();});
+ window.addEventListener('storage',function(event){if(event.key===KEY){try{var incoming=read(event.newValue);pendingDelete=null;items=incoming;render();announce('Birthday list updated from another tab.',false);}catch(error){announce('Could not read the updated birthday list. This page was left unchanged.',false);}}});
  try{items=read(localStorage.getItem(KEY));}catch(error){canSave=false;el('saveStatus').textContent='Saved birthdays could not be read. They were left untouched. New countdowns stay on this page only.';}
  monthOptions();formHints();render();
  if(legacyLoaded&&items.some(needsReview)){

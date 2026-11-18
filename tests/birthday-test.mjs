@@ -29,7 +29,7 @@ try{
  await edit('Chana');eq(await page.locator('#year').inputValue(),'');await page.selectOption('#adar','first');await page.fill('#name','Chana Leah');await page.locator('#saveBirthday').click();
  await setup();ok((await managed('Chana Leah').textContent()).includes('Adar I'));await page.locator('#closeSettings').click();
  await page.reload({waitUntil:'networkidle'});eq(await page.locator('.birthday').count(),3);eq(await page.locator('#settings').isVisible(),false);eq(await card('Miriam').getAttribute('data-hours'),'14');
- await setup();await managed('Miriam').getByRole('button',{name:'Delete Miriam',exact:true}).click();eq(await card('Miriam').count(),0);await page.locator('#undo').click();eq(await card('Miriam').count(),1);
+ await setup();await managed('Miriam').getByRole('button',{name:'Delete Miriam',exact:true}).click();eq(await card('Miriam').count(),1);await managed('Miriam').getByRole('button',{name:'Confirm delete',exact:true}).click();eq(await card('Miriam').count(),0);await page.locator('#undo').click();eq(await card('Miriam').count(),1);
  await edit('Dovid');await page.fill('#name','Do not save');await page.locator('#cancelEdit').click();eq(await card('Dovid').count(),1);
  await add('<img src=x onerror=alert(1)>',2,29,{year:2000});eq(await page.locator('.birthday img').count(),0);await setup();ok((await managed('<img src=x onerror=alert(1)>').textContent()).includes('February 28'));
  await edit('<img src=x onerror=alert(1)>');await page.selectOption('#february','mar1');await page.locator('#saveBirthday').click();await setup();ok((await managed('<img src=x onerror=alert(1)>').textContent()).includes('March 1'));

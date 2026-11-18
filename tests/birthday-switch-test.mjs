@@ -43,9 +43,26 @@ try{
  await page.fill('#year','2010');await page.selectOption('#birthTime','daytime');await page.locator('#saveBirthday').click();
  eq(await card('Miriam').getAttribute('data-calendar'),'hebrew');eq((await stored()).find(r=>r.id==='miriam').calendar,'english');
  eq(await page.locator('#reviewDates').isVisible(),false);
- // Direct deletion and Undo preserve both the original date and chosen view.
- await card('Miriam').getByRole('button',{name:'Delete Miriam',exact:true}).click();eq(await card('Miriam').count(),0);eq(await page.locator('#mainUndo').isVisible(),true);
- await page.locator('#mainUndo').click();eq(await card('Miriam').count(),1);eq(await card('Miriam').getAttribute('data-calendar'),'hebrew');
+ // Delete is only in setup and cannot change storage before confirmation.
+ eq(await page.locator('.birthday').getByRole('button',{name:/Delete/}).count(),0);
+ const beforeDelete=JSON.stringify(await stored());
+ await page.locator('#addAnother').click();
+ const managedMiriam=page.locator('.managed-birthday').filter({has:page.getByRole('heading',{name:'Miriam',exact:true})});
+ await managedMiriam.getByRole('button',{name:'Delete Miriam',exact:true}).click();
+ eq(await card('Miriam').count(),1);eq(JSON.stringify(await stored()),beforeDelete);
+ eq(await managedMiriam.getByRole('button',{name:'Confirm delete',exact:true}).isVisible(),true);
+ eq(await page.evaluate(()=>document.activeElement.textContent),'Cancel');
+ await managedMiriam.getByRole('button',{name:'Cancel',exact:true}).click();eq(await page.locator('.delete-confirm').count(),0);eq(JSON.stringify(await stored()),beforeDelete);
+ // Closing setup also cancels a pending request, including native Escape.
+ await managedMiriam.getByRole('button',{name:'Delete Miriam',exact:true}).click();await page.keyboard.press('Escape');
+ await page.locator('#addAnother').click();eq(await page.locator('.delete-confirm').count(),0);eq(JSON.stringify(await stored()),beforeDelete);
+ await managedMiriam.getByRole('button',{name:'Delete Miriam',exact:true}).click();await page.locator('#closeSettings').click();
+ await page.locator('#addAnother').click();eq(await page.locator('.delete-confirm').count(),0);eq(JSON.stringify(await stored()),beforeDelete);
+ await managedMiriam.getByRole('button',{name:'Delete Miriam',exact:true}).click();await managedMiriam.getByRole('button',{name:'Confirm delete',exact:true}).click();
+ eq(await card('Miriam').count(),0);eq(await page.locator('#undo').isVisible(),true);eq((await stored()).some(r=>r.id==='miriam'),false);
+ await page.locator('#undo').click();eq(await card('Miriam').count(),1);eq(await card('Miriam').getAttribute('data-calendar'),'hebrew');
+ eq(JSON.stringify((await stored()).find(r=>r.id==='miriam')),JSON.stringify(JSON.parse(beforeDelete).find(r=>r.id==='miriam')));
+ await page.locator('#closeSettings').click();
  await page.locator('#addAnother').click();await page.locator('#newBirthday').click();await page.fill('#name','Soon');await page.selectOption('#month','12');await page.selectOption('#day','24');await page.fill('#year','2010');await page.selectOption('#birthTime','daytime');await page.locator('#saveBirthday').click();
  // Remainder days split into weeks; three normal rows should fit comfortably.
  await page.clock.setSystemTime(new Date('2026-12-01T15:00:00Z'));await page.clock.runFor(5001);
@@ -58,7 +75,15 @@ try{
   if(width<500)ok(await page.locator('.birthday').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().height<=125)),'Compact rows stay at most 125px tall');
   if(width<500)ok(await card('Soon').locator('.countdown-row').evaluate(n=>n.getBoundingClientRect().height<=35),'Weeks, days, hours and minutes fit in one compact row');
   await page.screenshot({path:`birthday-compact-${width}.png`,fullPage:true});
+  eq(await page.locator('.birthday').getByRole('button',{name:/Delete/}).count(),0);
+  await page.locator('#addAnother').click();
+  const managedSoon=page.locator('.managed-birthday').filter({has:page.getByRole('heading',{name:'Soon',exact:true})});
+  await managedSoon.getByRole('button',{name:'Delete Soon',exact:true}).click();
+  eq(await page.locator('.delete-confirm').evaluate(n=>{const r=n.getBoundingClientRect();return n.scrollWidth<=n.clientWidth&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight+1;}),true);
+  await page.screenshot({path:`birthday-delete-${width}.png`,fullPage:true});
+  await managedSoon.getByRole('button',{name:'Cancel',exact:true}).click();await page.locator('#closeSettings').click();
+
  }
  await page.reload({waitUntil:'networkidle'});eq(await page.locator('.birthday').count(),4);eq(await page.locator('#settings').isVisible(),false);
- eq(errors,[]);console.log(`${checks} birthday calendar switching, original-date preservation, night review, deletion, weeks and compact-layout checks passed.`);
+ eq(errors,[]);console.log(`${checks} birthday calendar switching, original-date preservation, night review, confirmed deletion, weeks and compact-layout checks passed.`);
 }finally{await context.close();await browser.close();}
