@@ -29,9 +29,10 @@ if records:raise ValueError('Unexpected dates outside the study')
 counts={name:sum(day[i]==code for day in days for i in [3,6]) for name,code in codes.items()}
 if counts!=meta['counts']:raise ValueError('Metadata coverage differs from CSV')
 public={'schemaVersion':1,'place':'Lakewood, NJ (08701)','timeZone':meta['timezone'],'startDate':meta['start_date'],'endDate':meta['end_date'],'updatedAt':meta['created_utc'],'latitude':meta['latitude'],'longitude':meta['longitude'],'counts':counts,'days':days}
+public.update({k:meta[k] for k in ['automation','unavailable','retryNotes'] if k in meta})
 root=pathlib.Path(__file__).resolve().parent;page=root/'index.html';html=page.read_text()
 before,rest=html.split('<!-- HISTORY_DATA_START -->');_,after=rest.split('<!-- HISTORY_DATA_END -->')
 payload=json.dumps(public,separators=(',',':')).replace('<','\\u003c')
 page.write_text(before+'<!-- HISTORY_DATA_START -->\n<script type="application/json" id="historyData">'+payload+'</script>\n<!-- HISTORY_DATA_END -->'+after)
-shutil.copyfile(args.csv,root/'lakewood-comparison.csv')
+if args.csv.resolve()!=(root/'lakewood-comparison.csv').resolve():shutil.copyfile(args.csv,root/'lakewood-comparison.csv')
 print(json.dumps({'days':len(days),'counts':counts,'embedded_bytes':len(payload)}))

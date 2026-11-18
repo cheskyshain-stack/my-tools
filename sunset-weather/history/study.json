@@ -1,0 +1,40 @@
+{
+  "latitude": 40.0754169,
+  "longitude": -74.2122167,
+  "timezone": "America/New_York",
+  "start_date": "2021-11-17",
+  "end_date": "2026-11-16",
+  "counts": {
+    "pending": 1930,
+    "ok": 1720,
+    "unavailable": 2
+  },
+  "created_utc": "2026-11-18T00:42:31.080Z",
+  "automation": {
+    "enabled": true,
+    "schedule": "Every 4 hours",
+    "lastCheckAt": "2026-11-18T00:42:31.081Z",
+    "lastOutcome": "weather_service_unavailable",
+    "nextCheckAfter": "2026-11-18T04:13:00.000Z",
+    "retryAfter": "2026-11-18T01:02:31.002Z",
+    "keptResults": 1713,
+    "newResults": 9,
+    "newUnavailable": 0,
+    "weatherRequests": 3,
+    "quotaUsed": 148.01,
+    "knownDataIssues": 0
+  },
+  "unavailable": [
+    {
+      "date": "2022-11-27",
+      "event": "Sunset",
+      "reason": "Strong near-surface bending returns the modeled ray to the surface"
+    },
+    {
+      "date": "2022-12-16",
+      "event": "Netz",
+      "reason": "Strong near-surface bending returns the modeled ray to the surface"
+    }
+  ],
+  "retryNotes": {}
+}

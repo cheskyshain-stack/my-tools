@@ -1,0 +1,71 @@
+name: Fill missing weather history
+
+on:
+  schedule:
+    - cron: '13 */4 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/weather-history.yml'
+      - 'scripts/weather-history/core.mjs'
+      - 'scripts/weather-history/update.mjs'
+
+concurrency:
+  group: weather-history-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  fill-missing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Restore unfinished downloads
+        uses: actions/cache/restore@v4
+        with:
+          path: .weather-history-cache/checkpoint.json.gz
+          key: weather-history-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: weather-history-v1-
+      - name: Test resume and quota handling
+        run: node tests/weather-history-update-test.mjs
+      - name: Fill missing events within a small quota budget
+        id: update
+        run: node scripts/weather-history/update.mjs --budget 1000 --max-seconds 240
+      - name: Back up progress before publishing
+        if: always() && hashFiles('.weather-history-cache/checkpoint.json.gz') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .weather-history-cache/checkpoint.json.gz
+          key: weather-history-v1-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save results to main
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/weather-history/checkpoint.json.gz sunset-weather/history/lakewood-comparison.csv sunset-weather/history/study.json sunset-weather/history/index.html
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m 'Save newly available weather history and retry checkpoint'
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      - name: Publish the saved branch with GitHub Pages
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"
