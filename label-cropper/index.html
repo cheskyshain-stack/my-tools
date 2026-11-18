@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#080b12">
-<meta name="description" content="Crop a shipping label from a PDF and save an original-quality 4 by 6 or 6 by 4 inch PDF for your label printer.">
+<meta name="description" content="Find multiple shipping labels in a PDF and save them together in an original-quality 4 by 6 or 6 by 4 inch PDF for your label printer.">
 <title>PDF Label Cropper | CJ Portal</title>
 <link rel="manifest" href="/label-cropper/manifest.json">
 <link rel="icon" href="/label-cropper/icon.png?v=1" type="image/png">
@@ -46,6 +46,9 @@
  .coordinates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.coordinates label{display:block;font-size:10px}.coordinates input{width:100%;font-size:13px;padding:8px 6px;margin-top:5px}
  .output-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
  .output-controls label{display:block;font-size:12px;font-weight:600}.output-controls select{display:block;width:100%;margin-top:6px;font-size:13px}
+ .label-review{display:flex;align-items:end;gap:7px;margin-top:13px}.label-review label{flex:1;min-width:0;font-size:12px}.label-review select{display:block;width:100%;margin-top:5px;font-size:12px}.label-review button{flex:none}
+ .include-label{display:flex;align-items:center;gap:8px;margin:9px 0;font-size:12px;min-height:30px}.include-label input{width:18px;height:18px;accent-color:var(--cj-cyan)}
+ .page-review{border:1px solid var(--cj-line);border-radius:10px;padding:9px;margin:9px 0}.page-review p{margin:0 0 6px}.page-review .links{display:flex;gap:6px;flex-wrap:wrap}
  #outputFrame{width:100%;max-width:280px;margin:14px auto;background:white;border:1px solid rgba(255,255,255,.2);box-shadow:0 6px 20px #0005;line-height:0}
  #outputCanvas{display:block;width:100%;height:auto}
  .quality{font-size:12px;color:var(--cj-success);margin:11px 0 6px}
@@ -61,25 +64,30 @@
 <body>
 <header class="cj-page-header"><div class="cj-brand"><img src="/label-cropper/icon.png?v=1" alt="PDF Label Cropper"></div><h1>PDF label cropper</h1></header>
 <main>
- <p class="intro">Turn the label on a PDF into a 4×6 or 6×4 PDF for your label printer. Original PDF quality is kept.</p>
+ <p class="intro">Find the labels in your PDF and save them together. Each label gets its own 4×6 or 6×4 page, with original PDF quality kept.</p>
  <label class="upload" id="dropArea"><strong>Choose a PDF</strong><span class="hint">Or drop a file here. Your PDF stays on this device.</span><input id="file" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF to crop"></label>
  <div class="file-options"><button id="browseAll" class="small-button" type="button">Browse all files</button><span class="hint">Use this if your PDF is missing from the picker.</span></div>
  <input id="allFiles" type="file" aria-label="Browse all files to select a PDF" hidden>
  <details class="picker-help"><summary>Where is my PDF on Android?</summary><p>In the file picker, tap the menu ☰ and try Recent. The file may be in a different location from Downloads. You can also use My Files to move or save a copy into Internal storage → Download, then select it here.</p><p>Browse all files removes the PDF-only filter. Choose your PDF; its contents are checked after you select it.</p></details>
  <p id="status" class="status" role="status" aria-live="polite">Ready for your PDF.</p>
  <p id="error" class="error" role="alert" hidden></p>
- <div id="empty" class="empty">Choose your file, check the selected label, then download the print-ready PDF. You can adjust the crop before saving.</div>
+ <div id="empty" class="empty">Choose your file, review the labels found across all its pages, then download one print-ready PDF. You can adjust or add labels before saving.</div>
  <div class="workspace" id="workspace" hidden>
   <section class="card editor" aria-labelledby="sourceTitle">
    <div class="bar"><h2 id="sourceTitle">Select the label</h2><div class="page-controls"><label for="pageNumber">Page</label><select id="pageNumber"></select><span class="hint" id="pageCount"></span></div></div>
-   <div class="tools"><button id="findLabel" class="small-button" type="button">Find label</button><button id="editCrop" class="small-button" type="button" aria-pressed="false">Adjust crop</button><button id="wholePage" class="small-button" type="button" hidden>Whole page</button><button id="cancelCrop" class="small-button" type="button" hidden>Cancel</button></div>
+   <p id="pageNote" class="hint"></p>
+   <div class="tools"><button id="findLabel" class="small-button" type="button">Find label</button><button id="editCrop" class="small-button" type="button" aria-pressed="false">Adjust crop</button><button id="addLabel" class="small-button" type="button">Add label</button><button id="wholePage" class="small-button" type="button" hidden>Whole page</button><button id="cancelCrop" class="small-button" type="button" hidden>Cancel</button></div>
    <div id="pageFrame"><canvas id="sourceCanvas"></canvas><svg id="cropOverlay" role="img" tabindex="0" aria-label="Label crop area. Crop locked." aria-describedby="cropHelp"></svg></div>
    <p id="cropHelp" class="hint">Crop locked. Scrolling and taps will not change it. Tap Adjust crop to edit, or Find label to restore the automatic selection.</p>
    <details class="fine-tune"><summary>Fine-tune the crop</summary><div class="coordinates"><label>Left %<input id="cropX" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Top %<input id="cropY" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Width %<input id="cropW" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label><label>Height %<input id="cropH" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label></div></details>
   </section>
   <section class="card result" aria-labelledby="resultTitle">
-   <h2 id="resultTitle">Your printer label</h2>
-   <div class="output-controls"><label for="paper">Label size<select id="paper"><option value="4x6">4 × 6 inches</option><option value="6x4">6 × 4 inches</option></select></label><label for="rotation">Rotation<select id="rotation"><option value="auto">Best fit</option><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° left</option></select></label></div>
+   <h2 id="resultTitle">Your printer labels</h2>
+   <p id="batchSummary" class="hint" role="status"></p>
+   <div id="unmatchedPages" class="page-review" hidden><p class="hint">These pages have no saved labels. Review them and use Add label if needed.</p><div class="links"></div></div>
+   <div class="label-review"><label for="labelNumber">Review label<select id="labelNumber"></select></label><button id="previousLabel" class="small-button" type="button" aria-label="Previous label">←</button><button id="nextLabel" class="small-button" type="button" aria-label="Next label">→</button></div>
+   <label class="include-label"><input id="includeLabel" type="checkbox" checked>Include this label in the PDF</label>
+   <div class="output-controls"><label for="paper">Size for all labels<select id="paper"><option value="4x6">4 × 6 inches</option><option value="6x4">6 × 4 inches</option></select></label><label for="rotation">This label's rotation<select id="rotation"><option value="auto">Best fit</option><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° left</option></select></label></div>
    <div class="actions"><button id="download" type="button" class="cj-btn cj-btn-primary" disabled>Download PDF</button><button id="sharePdf" type="button" class="cj-btn cj-btn-ghost" hidden disabled>Share PDF</button><button id="openPdf" type="button" class="cj-btn cj-btn-ghost" disabled>Open PDF</button></div>
    <div id="outputFrame"><canvas id="outputCanvas" aria-label="Preview of the cropped label"></canvas></div>
    <p id="dimensions" class="hint"></p><p class="quality">Original PDF content preserved. No added image compression or downsampling.</p>
@@ -102,10 +110,15 @@ var LabelGeometry=(function(){
  function layout(w,h,cw,pw,ph){cw=((cw%360)+360)%360;var rw=cw%180?h:w,rh=cw%180?w:h,s=Math.min(pw/rw,ph/rh),x=(pw-rw*s)/2,y=(ph-rh*s)/2;if(cw===90)y+=w*s;else if(cw===180){x+=w*s;y+=h*s;}else if(cw===270)x+=h*s;return {x:x,y:y,width:w*s,height:h*s,degrees:(360-cw)%360};}
  function bestRotation(r,pw,ph){return Math.min(pw/r.h,ph/r.w)>Math.min(pw/r.w,ph/r.h)+1e-8?90:0;}
  function multiply(a,b){return [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];}
- function findLabel(ops,OPS,view){
+ function findLabels(ops,OPS,view){
   var ratio=Math.max(view.width,view.height)/Math.min(view.width,view.height);
-  if(Math.abs(ratio-1.5)<.16&&Math.max(view.width,view.height)<=720)return {x:0,y:0,w:view.width,h:view.height};
+  var labelPage=Math.abs(ratio-1.5)<.16&&Math.max(view.width,view.height)<=720;
   var matrix=[1,0,0,1,0,0],stack=[],candidates=[];
+  function candidate(transform){
+   var corners=[[0,0],[1,0],[0,1],[1,1]].map(function(p){return view.convertToViewportPoint(transform[0]*p[0]+transform[2]*p[1]+transform[4],transform[1]*p[0]+transform[3]*p[1]+transform[5]);});
+   var x=Math.min.apply(null,corners.map(p=>p[0])),y=Math.min.apply(null,corners.map(p=>p[1])),w=Math.max.apply(null,corners.map(p=>p[0]))-x,h=Math.max.apply(null,corners.map(p=>p[1]))-y,aspect=Math.max(w,h)/Math.min(w,h);
+   if(Math.min(w,h)>24&&Math.abs(aspect-1.5)<.16&&w*h>view.width*view.height*.005)candidates.push({x:x,y:y,w:w,h:h});
+  }
   for(var i=0;i<ops.fnArray.length;i++){
    var op=ops.fnArray[i],a=ops.argsArray[i];
    if(op===OPS.save)stack.push(matrix.slice());
@@ -113,17 +126,21 @@ var LabelGeometry=(function(){
    else if(op===OPS.transform)matrix=multiply(matrix,a);
    else if(op===OPS.paintFormXObjectBegin){stack.push(matrix.slice());if(a[0])matrix=multiply(matrix,a[0]);}
    else if(op===OPS.paintFormXObjectEnd)matrix=stack.pop()||[1,0,0,1,0,0];
-   else if(op===OPS.paintImageXObject||op===OPS.paintInlineImageXObject){
-    var corners=[[0,0],[1,0],[0,1],[1,1]].map(function(p){return view.convertToViewportPoint(matrix[0]*p[0]+matrix[2]*p[1]+matrix[4],matrix[1]*p[0]+matrix[3]*p[1]+matrix[5]);});
-    var x=Math.min.apply(null,corners.map(p=>p[0])),y=Math.min.apply(null,corners.map(p=>p[1])),w=Math.max.apply(null,corners.map(p=>p[0]))-x,h=Math.max.apply(null,corners.map(p=>p[1]))-y,aspect=Math.max(w,h)/Math.min(w,h);
-    if(Math.min(w,h)>60&&Math.abs(aspect-1.5)<.16&&w*h>view.width*view.height*.06)candidates.push({x:x,y:y,w:w,h:h});
+   else if(op===OPS.paintImageXObject||op===OPS.paintInlineImageXObject)candidate(matrix);
+   else if(op===OPS.paintImageXObjectRepeat){
+    for(var p=0;p<a[3].length;p+=2)candidate(multiply(matrix,[a[1],0,0,a[2],a[3][p],a[3][p+1]]));
    }
+   else if(op===OPS.paintInlineImageXObjectGroup)a[1].forEach(function(image){candidate(multiply(matrix,image.transform));});
   }
-  candidates.sort(function(a,b){return b.w*b.h-a.w*a.h;});if(!candidates.length)return null;
-  var r=candidates[0],left=Math.max(0,r.x-3),top=Math.max(0,r.y-3),right=Math.min(view.width,r.x+r.w+3),bottom=Math.min(view.height,r.y+r.h+3);
-  return clamp({x:left,y:top,w:right-left,h:bottom-top},view.width,view.height);
+  candidates.sort(function(a,b){return b.w*b.h-a.w*a.h;});var kept=[];
+  candidates.forEach(function(r){
+   if(kept.some(function(k){var area=Math.max(0,Math.min(r.x+r.w,k.x+k.w)-Math.max(r.x,k.x))*Math.max(0,Math.min(r.y+r.h,k.y+k.h)-Math.max(r.y,k.y));return area/Math.min(r.w*r.h,k.w*k.h)>.85;}))return;
+   kept.push(r);
+  });
+  if(labelPage&&kept.length<2)return [{x:0,y:0,w:view.width,h:view.height}];
+  return kept.sort(function(a,b){return a.y-b.y||a.x-b.x;}).map(function(r){var left=Math.max(0,r.x-3),top=Math.max(0,r.y-3),right=Math.min(view.width,r.x+r.w+3),bottom=Math.min(view.height,r.y+r.h+3);return clamp({x:left,y:top,w:right-left,h:bottom-top},view.width,view.height);});
  }
- return {clamp:clamp,bounds:bounds,layout:layout,bestRotation:bestRotation,findLabel:findLabel};
+ return {clamp:clamp,bounds:bounds,layout:layout,bestRotation:bestRotation,findLabels:findLabels,findLabel:function(ops,OPS,view){return findLabels(ops,OPS,view)[0]||null;}};
 })();
 /* LABEL_GEOMETRY_END */
 </script>
@@ -132,25 +149,45 @@ import * as pdfjs from '/label-cropper/vendor/pdfjs/pdf.min.js';
 pdfjs.GlobalWorkerOptions.workerSrc='/label-cropper/vendor/pdfjs/pdf.worker.min.js';
 const el=id=>document.getElementById(id),G=LabelGeometry,NS='http://www.w3.org/2000/svg';
 const base='/label-cropper/vendor/pdfjs/';
-const state={pdf:null,original:null,view:null,page:null,crop:null,ops:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null};
+const state={pdf:null,original:null,view:null,page:null,crop:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null,labels:[],pageInfo:new Map(),activeId:null,adding:false,nextId:1};
 function status(text){el('status').textContent=text;}
 function error(message){el('error').textContent=message;el('error').hidden=!message;}
 function outputSize(){return el('paper').value==='6x4'?[432,288]:[288,432];}
-function extraRotation(){const [w,h]=outputSize();return el('rotation').value==='auto'?G.bestRotation(state.crop,w,h):Number(el('rotation').value);}
-function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready);}
+function extraRotation(crop=state.crop,rotation=el('rotation').value){const [w,h]=outputSize();return rotation==='auto'?G.bestRotation(crop,w,h):Number(rotation);}
+function activeLabel(){return state.labels.find(label=>label.id===state.activeId);}
+function includedLabels(){return state.labels.filter(label=>label.include);}
+function addEntry(pageNumber,crop,automatic=true){const entry={id:'label-'+state.nextId++,pageNumber,crop:{...crop},autoCrop:{...crop},automatic,include:true,rotation:'auto'};state.labels.push(entry);return entry;}
+function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready||state.adding);}
 function clearOutput(){state.buildId++;state.bytes=null;setActions(false);if(state.url){const old=state.url;setTimeout(()=>URL.revokeObjectURL(old),60000);state.url=null;}}
 function svg(tag,attrs){const n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));el('cropOverlay').append(n);return n;}
+function updateBatchControls(){
+ const current=activeLabel(),count=includedLabels().length,index=state.labels.findIndex(label=>label.id===state.activeId),select=el('labelNumber');
+ select.replaceChildren();const blank=new Option(state.adding?'New label (tap Done to add)':'Choose a label','');blank.disabled=true;select.add(blank);
+ state.labels.forEach((label,i)=>select.add(new Option(`Label ${i+1} of ${state.labels.length} · page ${label.pageNumber}${label.include?'':' · left out'}`,label.id)));
+ select.value=current?current.id:'';select.disabled=state.adding||!state.labels.length;el('previousLabel').disabled=state.adding||index<=0;el('nextLabel').disabled=state.adding||index>=state.labels.length-1||!state.labels.length;
+ el('includeLabel').checked=!!current?.include;el('includeLabel').disabled=!current||state.adding;el('rotation').disabled=!current&&!state.adding;
+ el('batchSummary').textContent=`${count} ${count===1?'label':'labels'} included · ${count} PDF ${count===1?'page':'pages'} · one label per page. Review each label before printing.`;
+ el('download').textContent=count>1?`Download all ${count} labels`:'Download PDF';
+ const missing=Array.from(state.pageInfo.keys()).filter(n=>!state.labels.some(label=>label.pageNumber===n)),links=el('unmatchedPages').querySelector('.links');links.replaceChildren();el('unmatchedPages').hidden=!missing.length;
+ missing.forEach(n=>{const button=document.createElement('button');button.type='button';button.className='small-button';button.textContent=`Review page ${n}`;button.addEventListener('click',()=>{el('pageNumber').value=String(n);showPage();el('sourceTitle').scrollIntoView({block:'start'});});links.append(button);});
+ if(state.view){const number=Number(el('pageNumber').value),onPage=state.labels.filter(label=>label.pageNumber===number).length;el('pageNote').textContent=state.adding?'Select the new label, then tap Done to add it.':onPage?`${onPage} saved ${onPage===1?'label':'labels'} on this page. Missing one? Use Add label.`:state.pageInfo.get(number)?.failed?'This page could not be checked automatically. Use Add label to select a label on it.':'No label found automatically on this page. Use Add label if it contains a shipping label.';}
+}
 function setCropEditing(editing,cancel=false){
- const enabled=editing&&!!state.view&&!!state.crop;
- if(enabled&&!state.editing)state.editStart={crop:{...state.crop},note:state.selectionNote};
- if(cancel&&state.editStart){state.crop={...state.editStart.crop};state.selectionNote=state.editStart.note;}
+ const enabled=editing&&!!state.view&&!!state.crop&&!!(activeLabel()||state.adding);
+ if(enabled&&!state.editing)state.editStart={crop:{...state.crop},note:state.selectionNote,previousId:null};
+ if(cancel&&state.editStart){
+  if(state.adding){state.activeId=state.editStart.previousId;const previous=activeLabel();state.crop=previous?{...previous.crop}:{x:0,y:0,w:state.view.width,h:state.view.height};el('rotation').value=previous?.rotation||'auto';}
+  else state.crop={...state.editStart.crop};
+  state.selectionNote=state.editStart.note;
+ }
  state.editing=enabled;
- if(!enabled){const drag=state.drag;state.drag=null;state.editStart=null;if(drag&&el('cropOverlay').hasPointerCapture(drag.id))el('cropOverlay').releasePointerCapture(drag.id);}
- el('pageFrame').classList.toggle('editing',enabled);el('editCrop').textContent=enabled?'Done':'Adjust crop';el('editCrop').setAttribute('aria-pressed',String(enabled));el('editCrop').disabled=!state.view||!state.crop;
+ if(!enabled){state.adding=false;const drag=state.drag;state.drag=null;state.editStart=null;if(drag&&el('cropOverlay').hasPointerCapture(drag.id))el('cropOverlay').releasePointerCapture(drag.id);}
+ el('pageFrame').classList.toggle('editing',enabled);el('editCrop').textContent=enabled?'Done':'Adjust crop';el('editCrop').setAttribute('aria-pressed',String(enabled));el('editCrop').disabled=!state.view||!state.crop||!(activeLabel()||state.adding);
+ el('addLabel').disabled=!state.view||enabled;el('findLabel').disabled=!state.view||!activeLabel()||state.adding;
  el('wholePage').hidden=!enabled;el('cancelCrop').hidden=!enabled;
  for(const id of ['cropX','cropY','cropW','cropH'])el(id).disabled=!enabled;
  el('cropHelp').textContent=enabled?'Drag the box or its corners to adjust. Drag outside to draw a new crop. Keep the whole label and the white space around its barcodes inside. Tap Done to lock, or Cancel to undo these edits.':'Crop locked. Scrolling and taps will not change it. Tap Adjust crop to edit, or Find label to restore the automatic selection.';
- if(cancel)scheduleOutput();else drawCrop();
+ updateBatchControls();if(cancel)scheduleOutput();else drawCrop();
 }
 function drawCrop(){
  if(!state.view||!state.crop)return;
@@ -164,47 +201,81 @@ function drawCrop(){
 }
 function drawPreview(){
  if(!state.crop||!state.view)return;
- const r=state.crop,source=el('sourceCanvas'),canvas=el('outputCanvas'),[pw,ph]=outputSize(),cw=extraRotation(),rw=cw%180?r.h:r.w,rh=cw%180?r.w:r.h;
+ const [pw,ph]=outputSize();el('paperHelp').textContent=`PDF paper size: ${pw/72} × ${ph/72} inches (${(pw/72*25.4).toFixed(1)} × ${(ph/72*25.4).toFixed(1)} mm).`;
+ const entry=activeLabel();el('outputFrame').hidden=!entry&&!state.adding;
+ if(!entry&&!state.adding){el('dimensions').textContent='No label selected on this page. Use Add label to select one, or choose a saved label above.';return;}
+ const r=state.crop,source=el('sourceCanvas'),canvas=el('outputCanvas'),cw=extraRotation(),rw=cw%180?r.h:r.w,rh=cw%180?r.w:r.h;
  canvas.width=Math.round(pw*1.5);canvas.height=Math.round(ph*1.5);const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
  const scale=Math.min(canvas.width/rw,canvas.height/rh);ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(cw*Math.PI/180);
  ctx.drawImage(source,r.x/state.view.width*source.width,r.y/state.view.height*source.height,r.w/state.view.width*source.width,r.h/state.view.height*source.height,-r.w*scale/2,-r.h*scale/2,r.w*scale,r.h*scale);ctx.restore();
- el('dimensions').textContent=`${pw/72} × ${ph/72} inches · one label · ${cw}° rotation`;
- el('paperHelp').textContent=`PDF paper size: ${pw/72} × ${ph/72} inches (${(pw/72*25.4).toFixed(1)} × ${(ph/72*25.4).toFixed(1)} mm).`;
+ el('dimensions').textContent=`${state.adding?'New label':`Label ${state.labels.indexOf(entry)+1} of ${state.labels.length}`} · ${pw/72} × ${ph/72} inches · ${cw}° rotation${entry&&!entry.include?' · not included in PDF':''}`;
 }
 async function makeOutput(){
- if(!state.crop||!state.original||!state.view)return;
- const generation=state.buildId,r={...state.crop},view=state.view,page=state.original.getPage(Number(el('pageNumber').value)-1),[pw,ph]=outputSize(),cw=extraRotation();
+ if(!state.original)return;
+ if(state.adding){status('Select the new label, then tap Done to add it to the PDF.');return;}
+ const labels=includedLabels().map(label=>({...label,crop:{...label.crop}}));
+ if(!labels.length){error('');status(state.selectionNote||'No labels included. Use Add label, or include a saved label above.');return;}
+ const generation=state.buildId,original=state.original,pdf=state.pdf,pageInfo=state.pageInfo,[pw,ph]=outputSize();
  try{
-  const bounds=G.bounds(view,r),annotations=await state.page.getAnnotations({intent:'print'});if(generation!==state.buildId)return;
-  if(annotations.some(a=>a.annotationType!==pdfjs.AnnotationType.LINK&&Array.isArray(a.rect)&&a.rect[0]<bounds.right&&a.rect[2]>bounds.left&&a.rect[1]<bounds.top&&a.rect[3]>bounds.bottom)){
-   const issue=new Error('Interactive label');issue.userMessage='This label contains editable fields or notes. Print the original to a new PDF first, then crop that copy so all visible details are included.';throw issue;
+  const result=await PDFLib.PDFDocument.create(),sources=[],boxes=[],views=[];
+  for(let i=0;i<labels.length;i++){
+   const label=labels[i],view=pageInfo.get(label.pageNumber).view,bounds=G.bounds(view,label.crop),source=await pdf.getPage(label.pageNumber),annotations=await source.getAnnotations({intent:'print'});if(generation!==state.buildId)return;
+   if(annotations.some(a=>a.annotationType!==pdfjs.AnnotationType.LINK&&Array.isArray(a.rect)&&a.rect[0]<bounds.right&&a.rect[2]>bounds.left&&a.rect[1]<bounds.top&&a.rect[3]>bounds.bottom)){
+    const issue=new Error('Interactive label');issue.userMessage=`The label on page ${label.pageNumber} contains editable fields or notes. Print the original to a new PDF first, then crop that copy so all visible details are included.`;throw issue;
+   }
+   sources.push(original.getPage(label.pageNumber-1));boxes.push(bounds);views.push(view);
   }
-  const result=await PDFLib.PDFDocument.create(),embedded=await result.embedPage(page,bounds),layout=G.layout(embedded.width,embedded.height,view.rotation+cw,pw,ph),out=result.addPage([pw,ph]);
-  out.drawPage(embedded,{x:layout.x,y:layout.y,width:layout.width,height:layout.height,rotate:PDFLib.degrees(layout.degrees)});
-  result.setTitle('Print-ready shipping label');const bytes=await result.save();if(generation!==state.buildId)return;
-  state.bytes=bytes;state.url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));error('');setActions(true);status(state.selectionNote||'Ready. Check the preview, then download the original-quality PDF.');
+  // One copy operation shares source image/font resources across all label pages.
+  const embedded=await result.embedPages(sources,boxes);if(generation!==state.buildId)return;
+  for(let i=0;i<labels.length;i++){
+   const label=labels[i],page=embedded[i],cw=extraRotation(label.crop,label.rotation),layout=G.layout(page.width,page.height,views[i].rotation+cw,pw,ph),out=result.addPage([pw,ph]);
+   out.drawPage(page,{x:layout.x,y:layout.y,width:layout.width,height:layout.height,rotate:PDFLib.degrees(layout.degrees)});
+   if(generation!==state.buildId)return;
+  }
+  result.setTitle('Print-ready shipping labels');const bytes=await result.save();if(generation!==state.buildId)return;
+  state.bytes=bytes;state.url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));error('');setActions(true);status(state.selectionNote||`Ready. ${labels.length} ${labels.length===1?'label':'labels'} will be saved, each on its own page. Check every label before printing.`);
   try{el('sharePdf').hidden=!navigator.canShare?.({files:[new File([bytes],filename(),{type:'application/pdf'})]});}catch{el('sharePdf').hidden=true;}
  }catch(e){if(generation===state.buildId){error(e.userMessage||'This PDF could not be cropped. Try a different page or an unlocked copy.');status('Could not create the label PDF.');}}
 }
-function scheduleOutput(){clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
-function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+'-label.pdf';}
-async function findLabel(){
- if(!state.page||!state.view)return;const id=state.loadId;setCropEditing(false);
- try{const ops=state.ops||await state.page.getOperatorList();if(id!==state.loadId)return;state.ops=ops;const crop=G.findLabel(ops,pdfjs.OPS,state.view);state.crop=crop||{x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote=crop?'Ready. Check that every barcode is inside the selected label.':'No label found automatically. Tap Adjust crop to select the label, then check the preview.';setCropEditing(false);scheduleOutput();status(state.selectionNote);}
- catch(e){if(id===state.loadId){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Tap Adjust crop to select the label area manually, then check the preview.';setCropEditing(false);scheduleOutput();status(state.selectionNote);}}
+function scheduleOutput(){const entry=activeLabel();if(entry&&state.crop)entry.crop={...state.crop};clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
+function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+(includedLabels().length===1?'-label.pdf':'-labels.pdf');}
+function findLabel(){
+ const entry=activeLabel();if(!entry)return;setCropEditing(false);state.crop={...entry.autoCrop};state.selectionNote=entry.automatic?'Automatic selection restored. Check that every barcode is inside this label.':'Manual selection reset. Tap Adjust crop to select this label.';scheduleOutput();status(state.selectionNote);
 }
-async function showPage(){
- if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.ops=null;state.view=null;setCropEditing(false);state.renderTask?.cancel();state.renderTask=null;error('');status('Opening page…');
- ['findLabel','wholePage'].forEach(id=>el(id).disabled=true);
+async function showPage(requestedId=null){
+ if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.view=null;setCropEditing(false);const previous=state.renderTask;previous?.cancel();state.renderTask=null;error('');status('Opening page…');
+ const number=Number(el('pageNumber').value),entry=state.labels.find(label=>label.id===requestedId&&label.pageNumber===number)||state.labels.find(label=>label.pageNumber===number);state.activeId=entry?.id||null;
  try{
-  const page=await state.pdf.getPage(Number(el('pageNumber').value));if(id!==state.loadId)return;const view=page.getViewport({scale:1});
+  await previous?.promise.catch(()=>{});if(id!==state.loadId)return;const page=await state.pdf.getPage(number);if(id!==state.loadId)return;const view=page.getViewport({scale:1});
   const scale=Math.min(2,Math.sqrt(6000000/(view.width*view.height))),renderView=page.getViewport({scale}),canvas=el('sourceCanvas');canvas.width=Math.ceil(renderView.width);canvas.height=Math.ceil(renderView.height);
   const task=page.render({canvasContext:canvas.getContext('2d'),viewport:renderView,background:'rgb(255,255,255)'});state.renderTask=task;await task.promise;if(id!==state.loadId)return;
-  state.page=page;state.view=view;state.renderTask=null;['findLabel','wholePage'].forEach(id=>el(id).disabled=false);await findLabel();
+  state.page=page;state.view=view;state.renderTask=null;state.pageInfo.set(number,{...state.pageInfo.get(number),view});state.crop=entry?{...entry.crop}:{x:0,y:0,w:view.width,h:view.height};el('rotation').value=entry?.rotation||'auto';
+  const count=state.labels.filter(label=>label.pageNumber===number).length;state.selectionNote=count?'':state.pageInfo.get(number).failed?'This page could not be checked automatically. Use Add label to select a label on it.':'No label found automatically on this page. Use Add label if it contains a shipping label.';
+  setCropEditing(false);scheduleOutput();
  }catch(e){if(id!==state.loadId||e.name==='RenderingCancelledException')return;error('This page could not be displayed. Try another page or a different PDF.');status('Could not open the page.');}
 }
+function chooseLabel(id){const label=state.labels.find(label=>label.id===id);if(label){el('pageNumber').value=String(label.pageNumber);showPage(label.id);}}
+function startAddLabel(){
+ if(!state.view)return;const previousId=state.activeId;setCropEditing(false);state.activeId=null;state.adding=true;state.crop={x:0,y:0,w:state.view.width,h:state.view.height};el('rotation').value='auto';setCropEditing(true);state.editStart.previousId=previousId;state.selectionNote='Select the new label, then tap Done to add it to the PDF.';scheduleOutput();
+}
+function finishCropEditing(){
+ if(!state.editing){setCropEditing(true);return;}
+ if(state.adding){const entry=addEntry(Number(el('pageNumber').value),state.crop,false);entry.rotation=el('rotation').value;state.activeId=entry.id;state.adding=false;state.labels.sort((a,b)=>a.pageNumber-b.pageNumber||a.autoCrop.y-b.autoCrop.y||a.autoCrop.x-b.autoCrop.x);state.selectionNote='Label added. It will have its own page in the PDF.';}
+ setCropEditing(false);scheduleOutput();
+}
+async function scanLabels(pdf,id){
+ for(let number=1;number<=pdf.numPages;number++){
+  if(id!==state.loadId)return;status(`Finding labels: page ${number} of ${pdf.numPages}…`);
+  try{
+   const page=await pdf.getPage(number);if(id!==state.loadId)return;const view=page.getViewport({scale:1});state.pageInfo.set(number,{view,failed:false});
+   const crops=G.findLabels(await page.getOperatorList(),pdfjs.OPS,view);if(id!==state.loadId)return;
+   crops.forEach(crop=>addEntry(number,crop));page.cleanup();
+  }catch(e){if(id!==state.loadId)return;state.pageInfo.set(number,{...state.pageInfo.get(number),failed:true});}
+  await new Promise(resolve=>setTimeout(resolve,0));
+ }
+}
 async function loadFile(file){
- if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;setCropEditing(false);el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
+ if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;state.labels=[];state.pageInfo=new Map();state.activeId=null;state.nextId=1;setCropEditing(false);el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
  try{
   if(file.size>50*1024*1024)throw new Error('Please use a PDF smaller than 50 MB.');
   const bytes=new Uint8Array(await file.arrayBuffer());if(id!==state.loadId)return;
@@ -214,7 +285,8 @@ async function loadFile(file){
   state.loadingTask=task;const pdf=await task.promise;if(id!==state.loadId){await task.destroy();return;}
   if(!pdf.numPages)throw new Error('This PDF has no pages.');state.pdf=pdf;state.original=original;state.sourceName=file.name;el('pageNumber').replaceChildren();
   for(let n=1;n<=pdf.numPages;n++)el('pageNumber').add(new Option(String(n),String(n)));el('pageCount').textContent='of '+pdf.numPages;el('pageNumber').value='1';el('rotation').value='auto';
-  el('workspace').hidden=false;el('empty').hidden=true;document.body.classList.add('has-pdf');await showPage();
+  await scanLabels(pdf,id);if(id!==state.loadId)return;el('pageNumber').value=String(state.labels[0]?.pageNumber||1);
+  el('workspace').hidden=false;el('empty').hidden=true;document.body.classList.add('has-pdf');await showPage(state.labels[0]?.id);
  }catch(e){if(id!==state.loadId)return;state.original=null;state.pdf=null;error(e.message||'This PDF could not be opened.');status('Please choose a different PDF.');}
 }
 function position(event){const box=el('cropOverlay').getBoundingClientRect();return {x:Math.max(0,Math.min(state.view.width,(event.clientX-box.left)/box.width*state.view.width)),y:Math.max(0,Math.min(state.view.height,(event.clientY-box.top)/box.height*state.view.height))};}
@@ -236,9 +308,13 @@ for(const id of ['cropX','cropY','cropW','cropH'])el(id).addEventListener('blur'
 el('file').addEventListener('change',()=>loadFile(el('file').files[0]));el('pageNumber').addEventListener('change',showPage);el('findLabel').addEventListener('click',findLabel);
 el('browseAll').addEventListener('click',()=>el('allFiles').click());
 el('allFiles').addEventListener('change',()=>{const file=el('allFiles').files[0];if(file){try{el('file').files=el('allFiles').files;}catch{}loadFile(file);}});
-el('editCrop').addEventListener('click',()=>setCropEditing(!state.editing));el('cancelCrop').addEventListener('click',()=>setCropEditing(false,true));
+el('editCrop').addEventListener('click',finishCropEditing);el('cancelCrop').addEventListener('click',()=>setCropEditing(false,true));el('addLabel').addEventListener('click',startAddLabel);
+el('labelNumber').addEventListener('change',()=>chooseLabel(el('labelNumber').value));
+el('previousLabel').addEventListener('click',()=>chooseLabel(state.labels[state.labels.findIndex(label=>label.id===state.activeId)-1]?.id));
+el('nextLabel').addEventListener('click',()=>chooseLabel(state.labels[state.labels.findIndex(label=>label.id===state.activeId)+1]?.id));
+el('includeLabel').addEventListener('change',()=>{const entry=activeLabel();if(entry){entry.include=el('includeLabel').checked;state.selectionNote='';updateBatchControls();scheduleOutput();}});
 el('wholePage').addEventListener('click',()=>{if(state.editing&&state.view){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Whole page selected. Check the preview before saving.';scheduleOutput();}});
-el('paper').addEventListener('change',scheduleOutput);el('rotation').addEventListener('change',scheduleOutput);
+el('paper').addEventListener('change',scheduleOutput);el('rotation').addEventListener('change',()=>{const entry=activeLabel();if(entry)entry.rotation=el('rotation').value;scheduleOutput();});
 el('download').addEventListener('click',()=>{if(!state.url)return;const a=document.createElement('a');a.href=state.url;a.download=filename();document.body.append(a);a.click();a.remove();status('PDF saved. In 4Barcode, choose PDF Printing and open the downloaded file.');});
 el('openPdf').addEventListener('click',()=>{if(state.url)window.open(state.url,'_blank','noopener');});
 el('sharePdf').addEventListener('click',async()=>{if(!state.bytes)return;try{await navigator.share({files:[new File([state.bytes],filename(),{type:'application/pdf'})]});}catch(e){if(e.name!=='AbortError')error('Sharing is unavailable. Use Download PDF instead.');}});

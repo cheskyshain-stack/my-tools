@@ -186,6 +186,11 @@ image bytes, exact 4x6/6x4 page sizes, rotated pages and crop boxes, page select
 locked accidental touches and native scrolling, explicit touch/keyboard adjustments,
 Done/Cancel/Find label restoration, an unfiltered file chooser with generic MIME
 metadata, invalid input, mobile layout and portal navigation.
+The batch suite checks multiple labels on one sheet and across pages, mixed
+raster/vector content, a grid of nine small repeated labels, rendered separation
+and ordering, shared original image resources, per-label edits/rotation,
+inclusion, manual additions/cancellation, empty exports, unmatched pages and
+printable fields on a different included label.
 Optional private samples are supplied with `CJ_LABEL_SAMPLE_CONFIG`; they are
 never test fixtures committed to the repository.
 
