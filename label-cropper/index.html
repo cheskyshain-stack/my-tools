@@ -20,6 +20,8 @@
  .upload strong{display:block;font-size:16px;margin-bottom:6px}.upload.over{background:rgba(0,200,255,.12)}
  .has-pdf .upload{padding:9px 12px}.has-pdf .upload strong,.has-pdf .upload .hint{display:none}.has-pdf .upload input{margin:0}
  .upload input{display:block;max-width:100%;margin:12px auto 0;font:12px var(--cj-body);color:var(--cj-muted)}
+ .file-options{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:-7px 0 4px}.file-options .hint{margin:0;font-size:11px}
+ .picker-help{font-size:11px;color:var(--cj-muted);margin:0 0 12px}.picker-help summary{min-height:30px;padding:5px 0}.picker-help p{margin:4px 0 9px}
  input::file-selector-button{min-height:38px;border:1px solid var(--cj-line);border-radius:10px;background:var(--cj-card);color:var(--cj-text);padding:7px 13px;margin-right:10px;cursor:pointer}
  .status{font-size:12px;min-height:19px;margin:8px 0;color:var(--cj-muted);overflow-wrap:anywhere}
  .error{color:#ffb4b4;border:1px solid rgba(239,68,68,.35);border-radius:12px;background:rgba(239,68,68,.06);padding:11px;font-size:13px;overflow-wrap:anywhere}
@@ -33,7 +35,10 @@
  .tools{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 12px}
  #pageFrame{position:relative;background:white;line-height:0;max-width:100%;overflow:hidden;border-radius:5px;user-select:none}
  #sourceCanvas{display:block;width:100%;height:auto}
- #cropOverlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;outline-offset:-3px}
+ #cropOverlay{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y pinch-zoom;cursor:default;outline-offset:-3px}
+ #pageFrame.editing #cropOverlay{touch-action:none;cursor:crosshair}
+ #editCrop[aria-pressed="true"]{border-color:var(--cj-cyan);color:var(--cj-cyan)}
+ .coordinates input:disabled{opacity:.5}
  #cropOverlay .shade{fill:rgba(5,10,24,.57);fill-rule:evenodd;pointer-events:none}
  #cropOverlay .edge{fill:none;stroke:#009dcc;stroke-width:1.6;vector-effect:non-scaling-stroke;pointer-events:none}
  #cropOverlay .handle{fill:#fff;stroke:#009dcc;stroke-width:2;vector-effect:non-scaling-stroke;cursor:crosshair}
@@ -58,15 +63,18 @@
 <main>
  <p class="intro">Turn the label on a PDF into a 4×6 or 6×4 PDF for your label printer. Original PDF quality is kept.</p>
  <label class="upload" id="dropArea"><strong>Choose a PDF</strong><span class="hint">Or drop a file here. Your PDF stays on this device.</span><input id="file" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF to crop"></label>
+ <div class="file-options"><button id="browseAll" class="small-button" type="button">Browse all files</button><span class="hint">Use this if your PDF is missing from the picker.</span></div>
+ <input id="allFiles" type="file" aria-label="Browse all files to select a PDF" hidden>
+ <details class="picker-help"><summary>Where is my PDF on Android?</summary><p>In the file picker, tap the menu ☰ and try Recent. The file may be in a different location from Downloads. You can also use My Files to move or save a copy into Internal storage → Download, then select it here.</p><p>Browse all files removes the PDF-only filter. Choose your PDF; its contents are checked after you select it.</p></details>
  <p id="status" class="status" role="status" aria-live="polite">Ready for your PDF.</p>
  <p id="error" class="error" role="alert" hidden></p>
  <div id="empty" class="empty">Choose your file, check the selected label, then download the print-ready PDF. You can adjust the crop before saving.</div>
  <div class="workspace" id="workspace" hidden>
   <section class="card editor" aria-labelledby="sourceTitle">
    <div class="bar"><h2 id="sourceTitle">Select the label</h2><div class="page-controls"><label for="pageNumber">Page</label><select id="pageNumber"></select><span class="hint" id="pageCount"></span></div></div>
-   <div class="tools"><button id="findLabel" class="small-button" type="button">Find label</button><button id="wholePage" class="small-button" type="button">Whole page</button></div>
-   <div id="pageFrame"><canvas id="sourceCanvas"></canvas><svg id="cropOverlay" role="img" tabindex="0" aria-label="Label crop area. Drag the box or its corners to adjust. Arrow keys move it; Shift moves it further." aria-describedby="cropHelp"></svg></div>
-   <p id="cropHelp" class="hint">Keep the whole label and the white space around its barcodes inside the box. Drag outside the box to draw a new crop.</p>
+   <div class="tools"><button id="findLabel" class="small-button" type="button">Find label</button><button id="editCrop" class="small-button" type="button" aria-pressed="false">Adjust crop</button><button id="wholePage" class="small-button" type="button" hidden>Whole page</button><button id="cancelCrop" class="small-button" type="button" hidden>Cancel</button></div>
+   <div id="pageFrame"><canvas id="sourceCanvas"></canvas><svg id="cropOverlay" role="img" tabindex="0" aria-label="Label crop area. Crop locked." aria-describedby="cropHelp"></svg></div>
+   <p id="cropHelp" class="hint">Crop locked. Scrolling and taps will not change it. Tap Adjust crop to edit, or Find label to restore the automatic selection.</p>
    <details class="fine-tune"><summary>Fine-tune the crop</summary><div class="coordinates"><label>Left %<input id="cropX" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Top %<input id="cropY" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Width %<input id="cropW" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label><label>Height %<input id="cropH" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label></div></details>
   </section>
   <section class="card result" aria-labelledby="resultTitle">
@@ -124,7 +132,7 @@ import * as pdfjs from '/label-cropper/vendor/pdfjs/pdf.min.js';
 pdfjs.GlobalWorkerOptions.workerSrc='/label-cropper/vendor/pdfjs/pdf.worker.min.js';
 const el=id=>document.getElementById(id),G=LabelGeometry,NS='http://www.w3.org/2000/svg';
 const base='/label-cropper/vendor/pdfjs/';
-const state={pdf:null,original:null,view:null,page:null,crop:null,ops:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null};
+const state={pdf:null,original:null,view:null,page:null,crop:null,ops:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null};
 function status(text){el('status').textContent=text;}
 function error(message){el('error').textContent=message;el('error').hidden=!message;}
 function outputSize(){return el('paper').value==='6x4'?[432,288]:[288,432];}
@@ -132,14 +140,26 @@ function extraRotation(){const [w,h]=outputSize();return el('rotation').value===
 function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready);}
 function clearOutput(){state.buildId++;state.bytes=null;setActions(false);if(state.url){const old=state.url;setTimeout(()=>URL.revokeObjectURL(old),60000);state.url=null;}}
 function svg(tag,attrs){const n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));el('cropOverlay').append(n);return n;}
+function setCropEditing(editing,cancel=false){
+ const enabled=editing&&!!state.view&&!!state.crop;
+ if(enabled&&!state.editing)state.editStart={crop:{...state.crop},note:state.selectionNote};
+ if(cancel&&state.editStart){state.crop={...state.editStart.crop};state.selectionNote=state.editStart.note;}
+ state.editing=enabled;
+ if(!enabled){const drag=state.drag;state.drag=null;state.editStart=null;if(drag&&el('cropOverlay').hasPointerCapture(drag.id))el('cropOverlay').releasePointerCapture(drag.id);}
+ el('pageFrame').classList.toggle('editing',enabled);el('editCrop').textContent=enabled?'Done':'Adjust crop';el('editCrop').setAttribute('aria-pressed',String(enabled));el('editCrop').disabled=!state.view||!state.crop;
+ el('wholePage').hidden=!enabled;el('cancelCrop').hidden=!enabled;
+ for(const id of ['cropX','cropY','cropW','cropH'])el(id).disabled=!enabled;
+ el('cropHelp').textContent=enabled?'Drag the box or its corners to adjust. Drag outside to draw a new crop. Keep the whole label and the white space around its barcodes inside. Tap Done to lock, or Cancel to undo these edits.':'Crop locked. Scrolling and taps will not change it. Tap Adjust crop to edit, or Find label to restore the automatic selection.';
+ if(cancel)scheduleOutput();else drawCrop();
+}
 function drawCrop(){
  if(!state.view||!state.crop)return;
  const {width:w,height:h}=state.view,r=state.crop,overlay=el('cropOverlay');overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);overlay.replaceChildren();
  svg('path',{class:'shade',d:`M0 0H${w}V${h}H0Z M${r.x} ${r.y}V${r.y+r.h}H${r.x+r.w}V${r.y}Z`});svg('rect',{class:'edge',x:r.x,y:r.y,width:r.w,height:r.h});
  const size=Math.max(10,22*w/Math.max(1,overlay.clientWidth));
- for(const [name,x,y] of [['nw',r.x,r.y],['n',r.x+r.w/2,r.y],['ne',r.x+r.w,r.y],['e',r.x+r.w,r.y+r.h/2],['se',r.x+r.w,r.y+r.h],['s',r.x+r.w/2,r.y+r.h],['sw',r.x,r.y+r.h],['w',r.x,r.y+r.h/2]])svg('rect',{class:'handle','data-handle':name,x:Math.max(0,Math.min(w-size,x-size/2)),y:Math.max(0,Math.min(h-size,y-size/2)),width:size,height:size,rx:2});
+ if(state.editing)for(const [name,x,y] of [['nw',r.x,r.y],['n',r.x+r.w/2,r.y],['ne',r.x+r.w,r.y],['e',r.x+r.w,r.y+r.h/2],['se',r.x+r.w,r.y+r.h],['s',r.x+r.w/2,r.y+r.h],['sw',r.x,r.y+r.h],['w',r.x,r.y+r.h/2]])svg('rect',{class:'handle','data-handle':name,x:Math.max(0,Math.min(w-size,x-size/2)),y:Math.max(0,Math.min(h-size,y-size/2)),width:size,height:size,rx:2});
  for(const [id,value] of [['cropX',r.x/w*100],['cropY',r.y/h*100],['cropW',r.w/w*100],['cropH',r.h/h*100]])if(document.activeElement!==el(id))el(id).value=value.toFixed(1);
- overlay.setAttribute('aria-label',`Crop: left ${(r.x/w*100).toFixed(1)}%, top ${(r.y/h*100).toFixed(1)}%, width ${(r.w/w*100).toFixed(1)}%, height ${(r.h/h*100).toFixed(1)}%. Use arrow keys to move.`);
+ overlay.setAttribute('aria-label',`Crop: left ${(r.x/w*100).toFixed(1)}%, top ${(r.y/h*100).toFixed(1)}%, width ${(r.w/w*100).toFixed(1)}%, height ${(r.h/h*100).toFixed(1)}%. ${state.editing?'Use arrow keys to move.':'Crop locked. Tap Adjust crop to edit.'}`);
  overlay.dataset.crop=JSON.stringify(r);drawPreview();
 }
 function drawPreview(){
@@ -169,12 +189,12 @@ async function makeOutput(){
 function scheduleOutput(){clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
 function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+'-label.pdf';}
 async function findLabel(){
- if(!state.page||!state.view)return;const id=state.loadId;
- try{const ops=state.ops||await state.page.getOperatorList();if(id!==state.loadId)return;state.ops=ops;const crop=G.findLabel(ops,pdfjs.OPS,state.view);state.crop=crop||{x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote=crop?'Ready. Check that every barcode is inside the selected label.':'No label found automatically. Draw a box around the label, then check the preview.';scheduleOutput();status(state.selectionNote);}
- catch(e){if(id===state.loadId){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Select the label area manually, then check the preview.';scheduleOutput();status(state.selectionNote);}}
+ if(!state.page||!state.view)return;const id=state.loadId;setCropEditing(false);
+ try{const ops=state.ops||await state.page.getOperatorList();if(id!==state.loadId)return;state.ops=ops;const crop=G.findLabel(ops,pdfjs.OPS,state.view);state.crop=crop||{x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote=crop?'Ready. Check that every barcode is inside the selected label.':'No label found automatically. Tap Adjust crop to select the label, then check the preview.';setCropEditing(false);scheduleOutput();status(state.selectionNote);}
+ catch(e){if(id===state.loadId){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Tap Adjust crop to select the label area manually, then check the preview.';setCropEditing(false);scheduleOutput();status(state.selectionNote);}}
 }
 async function showPage(){
- if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.ops=null;state.view=null;state.renderTask?.cancel();state.renderTask=null;error('');status('Opening page…');
+ if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.ops=null;state.view=null;setCropEditing(false);state.renderTask?.cancel();state.renderTask=null;error('');status('Opening page…');
  ['findLabel','wholePage'].forEach(id=>el(id).disabled=true);
  try{
   const page=await state.pdf.getPage(Number(el('pageNumber').value));if(id!==state.loadId)return;const view=page.getViewport({scale:1});
@@ -184,7 +204,7 @@ async function showPage(){
  }catch(e){if(id!==state.loadId||e.name==='RenderingCancelledException')return;error('This page could not be displayed. Try another page or a different PDF.');status('Could not open the page.');}
 }
 async function loadFile(file){
- if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
+ if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;setCropEditing(false);el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
  try{
   if(file.size>50*1024*1024)throw new Error('Please use a PDF smaller than 50 MB.');
   const bytes=new Uint8Array(await file.arrayBuffer());if(id!==state.loadId)return;
@@ -199,22 +219,25 @@ async function loadFile(file){
 }
 function position(event){const box=el('cropOverlay').getBoundingClientRect();return {x:Math.max(0,Math.min(state.view.width,(event.clientX-box.left)/box.width*state.view.width)),y:Math.max(0,Math.min(state.view.height,(event.clientY-box.top)/box.height*state.view.height))};}
 el('cropOverlay').addEventListener('pointerdown',event=>{
- if(!state.crop||!state.view||event.button!==0)return;event.preventDefault();const p=position(event),r=state.crop,handle=event.target.dataset.handle;
+ if(!state.editing||!state.crop||!state.view||event.button!==0)return;event.preventDefault();const p=position(event),r=state.crop,handle=event.target.dataset.handle;
  state.drag={id:event.pointerId,start:p,rect:{...r},mode:handle||((p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)?'move':'draw')};el('cropOverlay').setPointerCapture(event.pointerId);el('cropOverlay').focus({preventScroll:true});
 });
 el('cropOverlay').addEventListener('pointermove',event=>{
- const drag=state.drag;if(!drag||drag.id!==event.pointerId||!state.view)return;const p=position(event),r=drag.rect,dx=p.x-drag.start.x,dy=p.y-drag.start.y;let changed;
+ const drag=state.drag;if(!state.editing||!drag||drag.id!==event.pointerId||!state.view)return;const p=position(event),r=drag.rect,dx=p.x-drag.start.x,dy=p.y-drag.start.y;let changed;
  if(drag.mode==='move')changed={x:r.x+dx,y:r.y+dy,w:r.w,h:r.h};
  else if(drag.mode==='draw')changed={x:Math.min(p.x,drag.start.x),y:Math.min(p.y,drag.start.y),w:Math.abs(p.x-drag.start.x),h:Math.abs(p.y-drag.start.y)};
  else{let l=r.x,t=r.y,right=r.x+r.w,bottom=r.y+r.h;if(drag.mode.includes('w'))l=Math.min(right-3,r.x+dx);if(drag.mode.includes('e'))right=Math.max(l+3,r.x+r.w+dx);if(drag.mode.includes('n'))t=Math.min(bottom-3,r.y+dy);if(drag.mode.includes('s'))bottom=Math.max(t+3,r.y+r.h+dy);changed={x:l,y:t,w:right-l,h:bottom-t};}
  state.crop=G.clamp(changed,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])el('cropOverlay').addEventListener(type,event=>{if(state.drag?.id===event.pointerId){state.drag=null;scheduleOutput();}});
-el('cropOverlay').addEventListener('keydown',event=>{if(!state.crop||!state.view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const r={...state.crop},step=event.shiftKey?10:1;if(event.key==='ArrowLeft')r.x-=step;if(event.key==='ArrowRight')r.x+=step;if(event.key==='ArrowUp')r.y-=step;if(event.key==='ArrowDown')r.y+=step;state.crop=G.clamp(r,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
-for(const [id,key,axis] of [['cropX','x','width'],['cropY','y','height'],['cropW','w','width'],['cropH','h','height']])el(id).addEventListener('input',()=>{if(!state.crop||!state.view||el(id).value==='')return;const value=Number(el(id).value);if(!Number.isFinite(value)||value<0||value>100)return;state.crop=G.clamp({...state.crop,[key]:value/100*state.view[axis]},state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
+el('cropOverlay').addEventListener('keydown',event=>{if(!state.editing||!state.crop||!state.view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const r={...state.crop},step=event.shiftKey?10:1;if(event.key==='ArrowLeft')r.x-=step;if(event.key==='ArrowRight')r.x+=step;if(event.key==='ArrowUp')r.y-=step;if(event.key==='ArrowDown')r.y+=step;state.crop=G.clamp(r,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
+for(const [id,key,axis] of [['cropX','x','width'],['cropY','y','height'],['cropW','w','width'],['cropH','h','height']])el(id).addEventListener('input',()=>{if(!state.editing||!state.crop||!state.view||el(id).value==='')return;const value=Number(el(id).value);if(!Number.isFinite(value)||value<0||value>100)return;state.crop=G.clamp({...state.crop,[key]:value/100*state.view[axis]},state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
 for(const id of ['cropX','cropY','cropW','cropH'])el(id).addEventListener('blur',drawCrop);
 el('file').addEventListener('change',()=>loadFile(el('file').files[0]));el('pageNumber').addEventListener('change',showPage);el('findLabel').addEventListener('click',findLabel);
-el('wholePage').addEventListener('click',()=>{if(state.view){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Whole page selected. Check the preview before saving.';scheduleOutput();}});
+el('browseAll').addEventListener('click',()=>el('allFiles').click());
+el('allFiles').addEventListener('change',()=>{const file=el('allFiles').files[0];if(file){try{el('file').files=el('allFiles').files;}catch{}loadFile(file);}});
+el('editCrop').addEventListener('click',()=>setCropEditing(!state.editing));el('cancelCrop').addEventListener('click',()=>setCropEditing(false,true));
+el('wholePage').addEventListener('click',()=>{if(state.editing&&state.view){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Whole page selected. Check the preview before saving.';scheduleOutput();}});
 el('paper').addEventListener('change',scheduleOutput);el('rotation').addEventListener('change',scheduleOutput);
 el('download').addEventListener('click',()=>{if(!state.url)return;const a=document.createElement('a');a.href=state.url;a.download=filename();document.body.append(a);a.click();a.remove();status('PDF saved. In 4Barcode, choose PDF Printing and open the downloaded file.');});
 el('openPdf').addEventListener('click',()=>{if(state.url)window.open(state.url,'_blank','noopener');});
@@ -222,6 +245,7 @@ el('sharePdf').addEventListener('click',async()=>{if(!state.bytes)return;try{awa
 for(const type of ['dragenter','dragover'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.add('over');});
 for(const type of ['dragleave','drop'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.remove('over');if(type==='drop')loadFile(event.dataTransfer.files[0]);});
 window.addEventListener('resize',()=>{if(state.view)drawCrop();});
+setCropEditing(false);
 </script>
 </body>
 </html>

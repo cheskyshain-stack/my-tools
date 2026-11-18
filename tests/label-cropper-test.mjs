@@ -16,6 +16,15 @@ async function ready(){await page.waitForFunction(()=>!document.getElementById('
 async function upload(file){await page.setInputFiles('#file',file);await ready();eq(await page.locator('#error').isVisible(),false);}
 async function download(name){const event=page.waitForEvent('download');await page.locator('#download').click();const d=await event,target=path.join(scratch,name);await d.saveAs(target);return fs.readFileSync(target);}
 async function verify(bytes,size,original){const doc=await P.PDFDocument.load(bytes);eq(doc.getPageCount(),1);eq([doc.getPage(0).getWidth(),doc.getPage(0).getHeight()],size);const input=await imageHashes(original),output=await imageHashes(bytes);ok(output.length>0&&output.every(h=>input.includes(h)),'Original compressed image streams survive unchanged');}
+const readCrop=async()=>JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));
+const cdp=await context.newCDPSession(page);
+async function touchDrag(dx,dy){
+ await page.locator('#cropOverlay').scrollIntoViewIfNeeded();const box=await page.locator('#cropOverlay').boundingBox(),view=(await page.locator('#cropOverlay').getAttribute('viewBox')).split(' ').map(Number),crop=await readCrop();
+ const x=box.x+(crop.x+crop.w/2)/view[2]*box.width,y=box.y+(crop.y+crop.h/2)/view[3]*box.height;
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+ for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/5,y:y+dy*i/5}]});await page.waitForTimeout(30);}
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(250);
+}
 try{
  await page.goto(`${BASE}/label-cropper/`,{waitUntil:'networkidle'});eq(await page.locator('#empty').isVisible(),true);eq(await page.locator('#workspace').isVisible(),false);
  // Generic, non-personal fixtures keep this suite usable without uploaded samples.
@@ -28,17 +37,27 @@ try{
  });
  const first=path.join(scratch,'return-with-instructions.pdf'),rotated=path.join(scratch,'already-cropped-rotated.pdf');fs.writeFileSync(first,Uint8Array.from(generated[0]));fs.writeFileSync(rotated,Uint8Array.from(generated[1]));
  await upload(first);eq(await page.locator('#pageNumber option').count(),2);let crop=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));
- ok(crop.x>20&&crop.y>250&&crop.w>540&&crop.h<390,'Finds the entire embedded label instead of the instructions');ok(await page.locator('#cropOverlay .handle').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().width>=21)),'Touch crop handles stay large on a phone');ok((await page.locator('#dimensions').textContent()).includes('90°'));
+ ok(crop.x>20&&crop.y>250&&crop.w>540&&crop.h<390,'Finds the entire embedded label instead of the instructions');eq(await page.locator('#cropOverlay .handle').count(),0);eq(await page.locator('#editCrop').textContent(),'Adjust crop');eq(await page.locator('#cropX').isDisabled(),true);ok((await page.locator('#dimensions').textContent()).includes('90°'));
  let output=await download('fixture-4x6.pdf');await verify(output,[288,432],fs.readFileSync(first));
+ const automatic={...crop};await page.locator('#cropOverlay').tap({position:{x:20,y:20}});eq(await readCrop(),automatic);
+ await page.locator('#cropOverlay').focus();await page.keyboard.press('ArrowRight');eq(await readCrop(),automatic);
+ await page.locator('#cropOverlay').scrollIntoViewIfNeeded();const scrollBefore=await page.evaluate(()=>scrollY);await touchDrag(0,-100);eq(await readCrop(),automatic);ok(await page.evaluate(y=>scrollY>y+10,scrollBefore),'Locked crop allows native touch scrolling');
+ eq(hash(await download('after-accidental-touches.pdf')),hash(output));
+ // The alternate picker has no type filter and still validates actual PDF contents.
+ const chooserEvent=page.waitForEvent('filechooser');await page.locator('#browseAll').click();const chooser=await chooserEvent;eq(await chooser.element().getAttribute('accept'),null);
+ await chooser.setFiles({name:'RETURN-LABEL.PDF',mimeType:'application/octet-stream',buffer:fs.readFileSync(first)});await ready();eq(await page.locator('#file').evaluate(n=>n.files[0].name),'RETURN-LABEL.PDF');eq(await readCrop(),automatic);await verify(await download('unfiltered-choice.pdf'),[288,432],fs.readFileSync(first));
  await page.selectOption('#pageNumber','2');await ready();ok((await page.locator('#status').textContent()).includes('No label found'));
  await page.selectOption('#pageNumber','1');await ready();
+ await page.locator('#editCrop').click();eq(await page.locator('#editCrop').textContent(),'Done');eq(await page.locator('#cropOverlay .handle').count(),8);ok(await page.locator('#cropOverlay .handle').evaluateAll(ns=>ns.every(n=>n.getBoundingClientRect().width>=21)),'Touch crop handles stay large on a phone');eq(await page.locator('#cropX').isDisabled(),false);
  await page.locator('#cropOverlay').focus();const before=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));await page.keyboard.press('ArrowRight');await ready();crop=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));ok(Math.abs(crop.x-before.x-1)<.01,'Keyboard nudges use page coordinates');
  await page.locator('.fine-tune summary').click();await page.fill('#cropX','12.3');eq(await page.inputValue('#cropX'),'12.3');await ready();eq(await page.inputValue('#cropX'),'12.3');
- await page.locator('#findLabel').click();await ready();await page.locator('#cropOverlay').scrollIntoViewIfNeeded();
- const box=await page.locator('#cropOverlay').boundingBox(),view=(await page.locator('#cropOverlay').getAttribute('viewBox')).split(' ').map(Number);crop=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));
- const x=box.x+(crop.x+crop.w/2)/view[2]*box.width,y=box.y+(crop.y+crop.h/2)/view[3]*box.height,cdp=await context.newCDPSession(page);
- await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+7,y:y+6}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await ready();
+ await page.locator('#cancelCrop').click();await ready();eq(await readCrop(),automatic);eq(await page.locator('#editCrop').textContent(),'Adjust crop');eq(await page.locator('#cropOverlay .handle').count(),0);
+ await page.locator('#editCrop').click();crop=await readCrop();await touchDrag(7,6);await ready();
  const moved=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));ok(moved.x>crop.x&&moved.y>crop.y,'Touch dragging moves the crop');
+ await page.locator('#editCrop').click();eq(await readCrop(),moved);eq(await page.locator('#cancelCrop').isVisible(),false);eq(await page.locator('#cropX').isDisabled(),true);await touchDrag(10,-20);eq(await readCrop(),moved);
+ await page.locator('#editCrop').click();await page.locator('#wholePage').click();await ready();eq(await readCrop(),{x:0,y:0,w:612,h:792});await page.locator('#cancelCrop').click();await ready();eq(await readCrop(),moved);
+ await page.locator('#editCrop').click();await page.locator('#findLabel').click();await ready();eq(await readCrop(),automatic);eq(await page.locator('#editCrop').textContent(),'Adjust crop');eq(await page.locator('#cropOverlay .handle').count(),0);
+ await page.locator('#editCrop').click();await page.selectOption('#pageNumber','2');await ready();eq(await page.locator('#editCrop').textContent(),'Adjust crop');await page.selectOption('#pageNumber','1');await ready();
  // Existing crop boxes and /Rotate metadata must both survive the conversion.
  await upload(rotated);eq(await page.locator('#pageNumber option').count(),1);crop=JSON.parse(await page.locator('#cropOverlay').getAttribute('data-crop'));eq(crop,{x:0,y:0,w:378,h:554});
  for(const rotation of ['auto','0','90','180','270']){

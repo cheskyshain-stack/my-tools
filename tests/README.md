@@ -181,7 +181,9 @@ mobile layout and portal navigation. Set `CJ_BASE_URL` to a fresh local server.
 `npm run test:labels` checks the PDF label cropper's fit/rotation geometry and its
 browser flow, using generated non-personal PDFs. It verifies original compressed
 image bytes, exact 4x6/6x4 page sizes, rotated pages and crop boxes, page selection,
-touch/keyboard adjustments, invalid input, mobile layout and portal navigation.
+locked accidental touches and native scrolling, explicit touch/keyboard adjustments,
+Done/Cancel/Find label restoration, an unfiltered file chooser with generic MIME
+metadata, invalid input, mobile layout and portal navigation.
 Optional private samples are supplied with `CJ_LABEL_SAMPLE_CONFIG`; they are
 never test fixtures committed to the repository.
 

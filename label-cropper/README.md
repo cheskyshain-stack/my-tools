@@ -11,6 +11,13 @@ PDF Printing option. Native file sharing appears when the browser supports it.
 Printing still depends on matching paper dimensions, actual-size settings, the
 printing app, original image resolution and the printer itself.
 
+The main file picker filters for PDFs. Browse all files opens an unfiltered picker
+for Android providers that hide a PDF because of its file metadata. Both paths
+use the same PDF parser and original-content export. On-device help also explains
+how to find Recent or save a copy into Internal storage / Download if the file
+is in a different folder. A web page cannot control which files Android providers
+expose in the native picker.
+
 The output is generated from the original PDF page with pdf-lib's `embedPage`.
 The crop becomes a clipped PDF Form XObject, centered and proportionally scaled
 on the new sheet. Text and vector paths stay PDF content; image streams retain
@@ -32,9 +39,13 @@ centering and equal horizontal/vertical scale.
 Find label is a suggestion: it selects a label-shaped image or an already cropped
 label-shaped page. It does not select a long, narrow authorization barcode as the
 shipping label. Otherwise the page stays selected and a persistent message asks
-for manual cropping. Users can draw, move or resize the selection with a pointer
-or touch, nudge it with arrow keys, and enter percentage bounds. Whole page and
-Find label reset the crop. Preview and output updates are debounced; stale builds
+for manual cropping. Every automatic selection starts locked, with no resize
+handles. Taps, drags and arrow keys cannot change it, and normal touch scrolling
+is allowed. Adjust crop explicitly enables drawing, moving, resizing, arrow-key
+nudges and percentage bounds. Done keeps the edits and locks the selection;
+Cancel restores the crop and status from before that editing session. Whole page
+is available while editing. Find label restores the automatic selection and locks
+it. Changing the page or file also exits editing. Preview and output updates are debounced; stale builds
 cannot enable downloading the previous crop. Replacing a file destroys the prior
 PDF.js loading task, not the document proxy.
 
@@ -66,7 +77,9 @@ preserved directly. Link annotations do not block cropping.
 Serve the repository on a fresh port and run `npm run test:labels` in `tests/`
 with `CJ_BASE_URL` set. The suite generates non-personal fixtures with instructions,
 multiple pages, nonzero page boxes and rotation. It checks exact output dimensions,
-original image hashes across all rotations, touch and keyboard selection, input
+original image hashes across all rotations, locked accidental touches and native
+scrolling, explicit touch/keyboard editing, Done/Cancel/Find label restoration,
+the unfiltered native chooser with an uppercase PDF and generic MIME type, input
 errors/replacement, mobile geometry, portal navigation and no upload requests.
 To additionally test private PDFs, set `CJ_LABEL_SAMPLE_CONFIG` to a local JSON file
 containing their paths. Never copy personal labels into the public repository.
