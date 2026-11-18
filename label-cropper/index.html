@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Crop a shipping label from a PDF and save an original-quality 4 by 6 or 6 by 4 inch PDF for your label printer.">
+<title>PDF Label Cropper | CJ Portal</title>
+<link rel="manifest" href="/label-cropper/manifest.json">
+<link rel="icon" href="/label-cropper/icon.png?v=1" type="image/png">
+<link rel="apple-touch-icon" href="/label-cropper/icon.png?v=1">
+<style>
+ *,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}
+ html,body{margin:0;overscroll-behavior-y:none}
+ body{max-width:1050px;margin:auto;padding:10px 13px calc(24px + env(safe-area-inset-bottom));line-height:1.5}
+ body .cj-page-header{width:100%;max-width:none;padding-left:0;padding-right:0}
+ h2{font:600 22px/1.25 var(--cj-display,Georgia,serif);margin:0}
+ .intro,.hint{font-size:12px;color:var(--cj-muted);margin:7px 0;overflow-wrap:anywhere}.intro{font-size:14px;margin:12px 0 18px}
+ .upload{display:block;border:1px dashed rgba(0,200,255,.45);border-radius:17px;padding:20px;background:rgba(0,200,255,.035);margin:0 0 15px;cursor:pointer;text-align:center}
+ .upload strong{display:block;font-size:16px;margin-bottom:6px}.upload.over{background:rgba(0,200,255,.12)}
+ .has-pdf .upload{padding:9px 12px}.has-pdf .upload strong,.has-pdf .upload .hint{display:none}.has-pdf .upload input{margin:0}
+ .upload input{display:block;max-width:100%;margin:12px auto 0;font:12px var(--cj-body);color:var(--cj-muted)}
+ input::file-selector-button{min-height:38px;border:1px solid var(--cj-line);border-radius:10px;background:var(--cj-card);color:var(--cj-text);padding:7px 13px;margin-right:10px;cursor:pointer}
+ .status{font-size:12px;min-height:19px;margin:8px 0;color:var(--cj-muted);overflow-wrap:anywhere}
+ .error{color:#ffb4b4;border:1px solid rgba(239,68,68,.35);border-radius:12px;background:rgba(239,68,68,.06);padding:11px;font-size:13px;overflow-wrap:anywhere}
+ .workspace{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:16px;align-items:start}
+ .card{min-width:0;border:1px solid var(--cj-line);border-radius:var(--cj-r-lg);padding:17px;background:var(--cj-card);box-shadow:var(--cj-shadow)}
+ .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}.bar h2{font-size:20px}
+ button,select,input{font-family:var(--cj-body,system-ui);min-width:0}
+ .small-button,select,input[type=number]{min-height:40px;padding:8px 10px;border:1px solid var(--cj-line);border-radius:10px;background:#0c1529;color:var(--cj-text);font-size:12px}
+ .small-button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+ .page-controls{display:flex;align-items:center;gap:7px}.page-controls label{font-size:12px;color:var(--cj-muted)}#pageNumber{max-width:95px}
+ .tools{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 12px}
+ #pageFrame{position:relative;background:white;line-height:0;max-width:100%;overflow:hidden;border-radius:5px;user-select:none}
+ #sourceCanvas{display:block;width:100%;height:auto}
+ #cropOverlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;outline-offset:-3px}
+ #cropOverlay .shade{fill:rgba(5,10,24,.57);fill-rule:evenodd;pointer-events:none}
+ #cropOverlay .edge{fill:none;stroke:#009dcc;stroke-width:1.6;vector-effect:non-scaling-stroke;pointer-events:none}
+ #cropOverlay .handle{fill:#fff;stroke:#009dcc;stroke-width:2;vector-effect:non-scaling-stroke;cursor:crosshair}
+ .fine-tune{margin-top:10px;font-size:12px;color:var(--cj-muted)}summary{cursor:pointer;min-height:38px;padding:8px 0}
+ .coordinates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.coordinates label{display:block;font-size:10px}.coordinates input{width:100%;font-size:13px;padding:8px 6px;margin-top:5px}
+ .output-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+ .output-controls label{display:block;font-size:12px;font-weight:600}.output-controls select{display:block;width:100%;margin-top:6px;font-size:13px}
+ #outputFrame{width:100%;max-width:280px;margin:14px auto;background:white;border:1px solid rgba(255,255,255,.2);box-shadow:0 6px 20px #0005;line-height:0}
+ #outputCanvas{display:block;width:100%;height:auto}
+ .quality{font-size:12px;color:var(--cj-success);margin:11px 0 6px}
+ .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.actions .cj-btn{min-height:44px;padding:0 15px;font-size:12px}.actions #download{flex:1}
+ .print-help{font-size:12px;color:var(--cj-muted);margin-top:15px;border-top:1px solid var(--cj-line);padding-top:10px}.print-help strong{color:var(--cj-text)}
+ .empty{border:1px solid var(--cj-line);border-radius:18px;padding:20px;color:var(--cj-muted);font-size:13px;margin:15px 0}
+ .back{display:block;margin:20px;text-align:center;color:var(--cj-cyan);font-size:13px}
+ :focus-visible{outline:2px solid var(--cj-cyan);outline-offset:3px}
+ @media(max-width:720px){.workspace{grid-template-columns:1fr}.card{padding:14px}.upload{padding:16px}.workspace .result{grid-row:1}#outputFrame{max-width:185px}.output-controls{margin:12px 0}.actions{margin-top:12px}}
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+</head>
+<body>
+<header class="cj-page-header"><div class="cj-brand"><img src="/label-cropper/icon.png?v=1" alt="PDF Label Cropper"></div><h1>PDF label cropper</h1></header>
+<main>
+ <p class="intro">Turn the label on a PDF into a 4×6 or 6×4 PDF for your label printer. Original PDF quality is kept.</p>
+ <label class="upload" id="dropArea"><strong>Choose a PDF</strong><span class="hint">Or drop a file here. Your PDF stays on this device.</span><input id="file" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF to crop"></label>
+ <p id="status" class="status" role="status" aria-live="polite">Ready for your PDF.</p>
+ <p id="error" class="error" role="alert" hidden></p>
+ <div id="empty" class="empty">Choose your file, check the selected label, then download the print-ready PDF. You can adjust the crop before saving.</div>
+ <div class="workspace" id="workspace" hidden>
+  <section class="card editor" aria-labelledby="sourceTitle">
+   <div class="bar"><h2 id="sourceTitle">Select the label</h2><div class="page-controls"><label for="pageNumber">Page</label><select id="pageNumber"></select><span class="hint" id="pageCount"></span></div></div>
+   <div class="tools"><button id="findLabel" class="small-button" type="button">Find label</button><button id="wholePage" class="small-button" type="button">Whole page</button></div>
+   <div id="pageFrame"><canvas id="sourceCanvas"></canvas><svg id="cropOverlay" role="img" tabindex="0" aria-label="Label crop area. Drag the box or its corners to adjust. Arrow keys move it; Shift moves it further." aria-describedby="cropHelp"></svg></div>
+   <p id="cropHelp" class="hint">Keep the whole label and the white space around its barcodes inside the box. Drag outside the box to draw a new crop.</p>
+   <details class="fine-tune"><summary>Fine-tune the crop</summary><div class="coordinates"><label>Left %<input id="cropX" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Top %<input id="cropY" type="number" min="0" max="100" step="0.1" inputmode="decimal"></label><label>Width %<input id="cropW" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label><label>Height %<input id="cropH" type="number" min="0.1" max="100" step="0.1" inputmode="decimal"></label></div></details>
+  </section>
+  <section class="card result" aria-labelledby="resultTitle">
+   <h2 id="resultTitle">Your printer label</h2>
+   <div class="output-controls"><label for="paper">Label size<select id="paper"><option value="4x6">4 × 6 inches</option><option value="6x4">6 × 4 inches</option></select></label><label for="rotation">Rotation<select id="rotation"><option value="auto">Best fit</option><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° left</option></select></label></div>
+   <div class="actions"><button id="download" type="button" class="cj-btn cj-btn-primary" disabled>Download PDF</button><button id="sharePdf" type="button" class="cj-btn cj-btn-ghost" hidden disabled>Share PDF</button><button id="openPdf" type="button" class="cj-btn cj-btn-ghost" disabled>Open PDF</button></div>
+   <div id="outputFrame"><canvas id="outputCanvas" aria-label="Preview of the cropped label"></canvas></div>
+   <p id="dimensions" class="hint"></p><p class="quality">Original PDF content preserved. No added image compression or downsampling.</p>
+   <p class="hint">This is a screen preview. The saved PDF keeps the original text, barcodes and image data.</p>
+
+   <details class="print-help"><summary><strong>Printing with 4Barcode</strong></summary><p>Download the file, then choose <strong>PDF Printing</strong> in 4Barcode and select it. Use the matching label size and 100% / actual size. Avoid stretch or a second crop.</p><p id="paperHelp"></p><p>The source file, printer resolution, print density and the printing app still affect the final result.</p></details>
+  </section>
+ </div>
+ <div id="cj-share"></div><a class="back" href="/">Back to CJ Portal</a>
+</main>
+<noscript><p class="empty">Turn on JavaScript to open and crop a PDF.</p></noscript>
+<script src="/assets/share-widget.js" defer></script>
+<script src="/assets/cj-refresh.js" defer></script>
+<script src="/label-cropper/vendor/pdf-lib.min.js"></script>
+<script>
+/* LABEL_GEOMETRY_START */
+var LabelGeometry=(function(){
+ function clamp(r,w,h){var min=Math.min(3,w,h),rw=Math.max(min,Math.min(w,r.w)),rh=Math.max(min,Math.min(h,r.h));return {x:Math.max(0,Math.min(w-rw,r.x)),y:Math.max(0,Math.min(h-rh,r.y)),w:rw,h:rh};}
+ function bounds(view,r){var points=[[r.x,r.y],[r.x+r.w,r.y],[r.x,r.y+r.h],[r.x+r.w,r.y+r.h]].map(function(p){return view.convertToPdfPoint(p[0],p[1]);});return {left:Math.min.apply(null,points.map(p=>p[0])),right:Math.max.apply(null,points.map(p=>p[0])),bottom:Math.min.apply(null,points.map(p=>p[1])),top:Math.max.apply(null,points.map(p=>p[1]))};}
+ function layout(w,h,cw,pw,ph){cw=((cw%360)+360)%360;var rw=cw%180?h:w,rh=cw%180?w:h,s=Math.min(pw/rw,ph/rh),x=(pw-rw*s)/2,y=(ph-rh*s)/2;if(cw===90)y+=w*s;else if(cw===180){x+=w*s;y+=h*s;}else if(cw===270)x+=h*s;return {x:x,y:y,width:w*s,height:h*s,degrees:(360-cw)%360};}
+ function bestRotation(r,pw,ph){return Math.min(pw/r.h,ph/r.w)>Math.min(pw/r.w,ph/r.h)+1e-8?90:0;}
+ function multiply(a,b){return [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];}
+ function findLabel(ops,OPS,view){
+  var ratio=Math.max(view.width,view.height)/Math.min(view.width,view.height);
+  if(Math.abs(ratio-1.5)<.16&&Math.max(view.width,view.height)<=720)return {x:0,y:0,w:view.width,h:view.height};
+  var matrix=[1,0,0,1,0,0],stack=[],candidates=[];
+  for(var i=0;i<ops.fnArray.length;i++){
+   var op=ops.fnArray[i],a=ops.argsArray[i];
+   if(op===OPS.save)stack.push(matrix.slice());
+   else if(op===OPS.restore)matrix=stack.pop()||[1,0,0,1,0,0];
+   else if(op===OPS.transform)matrix=multiply(matrix,a);
+   else if(op===OPS.paintFormXObjectBegin){stack.push(matrix.slice());if(a[0])matrix=multiply(matrix,a[0]);}
+   else if(op===OPS.paintFormXObjectEnd)matrix=stack.pop()||[1,0,0,1,0,0];
+   else if(op===OPS.paintImageXObject||op===OPS.paintInlineImageXObject){
+    var corners=[[0,0],[1,0],[0,1],[1,1]].map(function(p){return view.convertToViewportPoint(matrix[0]*p[0]+matrix[2]*p[1]+matrix[4],matrix[1]*p[0]+matrix[3]*p[1]+matrix[5]);});
+    var x=Math.min.apply(null,corners.map(p=>p[0])),y=Math.min.apply(null,corners.map(p=>p[1])),w=Math.max.apply(null,corners.map(p=>p[0]))-x,h=Math.max.apply(null,corners.map(p=>p[1]))-y,aspect=Math.max(w,h)/Math.min(w,h);
+    if(Math.min(w,h)>60&&Math.abs(aspect-1.5)<.16&&w*h>view.width*view.height*.06)candidates.push({x:x,y:y,w:w,h:h});
+   }
+  }
+  candidates.sort(function(a,b){return b.w*b.h-a.w*a.h;});if(!candidates.length)return null;
+  var r=candidates[0],left=Math.max(0,r.x-3),top=Math.max(0,r.y-3),right=Math.min(view.width,r.x+r.w+3),bottom=Math.min(view.height,r.y+r.h+3);
+  return clamp({x:left,y:top,w:right-left,h:bottom-top},view.width,view.height);
+ }
+ return {clamp:clamp,bounds:bounds,layout:layout,bestRotation:bestRotation,findLabel:findLabel};
+})();
+/* LABEL_GEOMETRY_END */
+</script>
+<script type="module">
+import * as pdfjs from '/label-cropper/vendor/pdfjs/pdf.min.js';
+pdfjs.GlobalWorkerOptions.workerSrc='/label-cropper/vendor/pdfjs/pdf.worker.min.js';
+const el=id=>document.getElementById(id),G=LabelGeometry,NS='http://www.w3.org/2000/svg';
+const base='/label-cropper/vendor/pdfjs/';
+const state={pdf:null,original:null,view:null,page:null,crop:null,ops:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null};
+function status(text){el('status').textContent=text;}
+function error(message){el('error').textContent=message;el('error').hidden=!message;}
+function outputSize(){return el('paper').value==='6x4'?[432,288]:[288,432];}
+function extraRotation(){const [w,h]=outputSize();return el('rotation').value==='auto'?G.bestRotation(state.crop,w,h):Number(el('rotation').value);}
+function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready);}
+function clearOutput(){state.buildId++;state.bytes=null;setActions(false);if(state.url){const old=state.url;setTimeout(()=>URL.revokeObjectURL(old),60000);state.url=null;}}
+function svg(tag,attrs){const n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));el('cropOverlay').append(n);return n;}
+function drawCrop(){
+ if(!state.view||!state.crop)return;
+ const {width:w,height:h}=state.view,r=state.crop,overlay=el('cropOverlay');overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);overlay.replaceChildren();
+ svg('path',{class:'shade',d:`M0 0H${w}V${h}H0Z M${r.x} ${r.y}V${r.y+r.h}H${r.x+r.w}V${r.y}Z`});svg('rect',{class:'edge',x:r.x,y:r.y,width:r.w,height:r.h});
+ const size=Math.max(10,22*w/Math.max(1,overlay.clientWidth));
+ for(const [name,x,y] of [['nw',r.x,r.y],['n',r.x+r.w/2,r.y],['ne',r.x+r.w,r.y],['e',r.x+r.w,r.y+r.h/2],['se',r.x+r.w,r.y+r.h],['s',r.x+r.w/2,r.y+r.h],['sw',r.x,r.y+r.h],['w',r.x,r.y+r.h/2]])svg('rect',{class:'handle','data-handle':name,x:Math.max(0,Math.min(w-size,x-size/2)),y:Math.max(0,Math.min(h-size,y-size/2)),width:size,height:size,rx:2});
+ for(const [id,value] of [['cropX',r.x/w*100],['cropY',r.y/h*100],['cropW',r.w/w*100],['cropH',r.h/h*100]])if(document.activeElement!==el(id))el(id).value=value.toFixed(1);
+ overlay.setAttribute('aria-label',`Crop: left ${(r.x/w*100).toFixed(1)}%, top ${(r.y/h*100).toFixed(1)}%, width ${(r.w/w*100).toFixed(1)}%, height ${(r.h/h*100).toFixed(1)}%. Use arrow keys to move.`);
+ overlay.dataset.crop=JSON.stringify(r);drawPreview();
+}
+function drawPreview(){
+ if(!state.crop||!state.view)return;
+ const r=state.crop,source=el('sourceCanvas'),canvas=el('outputCanvas'),[pw,ph]=outputSize(),cw=extraRotation(),rw=cw%180?r.h:r.w,rh=cw%180?r.w:r.h;
+ canvas.width=Math.round(pw*1.5);canvas.height=Math.round(ph*1.5);const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+ const scale=Math.min(canvas.width/rw,canvas.height/rh);ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(cw*Math.PI/180);
+ ctx.drawImage(source,r.x/state.view.width*source.width,r.y/state.view.height*source.height,r.w/state.view.width*source.width,r.h/state.view.height*source.height,-r.w*scale/2,-r.h*scale/2,r.w*scale,r.h*scale);ctx.restore();
+ el('dimensions').textContent=`${pw/72} × ${ph/72} inches · one label · ${cw}° rotation`;
+ el('paperHelp').textContent=`PDF paper size: ${pw/72} × ${ph/72} inches (${(pw/72*25.4).toFixed(1)} × ${(ph/72*25.4).toFixed(1)} mm).`;
+}
+async function makeOutput(){
+ if(!state.crop||!state.original||!state.view)return;
+ const generation=state.buildId,r={...state.crop},view=state.view,page=state.original.getPage(Number(el('pageNumber').value)-1),[pw,ph]=outputSize(),cw=extraRotation();
+ try{
+  const bounds=G.bounds(view,r),annotations=await state.page.getAnnotations({intent:'print'});if(generation!==state.buildId)return;
+  if(annotations.some(a=>a.annotationType!==pdfjs.AnnotationType.LINK&&Array.isArray(a.rect)&&a.rect[0]<bounds.right&&a.rect[2]>bounds.left&&a.rect[1]<bounds.top&&a.rect[3]>bounds.bottom)){
+   const issue=new Error('Interactive label');issue.userMessage='This label contains editable fields or notes. Print the original to a new PDF first, then crop that copy so all visible details are included.';throw issue;
+  }
+  const result=await PDFLib.PDFDocument.create(),embedded=await result.embedPage(page,bounds),layout=G.layout(embedded.width,embedded.height,view.rotation+cw,pw,ph),out=result.addPage([pw,ph]);
+  out.drawPage(embedded,{x:layout.x,y:layout.y,width:layout.width,height:layout.height,rotate:PDFLib.degrees(layout.degrees)});
+  result.setTitle('Print-ready shipping label');const bytes=await result.save();if(generation!==state.buildId)return;
+  state.bytes=bytes;state.url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));error('');setActions(true);status(state.selectionNote||'Ready. Check the preview, then download the original-quality PDF.');
+  try{el('sharePdf').hidden=!navigator.canShare?.({files:[new File([bytes],filename(),{type:'application/pdf'})]});}catch{el('sharePdf').hidden=true;}
+ }catch(e){if(generation===state.buildId){error(e.userMessage||'This PDF could not be cropped. Try a different page or an unlocked copy.');status('Could not create the label PDF.');}}
+}
+function scheduleOutput(){clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
+function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+'-label.pdf';}
+async function findLabel(){
+ if(!state.page||!state.view)return;const id=state.loadId;
+ try{const ops=state.ops||await state.page.getOperatorList();if(id!==state.loadId)return;state.ops=ops;const crop=G.findLabel(ops,pdfjs.OPS,state.view);state.crop=crop||{x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote=crop?'Ready. Check that every barcode is inside the selected label.':'No label found automatically. Draw a box around the label, then check the preview.';scheduleOutput();status(state.selectionNote);}
+ catch(e){if(id===state.loadId){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Select the label area manually, then check the preview.';scheduleOutput();status(state.selectionNote);}}
+}
+async function showPage(){
+ if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.ops=null;state.view=null;state.renderTask?.cancel();state.renderTask=null;error('');status('Opening page…');
+ ['findLabel','wholePage'].forEach(id=>el(id).disabled=true);
+ try{
+  const page=await state.pdf.getPage(Number(el('pageNumber').value));if(id!==state.loadId)return;const view=page.getViewport({scale:1});
+  const scale=Math.min(2,Math.sqrt(6000000/(view.width*view.height))),renderView=page.getViewport({scale}),canvas=el('sourceCanvas');canvas.width=Math.ceil(renderView.width);canvas.height=Math.ceil(renderView.height);
+  const task=page.render({canvasContext:canvas.getContext('2d'),viewport:renderView,background:'rgb(255,255,255)'});state.renderTask=task;await task.promise;if(id!==state.loadId)return;
+  state.page=page;state.view=view;state.renderTask=null;['findLabel','wholePage'].forEach(id=>el(id).disabled=false);await findLabel();
+ }catch(e){if(id!==state.loadId||e.name==='RenderingCancelledException')return;error('This page could not be displayed. Try another page or a different PDF.');status('Could not open the page.');}
+}
+async function loadFile(file){
+ if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
+ try{
+  if(file.size>50*1024*1024)throw new Error('Please use a PDF smaller than 50 MB.');
+  const bytes=new Uint8Array(await file.arrayBuffer());if(id!==state.loadId)return;
+  let original;try{original=await PDFLib.PDFDocument.load(bytes,{updateMetadata:false});}catch(e){throw new Error(/encrypt/i.test(String(e))?'Password-protected PDFs are not supported. Save an unlocked copy and try again.':'This file could not be read as a PDF. Please choose a valid PDF.');}
+  if(id!==state.loadId)return;const old=state.loadingTask;state.pdf=null;state.loadingTask=null;await old?.destroy();if(id!==state.loadId)return;
+  const task=pdfjs.getDocument({data:bytes.slice(),isEvalSupported:false,standardFontDataUrl:base+'standard_fonts/',wasmUrl:base+'wasm/',cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/cmaps/',cMapPacked:true});
+  state.loadingTask=task;const pdf=await task.promise;if(id!==state.loadId){await task.destroy();return;}
+  if(!pdf.numPages)throw new Error('This PDF has no pages.');state.pdf=pdf;state.original=original;state.sourceName=file.name;el('pageNumber').replaceChildren();
+  for(let n=1;n<=pdf.numPages;n++)el('pageNumber').add(new Option(String(n),String(n)));el('pageCount').textContent='of '+pdf.numPages;el('pageNumber').value='1';el('rotation').value='auto';
+  el('workspace').hidden=false;el('empty').hidden=true;document.body.classList.add('has-pdf');await showPage();
+ }catch(e){if(id!==state.loadId)return;state.original=null;state.pdf=null;error(e.message||'This PDF could not be opened.');status('Please choose a different PDF.');}
+}
+function position(event){const box=el('cropOverlay').getBoundingClientRect();return {x:Math.max(0,Math.min(state.view.width,(event.clientX-box.left)/box.width*state.view.width)),y:Math.max(0,Math.min(state.view.height,(event.clientY-box.top)/box.height*state.view.height))};}
+el('cropOverlay').addEventListener('pointerdown',event=>{
+ if(!state.crop||!state.view||event.button!==0)return;event.preventDefault();const p=position(event),r=state.crop,handle=event.target.dataset.handle;
+ state.drag={id:event.pointerId,start:p,rect:{...r},mode:handle||((p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)?'move':'draw')};el('cropOverlay').setPointerCapture(event.pointerId);el('cropOverlay').focus({preventScroll:true});
+});
+el('cropOverlay').addEventListener('pointermove',event=>{
+ const drag=state.drag;if(!drag||drag.id!==event.pointerId||!state.view)return;const p=position(event),r=drag.rect,dx=p.x-drag.start.x,dy=p.y-drag.start.y;let changed;
+ if(drag.mode==='move')changed={x:r.x+dx,y:r.y+dy,w:r.w,h:r.h};
+ else if(drag.mode==='draw')changed={x:Math.min(p.x,drag.start.x),y:Math.min(p.y,drag.start.y),w:Math.abs(p.x-drag.start.x),h:Math.abs(p.y-drag.start.y)};
+ else{let l=r.x,t=r.y,right=r.x+r.w,bottom=r.y+r.h;if(drag.mode.includes('w'))l=Math.min(right-3,r.x+dx);if(drag.mode.includes('e'))right=Math.max(l+3,r.x+r.w+dx);if(drag.mode.includes('n'))t=Math.min(bottom-3,r.y+dy);if(drag.mode.includes('s'))bottom=Math.max(t+3,r.y+r.h+dy);changed={x:l,y:t,w:right-l,h:bottom-t};}
+ state.crop=G.clamp(changed,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();
+});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])el('cropOverlay').addEventListener(type,event=>{if(state.drag?.id===event.pointerId){state.drag=null;scheduleOutput();}});
+el('cropOverlay').addEventListener('keydown',event=>{if(!state.crop||!state.view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const r={...state.crop},step=event.shiftKey?10:1;if(event.key==='ArrowLeft')r.x-=step;if(event.key==='ArrowRight')r.x+=step;if(event.key==='ArrowUp')r.y-=step;if(event.key==='ArrowDown')r.y+=step;state.crop=G.clamp(r,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
+for(const [id,key,axis] of [['cropX','x','width'],['cropY','y','height'],['cropW','w','width'],['cropH','h','height']])el(id).addEventListener('input',()=>{if(!state.crop||!state.view||el(id).value==='')return;const value=Number(el(id).value);if(!Number.isFinite(value)||value<0||value>100)return;state.crop=G.clamp({...state.crop,[key]:value/100*state.view[axis]},state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
+for(const id of ['cropX','cropY','cropW','cropH'])el(id).addEventListener('blur',drawCrop);
+el('file').addEventListener('change',()=>loadFile(el('file').files[0]));el('pageNumber').addEventListener('change',showPage);el('findLabel').addEventListener('click',findLabel);
+el('wholePage').addEventListener('click',()=>{if(state.view){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Whole page selected. Check the preview before saving.';scheduleOutput();}});
+el('paper').addEventListener('change',scheduleOutput);el('rotation').addEventListener('change',scheduleOutput);
+el('download').addEventListener('click',()=>{if(!state.url)return;const a=document.createElement('a');a.href=state.url;a.download=filename();document.body.append(a);a.click();a.remove();status('PDF saved. In 4Barcode, choose PDF Printing and open the downloaded file.');});
+el('openPdf').addEventListener('click',()=>{if(state.url)window.open(state.url,'_blank','noopener');});
+el('sharePdf').addEventListener('click',async()=>{if(!state.bytes)return;try{await navigator.share({files:[new File([state.bytes],filename(),{type:'application/pdf'})]});}catch(e){if(e.name!=='AbortError')error('Sharing is unavailable. Use Download PDF instead.');}});
+for(const type of ['dragenter','dragover'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.add('over');});
+for(const type of ['dragleave','drop'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.remove('over');if(type==='drop')loadFile(event.dataTransfer.files[0]);});
+window.addEventListener('resize',()=>{if(state.view)drawCrop();});
+</script>
+</body>
+</html>

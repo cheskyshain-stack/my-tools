@@ -178,6 +178,13 @@ suite for multiple English/Hebrew countdowns, Adar/February adjustments, optiona
 birth years, editing, Undo, saving, midnight rollover, focused inputs, other tabs,
 mobile layout and portal navigation. Set `CJ_BASE_URL` to a fresh local server.
 
+`npm run test:labels` checks the PDF label cropper's fit/rotation geometry and its
+browser flow, using generated non-personal PDFs. It verifies original compressed
+image bytes, exact 4x6/6x4 page sizes, rotated pages and crop boxes, page selection,
+touch/keyboard adjustments, invalid input, mobile layout and portal navigation.
+Optional private samples are supplied with `CJ_LABEL_SAMPLE_CONFIG`; they are
+never test fixtures committed to the repository.
+
 Do not delete them without understanding what they caught:
 
 - the sun's marker drawn off the ridge it was setting behind, from solving the bearing
