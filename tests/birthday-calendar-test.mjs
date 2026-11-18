@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+process.env.TZ='America/New_York';
 const html=fs.readFileSync(new URL('../birthday/index.html',import.meta.url),'utf8'),context={};
 vm.createContext(context);vm.runInContext(html.split('/* BIRTHDAY_CALENDAR_START */')[1].split('/* BIRTHDAY_CALENDAR_END */')[0],context);
 const C=context.BirthdayCalendar,DAY=86400000,EPOCH=Date.UTC(1899,11,30),serial=iso=>(Date.parse(iso+'T00:00:00Z')-EPOCH)/DAY;
@@ -37,5 +38,22 @@ for(const invalid of [{month:4,day:31},{month:2,day:29,year:2023},{year:2027},{c
 }
 eq(C.validate(item({name:'  Miriam  '}),serial('2026-11-18')).name,'Miriam');
 eq(C.validate(item({calendar:'hebrew',month:14,day:15,year:5784}),serial('2026-11-18')).year,5784);
+function duration(birthday,when){const now=new Date(when);return C.duration(birthday,C.next(birthday,C.serial(now)),now);}
+let split=duration(item({month:12,day:20}),'2026-11-18T10:00:00-05:00');
+eq(split.months,1);eq(split.days,1);eq(split.hours,14);
+split=duration(item({month:12,day:18}),'2026-11-18T00:00:00-05:00');eq(split.months,1);
+split=duration(item({month:12,day:18}),'2026-11-18T00:00:01-05:00');eq(split.months,0);eq(split.days,29);eq(split.hours,23);eq(split.minutes,59);
+eq(duration(item({month:2,day:28}),'2027-01-31T00:00:00-05:00').months,1);
+eq(duration(item({month:2,day:28}),'2027-01-31T12:00:00-05:00').months,0);
+split=duration(item({month:3,day:15}),'2027-03-13T12:00:00-05:00');eq(split.days,1);eq(split.hours,11);
+split=duration(item({month:11,day:8}),'2027-11-06T12:00:00-04:00');eq(split.days,1);eq(split.hours,13);
+eq(duration(item({day:19}),'2026-11-18T23:59:30-05:00').underMinute,true);
+eq(duration(item({day:19}),'2026-11-19T00:00:00-05:00').today,true);
+const shevat30=C.localDate(C.hebrewDate(5787,11,30));
+eq(C.serial(C.addMonths(shevat30,1,'hebrew')),C.hebrewDate(5787,13,30));
+eq(C.serial(C.addMonths(shevat30,2,'hebrew')),C.hebrewDate(5787,14,29));
+eq(C.serial(C.addMonths(shevat30,3,'hebrew')),C.hebrewDate(5787,1,30));
+split=duration(item({calendar:'hebrew',month:1,day:30}),shevat30);
+eq(split.months,3);eq(split.days,0);
 assert.ok(!html.includes('\u2014'));checks++;
 console.log(`${checks} birthday calendar checks passed, including ${dates} independent Gregorian/Hebrew reference dates.`);

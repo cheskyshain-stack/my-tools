@@ -3,15 +3,27 @@
 `/birthday/` is a static, self-contained tool linked from the portal's Tools tab.
 People can add, edit and remove multiple annual countdowns in the English
 (Gregorian) or Hebrew calendar. Birth year is optional and enables the age display.
-Cards sort by the next date, and removals have Undo.
+Cards sort by the next date, and removals have Undo. The main screen contains
+only each person's name and countdown. The Set up button opens a native modal
+with all dates, ages, adjustments, adding, editing and removal controls. The form
+starts hidden, including for an empty list. Saving returns to the countdowns;
+Done or Escape closes setup and preserves an unfinished draft for reopening.
 
-Countdowns count calendar days in the device's time zone. Day ordinals use UTC
-representations of local year/month/day, so daylight saving does not add or remove
-a countdown day. On the displayed birthday date the card celebrates all day; it
-advances to the following occurrence after local midnight. A timer plus focus,
-visibility and pageshow checks catch date changes without touching form fields.
-Hebrew cards also state the previous evening, when the birthday begins at sunset.
-They do not claim an exact sunset countdown or request location data.
+Countdowns end at midnight at the start of the birthday's daytime date, in the
+device's time zone. Whole months use the selected calendar, anchored to the
+current date/time, and clamp the day to the last day of a short target month.
+The remaining elapsed time is divided into 24-hour days, hours and minutes, so
+daylight saving can change the hours shown. With at least one month remaining,
+cards show months and days. Under one month, they show days/hours/minutes and
+hide leading zero units. The last minute says "Less than 1 minute".
+
+On the birthday date the card celebrates all day, then advances to next year's
+occurrence after midnight. A one-second timer plus focus, visibility and
+pageshow checks update the displayed units without touching form fields or
+moving focus. Timer regions do not announce every update to screen readers.
+Hebrew birthday details in setup state the previous evening, when the birthday
+begins at sunset, and explicitly explain the midnight target. No location is
+requested and the app does not claim an exact sunset countdown.
 
 The inline Hebrew forward calendar and Rosh Hashana calculation come from the
 owner's `zmanim-tool/js/hebrew-calendar.js`. Reverse conversion indexes actual
@@ -36,6 +48,8 @@ failures leave the calculator usable and show the saving limitation.
 Run `npm run test:birthdays` in `tests/`, with the site served on a fresh port and
 `CJ_BASE_URL` pointing to it. The two suites check independent date conversion,
 Adar/short-month/February behavior, validation, optional years, multiple entries,
-editing, removal/Undo, reload persistence, midnight rollover while typing,
-other-tab updates, direct/portal navigation and measured geometry at 375, 393,
-412 and 1280px. No calendar or location API is used.
+editing, removal/Undo, reload persistence, month/minute/midnight rollover while
+typing, DST and short-month arithmetic, hidden setup, modal keyboard dismissal,
+other-tab updates, direct/portal navigation and measured main/modal geometry at
+375, 393, 412 and 1280px. No calendar or location API is used. Saved V1 birthday
+records remain compatible; this interface update does not rewrite them on load.
