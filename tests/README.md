@@ -173,6 +173,11 @@ still limit physical accuracy, especially for nearby obstructions.
 
 ## Several of these exist because of a specific bug
 
+`npm run test:birthdays` runs the birthday calendar reference checks and a browser
+suite for multiple English/Hebrew countdowns, Adar/February adjustments, optional
+birth years, editing, Undo, saving, midnight rollover, focused inputs, other tabs,
+mobile layout and portal navigation. Set `CJ_BASE_URL` to a fresh local server.
+
 Do not delete them without understanding what they caught:
 
 - the sun's marker drawn off the ridge it was setting behind, from solving the bearing

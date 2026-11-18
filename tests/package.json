@@ -9,6 +9,7 @@
     "test:sunset-history": "node sunset-history-test.mjs",
     "test:weather-history-update": "node weather-history-update-test.mjs",
     "test:hours": "node hours-test.mjs",
+    "test:birthdays": "node birthday-calendar-test.mjs && node birthday-test.mjs",
     "test:catering": "node catering-test.mjs && node catering-operations-test.mjs && node catering-database-test.mjs && node catering-cloud-test.mjs && node catering-invite-test.mjs && node catering-shopping-test.mjs && node catering-supplier-orders-test.mjs && node catering-pricing-test.mjs",
     "test:prospr": "node prospr-test.mjs"
   },

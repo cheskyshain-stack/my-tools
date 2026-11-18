@@ -1,0 +1,11 @@
+{
+  "name": "Birthday Countdowns",
+  "short_name": "Birthdays",
+  "description": "Count down to multiple English or Hebrew birthdays, automatically every year.",
+  "start_url": "/birthday/",
+  "scope": "/birthday/",
+  "display": "standalone",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [{"src":"/birthday/icon.png?v=1","sizes":"512x512","type":"image/png","purpose":"any"}]
+}
