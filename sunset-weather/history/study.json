@@ -5,23 +5,23 @@
   "start_date": "2021-11-17",
   "end_date": "2026-11-16",
   "counts": {
-    "pending": 1585,
-    "ok": 2065,
+    "pending": 1473,
+    "ok": 2177,
     "unavailable": 2
   },
-  "created_utc": "2026-11-19T07:18:08.361Z",
+  "created_utc": "2026-11-19T17:22:10.309Z",
   "automation": {
     "enabled": true,
     "schedule": "Every 4 hours",
-    "lastCheckAt": "2026-11-19T07:18:08.362Z",
+    "lastCheckAt": "2026-11-19T17:22:10.309Z",
     "lastOutcome": "batch_budget",
-    "nextCheckAfter": "2026-11-19T08:13:00.000Z",
+    "nextCheckAfter": "2026-11-19T20:13:00.000Z",
     "retryAfter": null,
-    "keptResults": 1940,
-    "newResults": 127,
+    "keptResults": 2067,
+    "newResults": 112,
     "newUnavailable": 0,
-    "weatherRequests": 21,
-    "quotaUsed": 998.33,
+    "weatherRequests": 22,
+    "quotaUsed": 999.33,
     "knownDataIssues": 0
   },
   "unavailable": [
