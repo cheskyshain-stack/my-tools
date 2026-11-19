@@ -74,7 +74,9 @@ Detection is a suggestion: it scans all pages for label-shaped images and also
 recognizes already cropped label-shaped pages, including vector PDFs. It handles
 repeated images and inline-image groups, keeps distinct positions even if the
 image is identical, deduplicates overlapping candidates, and orders labels by
-source page, top edge and left edge. Candidates have a long/short ratio within
+source page, top edge and left edge. Candidate bounds are intersected with the
+visible source page, so images retained outside an earlier crop do not become
+extra labels when a cropper-generated PDF is opened again. Candidates have a long/short ratio within
 0.16 of 1.5, a short edge over 24 points and area over 0.5% of the source page.
 A label-shaped page is kept whole unless it has multiple image candidates.
 Long, narrow authorization barcodes are not treated as complete shipping labels.
