@@ -21,6 +21,7 @@
  .has-pdf .upload{padding:9px 12px}.has-pdf .upload strong,.has-pdf .upload .hint{display:none}.has-pdf .upload input{margin:0}
  .upload input{display:block;max-width:100%;margin:12px auto 0;font:12px var(--cj-body);color:var(--cj-muted)}
  .file-options{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:-7px 0 4px}.file-options .hint{margin:0;font-size:11px}
+ .files-summary{font-size:12px;color:var(--cj-muted);overflow-wrap:anywhere;margin:6px 0}.selection-actions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.selection-file{border:1px solid var(--cj-line);border-radius:10px;padding:9px;margin:8px 0;min-width:0}.selection-file legend{max-width:100%;font-size:11px;color:var(--cj-muted);overflow-wrap:anywhere}.selection-label{display:flex;align-items:center;gap:8px;font-size:12px;min-height:36px;min-width:0}.selection-label input{width:18px;height:18px;flex:none;accent-color:var(--cj-cyan)}.selection-label span{overflow-wrap:anywhere;min-width:0}.selection-row{display:flex;align-items:center;gap:7px;justify-content:space-between}.selection-row label{flex:1}.selection-row button{min-height:32px;padding:5px 8px}.selection-file .hint{margin-bottom:3px}
  .picker-help{font-size:11px;color:var(--cj-muted);margin:0 0 12px}.picker-help summary{min-height:30px;padding:5px 0}.picker-help p{margin:4px 0 9px}
  input::file-selector-button{min-height:38px;border:1px solid var(--cj-line);border-radius:10px;background:var(--cj-card);color:var(--cj-text);padding:7px 13px;margin-right:10px;cursor:pointer}
  .status{font-size:12px;min-height:19px;margin:8px 0;color:var(--cj-muted);overflow-wrap:anywhere}
@@ -65,14 +66,15 @@
 <body>
 <header class="cj-page-header"><div class="cj-brand"><img src="/label-cropper/icon.png?v=1" alt="PDF Label Cropper"></div><h1>PDF label cropper</h1></header>
 <main>
- <p class="intro">Find the labels in your PDF and save them together. Each label gets its own 4×6 or 6×4 page, with original PDF quality kept.</p>
- <label class="upload" id="dropArea"><strong>Choose a PDF</strong><span class="hint">Or drop a file here. Your PDF stays on this device.</span><input id="file" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF to crop"></label>
- <div class="file-options"><button id="browseAll" class="small-button" type="button">Browse all files</button><span class="hint">Use this if your PDF is missing from the picker.</span></div>
- <input id="allFiles" type="file" aria-label="Browse all files to select a PDF" hidden>
+ <p class="intro">Choose one or more PDFs, then print all their labels or select just some. Each selected label gets its own 4×6 or 6×4 page, with original PDF quality kept.</p>
+ <label class="upload" id="dropArea"><strong>Choose PDFs</strong><span class="hint">Select multiple PDFs or drop them here. Your files stay on this device.</span><input id="file" type="file" accept="application/pdf,.pdf" multiple aria-label="Choose one or more PDFs to crop"></label>
+ <div class="file-options"><button id="browseAll" class="small-button" type="button">Browse all files</button><button id="addFiles" class="small-button" type="button" hidden>Add more PDFs</button><span class="hint">Use Browse all files if a PDF is missing from the picker.</span></div>
+ <input id="allFiles" type="file" multiple aria-label="Browse all files to select PDFs" hidden><input id="moreFiles" type="file" multiple aria-label="Add more PDF files" hidden>
+ <p id="filesSummary" class="files-summary" hidden></p><p id="fileError" class="error" role="alert" hidden></p>
  <details class="picker-help"><summary>Where is my PDF on Android?</summary><p>In the file picker, tap the menu ☰ and try Recent. The file may be in a different location from Downloads. You can also use My Files to move or save a copy into Internal storage → Download, then select it here.</p><p>Browse all files removes the PDF-only filter. Choose your PDF; its contents are checked after you select it.</p></details>
  <p id="status" class="status" role="status" aria-live="polite">Ready for your PDF.</p>
  <p id="error" class="error" role="alert" hidden></p>
- <div id="empty" class="empty">Choose your file, review the labels found across all its pages, then download one print-ready PDF. You can adjust or add labels before saving.</div>
+ <div id="empty" class="empty">Choose your PDFs, review their labels, then choose all or just some to print. You can keep the others loaded for later, and add more PDFs at any time.</div>
  <div class="workspace" id="workspace" hidden>
   <section class="card editor" aria-labelledby="sourceTitle">
    <div class="bar"><h2 id="sourceTitle">Select the label</h2><div class="page-controls"><label for="pageNumber">Page</label><select id="pageNumber"></select><span class="hint" id="pageCount"></span></div></div>
@@ -85,6 +87,7 @@
   <section class="card result" aria-labelledby="resultTitle">
    <h2 id="resultTitle">Your printer labels</h2>
    <p id="batchSummary" class="hint" role="status"></p>
+   <details id="printSelection" class="print-help"><summary id="selectionSummary"><strong>Choose labels to print</strong></summary><div class="selection-actions"><button id="selectAllLabels" class="small-button" type="button">Select all</button><button id="clearLabelSelection" class="small-button" type="button">Clear selection</button></div><div id="labelSelectionList"></div><p class="hint">Only checked labels go into the downloaded PDF or printer images. The other labels stay loaded for the next print.</p></details>
    <div id="unmatchedPages" class="page-review" hidden><p class="hint">These pages have no saved labels. Review them and use Add label if needed.</p><div class="links"></div></div>
    <div class="label-review"><label for="labelNumber">Review label<select id="labelNumber"></select></label><button id="previousLabel" class="small-button" type="button" aria-label="Previous label">←</button><button id="nextLabel" class="small-button" type="button" aria-label="Next label">→</button></div>
    <label class="include-label"><input id="includeLabel" type="checkbox" checked>Include this label in the PDF</label>
@@ -184,7 +187,7 @@ import * as pdfjs from '/label-cropper/vendor/pdfjs/pdf.min.js';
 pdfjs.GlobalWorkerOptions.workerSrc='/label-cropper/vendor/pdfjs/pdf.worker.min.js';
 const el=id=>document.getElementById(id),G=LabelGeometry,NS='http://www.w3.org/2000/svg';
 const base='/label-cropper/vendor/pdfjs/';
-const state={pdf:null,original:null,view:null,page:null,crop:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null,labels:[],pageInfo:new Map(),activeId:null,adding:false,nextId:1,printBusy:false};
+const state={documents:[],pendingTasks:new Set(),loading:false,batchId:0,view:null,page:null,crop:null,selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,drag:null,editing:false,editStart:null,labels:[],pageInfo:new Map(),activeId:null,adding:false,nextId:1,printBusy:false,selectionSignature:''};
 function status(text){el('status').textContent=text;}
 function error(message){el('error').textContent=message;el('error').hidden=!message;}
 function outputSize(){return el('paper').value==='6x4'?[432,288]:[288,432];}
@@ -192,21 +195,40 @@ function extraRotation(crop=state.crop,rotation=el('rotation').value){const [w,h
 function activeLabel(){return state.labels.find(label=>label.id===state.activeId);}
 function includedLabels(){return state.labels.filter(label=>label.include);}
 function addEntry(pageNumber,crop,automatic=true){const entry={id:'label-'+state.nextId++,pageNumber,crop:{...crop},autoCrop:{...crop},automatic,include:true,rotation:'auto'};state.labels.push(entry);return entry;}
-function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready||state.adding);el('downloadImage').disabled=!ready||state.adding||state.printBusy;}
+function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready||state.adding||state.loading);el('downloadImage').disabled=!ready||state.adding||state.loading||state.printBusy;}
 function clearOutput(){state.buildId++;state.bytes=null;setActions(false);if(state.url){const old=state.url;setTimeout(()=>URL.revokeObjectURL(old),60000);state.url=null;}}
 function svg(tag,attrs){const n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));el('cropOverlay').append(n);return n;}
+function pageDescription(number){const info=state.pageInfo.get(number);return state.documents.length>1?`${info.document.name} · page ${info.sourcePage}`:`page ${number}`;}
+function renderSelection(){
+ const signature=JSON.stringify([state.documents.map(doc=>doc.name),state.labels.map(label=>[label.id,label.pageNumber])]),list=el('labelSelectionList');
+ if(signature!==state.selectionSignature){
+  state.selectionSignature=signature;list.replaceChildren();
+  state.documents.forEach((doc,index)=>{
+   const labels=state.labels.filter(label=>state.pageInfo.get(label.pageNumber).document===doc),group=document.createElement('fieldset'),legend=document.createElement('legend');group.className='selection-file';legend.textContent=`File ${index+1}: ${doc.name}`;group.append(legend);list.append(group);
+   if(!labels.length){const note=document.createElement('p');note.className='hint';note.textContent='No labels found automatically. Review this file’s pages and use Add label if needed.';group.append(note);return;}
+   const all=document.createElement('label'),box=document.createElement('input'),text=document.createElement('span');all.className='selection-label';box.type='checkbox';box.dataset.fileIndex=String(index);text.textContent=`Entire file (${labels.length} ${labels.length===1?'label':'labels'})`;all.append(box,text);group.append(all);
+   box.addEventListener('change',()=>{labels.forEach(label=>label.include=box.checked);state.selectionNote='';updateBatchControls();scheduleOutput();});
+   labels.forEach(label=>{const row=document.createElement('div'),choice=document.createElement('label'),check=document.createElement('input'),name=document.createElement('span'),view=document.createElement('button');row.className='selection-row';choice.className='selection-label';check.type='checkbox';check.dataset.labelId=label.id;name.textContent=`Label ${state.labels.indexOf(label)+1} · page ${state.pageInfo.get(label.pageNumber).sourcePage}`;choice.append(check,name);view.type='button';view.className='small-button';view.textContent='View';view.setAttribute('aria-label',`View label ${state.labels.indexOf(label)+1}`);row.append(choice,view);group.append(row);check.addEventListener('change',()=>{label.include=check.checked;state.selectionNote='';updateBatchControls();scheduleOutput();});view.addEventListener('click',()=>chooseLabel(label.id));});
+  });
+ }
+ list.querySelectorAll('[data-label-id]').forEach(check=>check.checked=state.labels.find(label=>label.id===check.dataset.labelId).include);
+ list.querySelectorAll('[data-file-index]').forEach(check=>{const doc=state.documents[Number(check.dataset.fileIndex)],labels=state.labels.filter(label=>state.pageInfo.get(label.pageNumber).document===doc),count=labels.filter(label=>label.include).length;check.checked=count===labels.length;check.indeterminate=count>0&&count<labels.length;});
+ const count=includedLabels().length;el('selectionSummary').textContent=count===state.labels.length&&count?`Print all ${count} ${count===1?'label':'labels'} · change`:`Print ${count} of ${state.labels.length} labels · choose`;
+ el('selectAllLabels').disabled=el('clearLabelSelection').disabled=!state.labels.length||state.loading;
+ el('addFiles').hidden=!state.documents.length;el('addFiles').disabled=state.loading||state.adding;el('filesSummary').hidden=!state.documents.length;el('filesSummary').textContent=`${state.documents.length} ${state.documents.length===1?'PDF':'PDFs'} loaded · ${state.pageInfo.size} source ${state.pageInfo.size===1?'page':'pages'}. Choose PDFs to start a new batch, or Add more PDFs to keep these labels.`;
+}
 function updateBatchControls(){
  const current=activeLabel(),count=includedLabels().length,index=state.labels.findIndex(label=>label.id===state.activeId),select=el('labelNumber');
  select.replaceChildren();const blank=new Option(state.adding?'New label (tap Done to add)':'Choose a label','');blank.disabled=true;select.add(blank);
- state.labels.forEach((label,i)=>select.add(new Option(`Label ${i+1} of ${state.labels.length} · page ${label.pageNumber}${label.include?'':' · left out'}`,label.id)));
+ state.labels.forEach((label,i)=>select.add(new Option(`Label ${i+1} of ${state.labels.length} · ${pageDescription(label.pageNumber)}${label.include?'':' · left out'}`,label.id)));
  select.value=current?current.id:'';select.disabled=state.adding||!state.labels.length;el('previousLabel').disabled=state.adding||index<=0;el('nextLabel').disabled=state.adding||index>=state.labels.length-1||!state.labels.length;
  el('includeLabel').checked=!!current?.include;el('includeLabel').disabled=!current||state.adding;el('rotation').disabled=!current&&!state.adding;
  el('batchSummary').textContent=`${count} ${count===1?'label':'labels'} included · ${count} PDF ${count===1?'page':'pages'} · one label per page. Review each label before printing.`;
  el('download').textContent=count>1?`Download all ${count} labels`:'Download PDF';
- updateImageSettings();
+ updateImageSettings();renderSelection();
  const missing=Array.from(state.pageInfo.keys()).filter(n=>!state.labels.some(label=>label.pageNumber===n)),links=el('unmatchedPages').querySelector('.links');links.replaceChildren();el('unmatchedPages').hidden=!missing.length;
- missing.forEach(n=>{const button=document.createElement('button');button.type='button';button.className='small-button';button.textContent=`Review page ${n}`;button.addEventListener('click',()=>{el('pageNumber').value=String(n);showPage();el('sourceTitle').scrollIntoView({block:'start'});});links.append(button);});
- if(state.view){const number=Number(el('pageNumber').value),onPage=state.labels.filter(label=>label.pageNumber===number).length;el('pageNote').textContent=state.adding?'Select the new label, then tap Done to add it.':onPage?`${onPage} saved ${onPage===1?'label':'labels'} on this page. Missing one? Use Add label.`:state.pageInfo.get(number)?.failed?'This page could not be checked automatically. Use Add label to select a label on it.':'No label found automatically on this page. Use Add label if it contains a shipping label.';}
+ missing.forEach(n=>{const button=document.createElement('button');button.type='button';button.className='small-button';button.textContent=`Review ${pageDescription(n)}`;button.addEventListener('click',()=>{el('pageNumber').value=String(n);showPage();el('sourceTitle').scrollIntoView({block:'start'});});links.append(button);});
+ if(state.view){const number=Number(el('pageNumber').value),onPage=state.labels.filter(label=>label.pageNumber===number).length;el('pageNote').textContent=(state.documents.length>1?pageDescription(number)+'. ':'')+(state.adding?'Select the new label, then tap Done to add it.':onPage?`${onPage} saved ${onPage===1?'label':'labels'} on this page. Missing one? Use Add label.`:state.pageInfo.get(number)?.failed?'This page could not be checked automatically. Use Add label to select a label on it.':'No label found automatically on this page. Use Add label if it contains a shipping label.');}
 }
 function setCropEditing(editing,cancel=false){
  const enabled=editing&&!!state.view&&!!state.crop&&!!(activeLabel()||state.adding);
@@ -247,22 +269,22 @@ function drawPreview(){
  el('dimensions').textContent=`${state.adding?'New label':`Label ${state.labels.indexOf(entry)+1} of ${state.labels.length}`} · ${pw/72} × ${ph/72} inches · ${cw}° rotation${entry&&!entry.include?' · not included in PDF':''}`;
 }
 async function makeOutput(){
- if(!state.original)return;
+ if(!state.documents.length||state.loading)return;
  if(state.adding){status('Select the new label, then tap Done to add it to the PDF.');return;}
  const labels=includedLabels().map(label=>({...label,crop:{...label.crop}}));
  if(!labels.length){error('');status(state.selectionNote||'No labels included. Use Add label, or include a saved label above.');return;}
- const generation=state.buildId,original=state.original,pdf=state.pdf,pageInfo=state.pageInfo,[pw,ph]=outputSize();
+ const generation=state.buildId,pageInfo=state.pageInfo,[pw,ph]=outputSize();
  try{
-  const result=await PDFLib.PDFDocument.create(),sources=[],boxes=[],views=[];
+  const result=await PDFLib.PDFDocument.create(),groups=new Map(),views=[],embedded=new Array(labels.length);
   for(let i=0;i<labels.length;i++){
-   const label=labels[i],view=pageInfo.get(label.pageNumber).view,bounds=G.bounds(view,label.crop),source=await pdf.getPage(label.pageNumber),annotations=await source.getAnnotations({intent:'print'});if(generation!==state.buildId)return;
+   const label=labels[i],info=pageInfo.get(label.pageNumber),doc=info.document,view=info.view,bounds=G.bounds(view,label.crop),source=await doc.pdf.getPage(info.sourcePage),annotations=await source.getAnnotations({intent:'print'});if(generation!==state.buildId)return;
    if(annotations.some(a=>a.annotationType!==pdfjs.AnnotationType.LINK&&Array.isArray(a.rect)&&a.rect[0]<bounds.right&&a.rect[2]>bounds.left&&a.rect[1]<bounds.top&&a.rect[3]>bounds.bottom)){
-    const issue=new Error('Interactive label');issue.userMessage=`The label on page ${label.pageNumber} contains editable fields or notes. Print the original to a new PDF first, then crop that copy so all visible details are included.`;throw issue;
+    const issue=new Error('Interactive label');issue.userMessage=`The label on ${pageDescription(label.pageNumber)} contains editable fields or notes. Print the original to a new PDF first, then crop that copy so all visible details are included.`;throw issue;
    }
-   sources.push(original.getPage(label.pageNumber-1));boxes.push(bounds);views.push(view);
+   if(!groups.has(doc))groups.set(doc,{sources:[],boxes:[],indices:[]});const group=groups.get(doc);group.sources.push(doc.original.getPage(info.sourcePage-1));group.boxes.push(bounds);group.indices.push(i);views.push(view);
   }
-  // One copy operation shares source image/font resources across all label pages.
-  const embedded=await result.embedPages(sources,boxes);if(generation!==state.buildId)return;
+  // Each source document shares its original image/font resources across its labels.
+  for(const group of groups.values()){const pages=await result.embedPages(group.sources,group.boxes);if(generation!==state.buildId)return;group.indices.forEach((index,i)=>embedded[index]=pages[i]);}
   for(let i=0;i<labels.length;i++){
    const label=labels[i],page=embedded[i],cw=extraRotation(label.crop,label.rotation),layout=G.layout(page.width,page.height,views[i].rotation+cw,pw,ph),out=result.addPage([pw,ph]);
    out.drawPage(page,{x:layout.x,y:layout.y,width:layout.width,height:layout.height,rotate:PDFLib.degrees(layout.degrees)});
@@ -274,7 +296,7 @@ async function makeOutput(){
  }catch(e){if(generation===state.buildId){error(e.userMessage||'This PDF could not be cropped. Try a different page or an unlocked copy.');status('Could not create the label PDF.');}}
 }
 function scheduleOutput(){const entry=activeLabel();if(entry&&state.crop)entry.crop={...state.crop};clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
-function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+(includedLabels().length===1?'-label.pdf':'-labels.pdf');}
+function filename(){return (state.documents.length===1?state.documents[0].name:'labels').replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+(includedLabels().length===1?'-label.pdf':'-labels.pdf');}
 function updateImageSettings(){
  const dpi=Number(el('printerDpi').value),[pw,ph]=outputSize(),count=includedLabels().length;
  el('imageDimensions').textContent=`Each image: ${Math.round(pw/72*dpi)} × ${Math.round(ph/72*dpi)} pixels · ${pw/72} × ${ph/72} inches · ${dpi} dpi.`;
@@ -304,16 +326,16 @@ async function downloadPrinterImages(){
   if(files.length===1)saveBlob(files[0].bytes,'image/png',files[0].name);else saveBlob(LabelPrint.zip(files),'application/zip',`${stem}-printer-images-${dpi}dpi.zip`);
   el('imageStatus').textContent=files.length===1?'PNG saved. In 4Barcode, use Pictures Printing and choose this image.':'ZIP saved. Extract it in My Files, then use Pictures Printing in 4Barcode for the PNGs.';
  }catch(e){if(current())el('imageStatus').textContent='Could not prepare the printer images. Try a lower printer resolution or fewer included labels.';}
- finally{await task?.destroy().catch(()=>{});state.printBusy=false;el('downloadImage').disabled=!state.bytes||state.adding;if(!current())el('imageStatus').textContent='The labels or print settings changed. Download the images again for the current settings.';}
+ finally{await task?.destroy().catch(()=>{});state.printBusy=false;el('downloadImage').disabled=!state.bytes||state.adding||state.loading;if(!current())el('imageStatus').textContent='The labels or print settings changed. Download the images again for the current settings.';}
 }
 function findLabel(){
  const entry=activeLabel();if(!entry)return;setCropEditing(false);state.crop={...entry.autoCrop};state.selectionNote=entry.automatic?'Automatic selection restored. Check that every barcode is inside this label.':'Manual selection reset. Tap Adjust crop to select this label.';scheduleOutput();status(state.selectionNote);
 }
 async function showPage(requestedId=null){
- if(!state.pdf)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.view=null;setCropEditing(false);const previous=state.renderTask;previous?.cancel();state.renderTask=null;error('');status('Opening page…');
+ if(!state.documents.length||state.loading)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.crop=null;state.view=null;setCropEditing(false);const previous=state.renderTask;previous?.cancel();state.renderTask=null;error('');status('Opening page…');
  const number=Number(el('pageNumber').value),entry=state.labels.find(label=>label.id===requestedId&&label.pageNumber===number)||state.labels.find(label=>label.pageNumber===number);state.activeId=entry?.id||null;
  try{
-  await previous?.promise.catch(()=>{});if(id!==state.loadId)return;const page=await state.pdf.getPage(number);if(id!==state.loadId)return;const view=page.getViewport({scale:1});
+  await previous?.promise.catch(()=>{});if(id!==state.loadId)return;const info=state.pageInfo.get(number),page=await info.document.pdf.getPage(info.sourcePage);if(id!==state.loadId)return;const view=page.getViewport({scale:1});
   const scale=Math.min(2,Math.sqrt(6000000/(view.width*view.height))),renderView=page.getViewport({scale}),canvas=el('sourceCanvas');canvas.width=Math.ceil(renderView.width);canvas.height=Math.ceil(renderView.height);
   const task=page.render({canvasContext:canvas.getContext('2d'),viewport:renderView,background:'rgb(255,255,255)'});state.renderTask=task;await task.promise;if(id!==state.loadId)return;
   state.page=page;state.view=view;state.renderTask=null;state.pageInfo.set(number,{...state.pageInfo.get(number),view});state.crop=entry?{...entry.crop}:{x:0,y:0,w:view.width,h:view.height};el('rotation').value=entry?.rotation||'auto';
@@ -330,31 +352,47 @@ function finishCropEditing(){
  if(state.adding){const entry=addEntry(Number(el('pageNumber').value),state.crop,false);entry.rotation=el('rotation').value;state.activeId=entry.id;state.adding=false;state.labels.sort((a,b)=>a.pageNumber-b.pageNumber||a.autoCrop.y-b.autoCrop.y||a.autoCrop.x-b.autoCrop.x);state.selectionNote='Label added. It will have its own page in the PDF.';}
  setCropEditing(false);scheduleOutput();
 }
-async function scanLabels(pdf,id){
- for(let number=1;number<=pdf.numPages;number++){
-  if(id!==state.loadId)return;status(`Finding labels: page ${number} of ${pdf.numPages}…`);
+async function scanDocument(doc,id,index,total){
+ const pages=new Map(),labels=[];
+ for(let sourcePage=1;sourcePage<=doc.pdf.numPages;sourcePage++){
+  if(id!==state.batchId)return null;const number=doc.startPage+sourcePage-1,info={document:doc,sourcePage,failed:false};status(`Finding labels: file ${index} of ${total}, page ${sourcePage} of ${doc.pdf.numPages}…`);
   try{
-   const page=await pdf.getPage(number);if(id!==state.loadId)return;const view=page.getViewport({scale:1});state.pageInfo.set(number,{view,failed:false});
-   const crops=G.findLabels(await page.getOperatorList(),pdfjs.OPS,view);if(id!==state.loadId)return;
-   crops.forEach(crop=>addEntry(number,crop));page.cleanup();
-  }catch(e){if(id!==state.loadId)return;state.pageInfo.set(number,{...state.pageInfo.get(number),failed:true});}
+   const page=await doc.pdf.getPage(sourcePage);if(id!==state.batchId)return null;info.view=page.getViewport({scale:1});
+   const crops=G.findLabels(await page.getOperatorList(),pdfjs.OPS,info.view);if(id!==state.batchId)return null;crops.forEach(crop=>labels.push({pageNumber:number,crop}));page.cleanup();
+  }catch(e){if(id!==state.batchId)return null;info.failed=true;}
+  pages.set(number,info);
   await new Promise(resolve=>setTimeout(resolve,0));
  }
+ return {pages,labels};
 }
-async function loadFile(file){
- if(!file)return;const id=++state.loadId;clearOutput();clearTimeout(state.timer);state.renderTask?.cancel();state.renderTask=null;state.view=null;state.crop=null;state.labels=[];state.pageInfo=new Map();state.activeId=null;state.nextId=1;setCropEditing(false);el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');error('');status('Opening PDF on this device…');
+async function loadFiles(fileList,append=false){
+ const files=Array.from(fileList||[]);if(!files.length)return;if(append&&(state.loading||state.adding))return;append=append&&state.documents.length>0;
+ const id=++state.batchId;state.loadId++;state.loading=true;clearOutput();clearTimeout(state.timer);const previous=state.renderTask;previous?.cancel();state.renderTask=null;setCropEditing(false);el('workspace').inert=true;el('addFiles').disabled=true;el('fileError').hidden=true;error('');status(append?'Adding PDFs on this device…':'Opening PDFs on this device…');
+ const keepId=state.activeId,keepPage=el('pageNumber').value,existing=append?state.documents.slice():[],tasks=[],staged=[];let adopted=false;
  try{
-  if(file.size>50*1024*1024)throw new Error('Please use a PDF smaller than 50 MB.');
-  const bytes=new Uint8Array(await file.arrayBuffer());if(id!==state.loadId)return;
-  let original;try{original=await PDFLib.PDFDocument.load(bytes,{updateMetadata:false});}catch(e){throw new Error(/encrypt/i.test(String(e))?'Password-protected PDFs are not supported. Save an unlocked copy and try again.':'This file could not be read as a PDF. Please choose a valid PDF.');}
-  if(id!==state.loadId)return;const old=state.loadingTask;state.pdf=null;state.loadingTask=null;await old?.destroy();if(id!==state.loadId)return;
-  const task=pdfjs.getDocument({data:bytes.slice(),isEvalSupported:false,standardFontDataUrl:base+'standard_fonts/',wasmUrl:base+'wasm/',cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/cmaps/',cMapPacked:true});
-  state.loadingTask=task;const pdf=await task.promise;if(id!==state.loadId){await task.destroy();return;}
-  if(!pdf.numPages)throw new Error('This PDF has no pages.');state.pdf=pdf;state.original=original;state.sourceName=file.name;el('pageNumber').replaceChildren();
-  for(let n=1;n<=pdf.numPages;n++)el('pageNumber').add(new Option(String(n),String(n)));el('pageCount').textContent='of '+pdf.numPages;el('pageNumber').value='1';el('rotation').value='auto';
-  await scanLabels(pdf,id);if(id!==state.loadId)return;el('pageNumber').value=String(state.labels[0]?.pageNumber||1);
-  el('workspace').hidden=false;el('empty').hidden=true;document.body.classList.add('has-pdf');await showPage(state.labels[0]?.id);
- }catch(e){if(id!==state.loadId)return;state.original=null;state.pdf=null;error(e.message||'This PDF could not be opened.');status('Please choose a different PDF.');}
+  await previous?.promise.catch(()=>{});if(id!==state.batchId)return;
+  const pending=Array.from(state.pendingTasks);state.pendingTasks.clear();await Promise.allSettled(pending.map(task=>task.destroy()));if(id!==state.batchId)return;
+  if(!append){const old=state.documents;state.documents=[];state.labels=[];state.pageInfo=new Map();state.activeId=null;state.nextId=1;state.view=null;state.crop=null;setCropEditing(false);el('workspace').hidden=true;el('empty').hidden=false;document.body.classList.remove('has-pdf');await Promise.allSettled(old.map(doc=>doc.task.destroy()));if(id!==state.batchId)return;}
+  const totalBytes=existing.reduce((sum,doc)=>sum+doc.size,0)+files.reduce((sum,file)=>sum+file.size,0);if(totalBytes>50*1024*1024)throw new Error('Please use PDFs totaling 50 MB or less.');
+  let offset=existing.reduce((sum,doc)=>sum+doc.pdf.numPages,0);
+  for(let index=0;index<files.length;index++){
+   const file=files[index];status(`Opening file ${index+1} of ${files.length}: ${file.name}`);const bytes=new Uint8Array(await file.arrayBuffer());if(id!==state.batchId)return;
+   let original;try{original=await PDFLib.PDFDocument.load(bytes,{updateMetadata:false});}catch(e){throw new Error(/encrypt/i.test(String(e))?`${file.name}: password-protected PDFs are not supported. Save an unlocked copy and try again.`:`${file.name}: this file could not be read as a PDF. Please choose a valid PDF.`);}
+   if(id!==state.batchId)return;const task=pdfjs.getDocument({data:bytes.slice(),isEvalSupported:false,standardFontDataUrl:base+'standard_fonts/',wasmUrl:base+'wasm/',cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/cmaps/',cMapPacked:true});tasks.push(task);state.pendingTasks.add(task);const pdf=await task.promise;if(id!==state.batchId)return;if(!pdf.numPages)throw new Error(`${file.name}: this PDF has no pages.`);
+   const doc={name:file.name,size:file.size,original,pdf,task,startPage:offset+1},scan=await scanDocument(doc,id,index+1,files.length);if(id!==state.batchId||!scan)return;staged.push({doc,...scan});offset+=pdf.numPages;
+  }
+  if(id!==state.batchId)return;
+  staged.forEach(item=>{state.documents.push(item.doc);item.pages.forEach((info,number)=>state.pageInfo.set(number,info));item.labels.forEach(label=>addEntry(label.pageNumber,label.crop));state.pendingTasks.delete(item.doc.task);});adopted=true;state.loading=false;el('workspace').inert=false;el('pageNumber').replaceChildren();
+  for(let n=1;n<=offset;n++)el('pageNumber').add(new Option(String(n),String(n)));el('pageCount').textContent='of '+offset+(state.documents.length>1?' across all files':'');el('pageNumber').value=append?keepPage:String(state.labels[0]?.pageNumber||1);
+  el('workspace').hidden=false;el('empty').hidden=true;document.body.classList.add('has-pdf');await showPage(append?keepId:state.labels[0]?.id);
+ }catch(e){
+  if(id!==state.batchId)return;state.loading=false;el('workspace').inert=false;
+  if(append){el('fileError').textContent=(e.message||'Could not add these PDFs.')+' Your existing files, crops and selections were kept.';el('fileError').hidden=false;updateBatchControls();scheduleOutput();}
+  else{error(e.message||'These PDFs could not be opened.');status('Please choose valid PDFs.');}
+ }finally{
+  if(!adopted){tasks.forEach(task=>state.pendingTasks.delete(task));await Promise.allSettled(tasks.map(task=>task.destroy()));}
+  if(id===state.batchId){state.loading=false;el('workspace').inert=false;el('addFiles').disabled=state.adding;updateBatchControls();}
+ }
 }
 function position(event){const box=el('cropOverlay').getBoundingClientRect();return {x:Math.max(0,Math.min(state.view.width,(event.clientX-box.left)/box.width*state.view.width)),y:Math.max(0,Math.min(state.view.height,(event.clientY-box.top)/box.height*state.view.height))};}
 el('cropOverlay').addEventListener('pointerdown',event=>{
@@ -372,9 +410,11 @@ for(const type of ['pointerup','pointercancel','lostpointercapture'])el('cropOve
 el('cropOverlay').addEventListener('keydown',event=>{if(!state.editing||!state.crop||!state.view||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const r={...state.crop},step=event.shiftKey?10:1;if(event.key==='ArrowLeft')r.x-=step;if(event.key==='ArrowRight')r.x+=step;if(event.key==='ArrowUp')r.y-=step;if(event.key==='ArrowDown')r.y+=step;state.crop=G.clamp(r,state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
 for(const [id,key,axis] of [['cropX','x','width'],['cropY','y','height'],['cropW','w','width'],['cropH','h','height']])el(id).addEventListener('input',()=>{if(!state.editing||!state.crop||!state.view||el(id).value==='')return;const value=Number(el(id).value);if(!Number.isFinite(value)||value<0||value>100)return;state.crop=G.clamp({...state.crop,[key]:value/100*state.view[axis]},state.view.width,state.view.height);state.selectionNote='';scheduleOutput();});
 for(const id of ['cropX','cropY','cropW','cropH'])el(id).addEventListener('blur',drawCrop);
-el('file').addEventListener('change',()=>loadFile(el('file').files[0]));el('pageNumber').addEventListener('change',showPage);el('findLabel').addEventListener('click',findLabel);
+el('file').addEventListener('change',()=>loadFiles(el('file').files));el('pageNumber').addEventListener('change',showPage);el('findLabel').addEventListener('click',findLabel);
 el('browseAll').addEventListener('click',()=>el('allFiles').click());
-el('allFiles').addEventListener('change',()=>{const file=el('allFiles').files[0];if(file){try{el('file').files=el('allFiles').files;}catch{}loadFile(file);}});
+el('allFiles').addEventListener('change',()=>{if(el('allFiles').files.length){try{el('file').files=el('allFiles').files;}catch{}loadFiles(el('allFiles').files);}});
+el('addFiles').addEventListener('click',()=>{el('moreFiles').value='';el('moreFiles').click();});el('moreFiles').addEventListener('change',()=>loadFiles(el('moreFiles').files,true));
+el('selectAllLabels').addEventListener('click',()=>{state.labels.forEach(label=>label.include=true);state.selectionNote='';updateBatchControls();scheduleOutput();});el('clearLabelSelection').addEventListener('click',()=>{state.labels.forEach(label=>label.include=false);state.selectionNote='';updateBatchControls();scheduleOutput();});
 el('editCrop').addEventListener('click',finishCropEditing);el('cancelCrop').addEventListener('click',()=>setCropEditing(false,true));el('addLabel').addEventListener('click',startAddLabel);
 el('labelNumber').addEventListener('change',()=>chooseLabel(el('labelNumber').value));
 el('previousLabel').addEventListener('click',()=>chooseLabel(state.labels[state.labels.findIndex(label=>label.id===state.activeId)-1]?.id));
@@ -389,7 +429,7 @@ el('download').addEventListener('click',()=>{if(!state.url)return;const a=docume
 el('openPdf').addEventListener('click',()=>{if(state.url)window.open(state.url,'_blank','noopener');});
 el('sharePdf').addEventListener('click',async()=>{if(!state.bytes)return;try{await navigator.share({files:[new File([state.bytes],filename(),{type:'application/pdf'})]});}catch(e){if(e.name!=='AbortError')error('Sharing is unavailable. Use Download PDF instead.');}});
 for(const type of ['dragenter','dragover'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.add('over');});
-for(const type of ['dragleave','drop'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.remove('over');if(type==='drop')loadFile(event.dataTransfer.files[0]);});
+for(const type of ['dragleave','drop'])el('dropArea').addEventListener(type,event=>{event.preventDefault();el('dropArea').classList.remove('over');if(type==='drop')loadFiles(event.dataTransfer.files);});
 window.addEventListener('resize',()=>{if(state.view)drawCrop();});
 setCropEditing(false);
 </script>

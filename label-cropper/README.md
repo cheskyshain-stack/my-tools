@@ -5,7 +5,7 @@ stay in browser memory. There is no upload service, account, stored label or
 document-processing API. A separate printer-image export is available for apps
 that lose detail while converting a PDF for a thermal printer.
 
-Choose a PDF, review the labels suggested across every source page, and download
+Choose one or more PDFs, review the labels suggested across every source page, and download
 or share one PDF with each included label on its own true 4x6-inch (288x432 point)
 or 6x4-inch (432x288 point) page. Review label and the previous/next buttons move
 between labels, including multiple labels on the same page. Include this label
@@ -15,6 +15,38 @@ viewer for printing. The primary mobile flow is Download PDF, then 4Barcode's
 PDF Printing option. Native file sharing appears when the browser supports it.
 Printing still depends on matching paper dimensions, actual-size settings, the
 printing app, original image resolution and the printer itself.
+
+The filtered and unfiltered pickers both accept multiple files, and drag/drop
+uses the entire FileList. Choose PDFs starts a new batch. Add more PDFs opens an
+unfiltered multi-file picker and appends files while preserving prior crops,
+rotations and checked/unchecked labels. A summary shows the actual loaded file
+and source-page counts, including files added after the initial native selection.
+
+The Print all / choose section groups labels by source file. Select all, Clear
+selection, a whole-file checkbox and individual label checkboxes choose what goes
+into the next PDF or PNG/ZIP download. Each label has a View button for review.
+File checkboxes show an indeterminate state when only some of their labels are
+chosen. The quick Include this label checkbox stays synchronized with the list.
+Changing a checkbox retains keyboard focus. Downloads do not remove labels or
+reset selections: unchecked labels remain available for a later print while the
+page stays open. This is browser-memory state; it does not survive a reload.
+
+Each file retains its own original pdf-lib document and PDF.js loading task.
+Visible global page numbers map to that file's original page number. Labels and
+missing-page review buttons show the source file and original page. Export groups
+embedding operations by source document, preserves original image/font data and
+vector content, then puts selected labels into one output in file/page order.
+Source documents are not merged or rasterized before detection or cropping, so
+their original boxes, rotations and printable annotations remain available.
+
+Incoming files are parsed and scanned sequentially in a staging area. An Add more
+batch is adopted only when every file opens: a bad later file does not partially
+append an earlier valid one. The prior files, crops and selections remain usable,
+with an explicit addition error. Stale file batches cannot replace a newer choice.
+Loading temporarily disables the workspace and downloads; it releases staged
+workers on failure/cancellation and old document tasks on a fresh batch. The
+50 MiB limit applies to the total original bytes of the loaded batch, including
+newly appended files, to bound phone memory use. There is no per-file count cap.
 
 The 4Barcode images button opens a printing route using 4Barcode's Pictures
 Printing instead of its PDF Printing conversion. Select the printer's actual
@@ -90,7 +122,7 @@ Add label starts a manual crop on the selected source page. Done saves it as
 another label; Cancel discards the draft and restores the previous selection.
 A file with no detected labels stays reviewable, with export disabled until a
 label is explicitly added. No arbitrary page-count or label-count cap is applied;
-the existing 50 MiB file limit and the device's memory still apply. Page scans
+the 50 MiB total batch limit and the device's memory still apply. Page scans
 run sequentially with visible progress and release decoded page images afterward.
 
 Every automatic selection starts locked, with no resize
@@ -122,7 +154,7 @@ Dependencies in `vendor/`:
   not document bytes. Core code, workers, standard fonts and WASM are local.
 
 PDF.js scripting is not enabled, and `isEvalSupported` is false. PDF document
-links and annotations are not rendered as active browser controls. Inputs larger
+links and annotations are not rendered as active browser controls. Batches larger
 than 50 MiB and encrypted PDFs receive a visible error. No PDF bytes or file names
 are persisted in local storage.
 
@@ -152,5 +184,10 @@ one-bit pixels, preserved gray values, the browser fallback, 203/300/600 dpi,
 ordered UTF-8 ZIP entries, inclusion, landscape output, all four viewports and
 an actual PNG download from the portal iframe. These are file/pixel checks, not
 a claim that a specific physical printer has been tested.
+The multi-file suite checks native/unfiltered/drop multi-file input, mixed source
+documents with original image bytes and vector text, all/file/individual selections,
+selected PNG counts, appended files with unchanged crops and unchecked labels,
+atomic invalid additions, correct source-page navigation/manual labels, replacement,
+stale-load cancellation, annotations in another PDF and four viewport widths.
 To additionally test private PDFs, set `CJ_LABEL_SAMPLE_CONFIG` to a local JSON file
 containing their paths. Never copy personal labels into the public repository.

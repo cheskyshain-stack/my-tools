@@ -200,6 +200,11 @@ The printer-image suite checks one-dot barcode detail at native resolution,
 PNG CRCs and DPI metadata, exact 203/300/600 dpi pixel sizes, one-bit black/white
 and preserved gray values, the browser fallback, ordered ZIP contents, inclusion,
 landscape, mobile layout and actual downloads through the portal iframe.
+The multi-file suite checks native/unfiltered/drop multi-file input, original
+image/vector content across separate documents, all/file/individual selection,
+selected PNG export, appending while preserving crops and unchecked labels,
+atomic bad additions, original source-page navigation, manual labels, replacement,
+stale file batches, per-file annotations and four viewport widths.
 Optional private samples are supplied with `CJ_LABEL_SAMPLE_CONFIG`; they are
 never test fixtures committed to the repository.
 
