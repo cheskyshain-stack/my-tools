@@ -191,6 +191,10 @@ raster/vector content, a grid of nine small repeated labels, rendered separation
 and ordering, shared original image resources, per-label edits/rotation,
 inclusion, manual additions/cancellation, empty exports, unmatched pages and
 printable fields on a different included label.
+The printer-image suite checks one-dot barcode detail at native resolution,
+PNG CRCs and DPI metadata, exact 203/300/600 dpi pixel sizes, one-bit black/white
+and preserved gray values, the browser fallback, ordered ZIP contents, inclusion,
+landscape, mobile layout and actual downloads through the portal iframe.
 Optional private samples are supplied with `CJ_LABEL_SAMPLE_CONFIG`; they are
 never test fixtures committed to the repository.
 

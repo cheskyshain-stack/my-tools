@@ -1,8 +1,9 @@
 # PDF Label Cropper
 
 Static tool at `/label-cropper/`, linked from the portal's Tools tab. PDF bytes
-stay in browser memory. There is no upload service, account, stored label, image
-export or document-processing API.
+stay in browser memory. There is no upload service, account, stored label or
+document-processing API. A separate printer-image export is available for apps
+that lose detail while converting a PDF for a thermal printer.
 
 Choose a PDF, review the labels suggested across every source page, and download
 or share one PDF with each included label on its own true 4x6-inch (288x432 point)
@@ -14,6 +15,33 @@ viewer for printing. The primary mobile flow is Download PDF, then 4Barcode's
 PDF Printing option. Native file sharing appears when the browser supports it.
 Printing still depends on matching paper dimensions, actual-size settings, the
 printing app, original image resolution and the printer itself.
+
+The 4Barcode images button opens a printing route using 4Barcode's Pictures
+Printing instead of its PDF Printing conversion. Select the printer's actual
+203, 300 or 600 dpi resolution (203 is the common default). Each included label
+is rendered directly from the finished original-content PDF at that resolution,
+never from the lower-resolution screen preview. A 4x6 label at 203 dpi is exactly
+812x1218 pixels; at 300 dpi it is 1200x1800. Landscape swaps the dimensions.
+PNG pHYs metadata records the selected resolution and physical print size.
+There is no JPEG step. Increasing the setting cannot add source detail.
+
+Black & white is intended for thermal labels: pixels are thresholded at 128
+using sRGB luminance weights to avoid gray-edge dithering. CompressionStream
+produces a lossless, one-bit grayscale PNG; browsers without it use a lossless
+eight-bit PNG with the same black/white pixels. Keep original shades preserves
+the rendered colors and grays in an eight-bit PNG. This raster export does not
+alter or replace the original-content PDF download. Fine detail is ultimately
+limited by the selected printer's dots, original document and printing app.
+
+One image downloads as a PNG. Multiple included labels download once as a ZIP
+containing ordered PNGs, with UTF-8 names and CRC-32 checks. Extract the ZIP in
+My Files, then choose the PNGs in 4Barcode's Pictures Printing and match the
+paper size without another crop/stretch. The ZIP stores each already-compressed
+PNG unchanged. Image jobs use a copy of the PDF bytes and cancel stale downloads
+if the labels, size, DPI or image style change during rendering. Decoded pages
+and canvas storage are released between images. There are no additional libraries
+or network uploads in this route. Its files and browser flow were verified;
+physical output in the owner's printer cannot be measured from this workspace.
 
 The main file picker filters for PDFs. Browse all files opens an unfiltered picker
 for Android providers that hide a PDF because of its file metadata. Both paths
@@ -77,6 +105,8 @@ PDF.js loading task, not the document proxy.
 The user's two reference files were tested from private attachment paths. Both
 exports are exactly one 4x6 page. An independent PyMuPDF check confirmed the
 1800x1200 label image's compressed stream hash is identical before and after.
+An independent ZXing Code 128 check also decoded identical barcode contents from
+the original-content PDF and both 203 dpi and 300 dpi printer PNG samples.
 The references and their output labels are not committed to the public site.
 
 Dependencies in `vendor/`:
@@ -113,5 +143,12 @@ output page counts, rendered color separation and page order, original image
 streams, shared resources, per-label crop/rotation persistence, exclusions,
 zero included labels, manual additions/cancellation, scan misses, printable fields
 on a later label, rapid rendering cancellation and four viewport sizes.
+The printer suite checks that a native-resolution fixture's alternating one-dot
+barcode bars survive in the exported PNG, independently of the screen preview.
+It validates PNG signatures, chunk CRCs, exact dimensions and DPI metadata,
+one-bit pixels, preserved gray values, the browser fallback, 203/300/600 dpi,
+ordered UTF-8 ZIP entries, inclusion, landscape output, all four viewports and
+an actual PNG download from the portal iframe. These are file/pixel checks, not
+a claim that a specific physical printer has been tested.
 To additionally test private PDFs, set `CJ_LABEL_SAMPLE_CONFIG` to a local JSON file
 containing their paths. Never copy personal labels into the public repository.

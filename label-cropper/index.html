@@ -54,6 +54,7 @@
  .quality{font-size:12px;color:var(--cj-success);margin:11px 0 6px}
  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.actions .cj-btn{min-height:44px;padding:0 15px;font-size:12px}.actions #download{flex:1}
  .print-help{font-size:12px;color:var(--cj-muted);margin-top:15px;border-top:1px solid var(--cj-line);padding-top:10px}.print-help strong{color:var(--cj-text)}
+ .image-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}.image-controls label{display:block;font-size:12px;color:var(--cj-text)}.image-controls select{display:block;width:100%;margin-top:5px;font-size:12px}.print-help .cj-btn{min-height:42px;font-size:12px;padding:8px 13px}
  .empty{border:1px solid var(--cj-line);border-radius:18px;padding:20px;color:var(--cj-muted);font-size:13px;margin:15px 0}
  .back{display:block;margin:20px;text-align:center;color:var(--cj-cyan);font-size:13px}
  :focus-visible{outline:2px solid var(--cj-cyan);outline-offset:3px}
@@ -88,10 +89,12 @@
    <div class="label-review"><label for="labelNumber">Review label<select id="labelNumber"></select></label><button id="previousLabel" class="small-button" type="button" aria-label="Previous label">←</button><button id="nextLabel" class="small-button" type="button" aria-label="Next label">→</button></div>
    <label class="include-label"><input id="includeLabel" type="checkbox" checked>Include this label in the PDF</label>
    <div class="output-controls"><label for="paper">Size for all labels<select id="paper"><option value="4x6">4 × 6 inches</option><option value="6x4">6 × 4 inches</option></select></label><label for="rotation">This label's rotation<select id="rotation"><option value="auto">Best fit</option><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° left</option></select></label></div>
-   <div class="actions"><button id="download" type="button" class="cj-btn cj-btn-primary" disabled>Download PDF</button><button id="sharePdf" type="button" class="cj-btn cj-btn-ghost" hidden disabled>Share PDF</button><button id="openPdf" type="button" class="cj-btn cj-btn-ghost" disabled>Open PDF</button></div>
+   <div class="actions"><button id="download" type="button" class="cj-btn cj-btn-primary" disabled>Download PDF</button><button id="imageOptions" type="button" class="cj-btn cj-btn-ghost" aria-expanded="false" aria-controls="printerImages">4Barcode images</button><button id="sharePdf" type="button" class="cj-btn cj-btn-ghost" hidden disabled>Share PDF</button><button id="openPdf" type="button" class="cj-btn cj-btn-ghost" disabled>Open PDF</button></div>
    <div id="outputFrame"><canvas id="outputCanvas" aria-label="Preview of the cropped label"></canvas></div>
    <p id="dimensions" class="hint"></p><p class="quality">Original PDF content preserved. No added image compression or downsampling.</p>
    <p class="hint">This is a screen preview. The saved PDF keeps the original text, barcodes and image data.</p>
+
+   <details id="printerImages" class="print-help"><summary><strong>Sharper printing in 4Barcode</strong></summary><p>If the PDF looks sharp but prints choppy, try <strong>Pictures Printing</strong> in 4Barcode with these lossless PNG images. This bypasses the app's PDF conversion.</p><div class="image-controls"><label for="printerDpi">Printer resolution<select id="printerDpi"><option value="203">203 dpi (common)</option><option value="300">300 dpi</option><option value="600">600 dpi</option></select></label><label for="printMode">Image style<select id="printMode"><option value="mono">Black &amp; white</option><option value="color">Keep original shades</option></select></label></div><p class="hint">Match your printer's resolution. A higher setting does not add detail. Black &amp; white avoids gray edge shading on thermal printers.</p><p id="imageDimensions" class="hint"></p><button id="downloadImage" type="button" class="cj-btn cj-btn-primary" disabled>Download printer PNG</button><p id="imageStatus" class="hint" role="status" aria-live="polite"></p><p>In 4Barcode, use <strong>Pictures Printing</strong>, choose the PNG, and select the matching label size. Avoid another crop or stretching. Multiple labels come in one ZIP file; extract it in My Files, then choose the PNGs.</p></details>
 
    <details class="print-help"><summary><strong>Printing with 4Barcode</strong></summary><p>Download the file, then choose <strong>PDF Printing</strong> in 4Barcode and select it. Use the matching label size and 100% / actual size. Avoid stretch or a second crop.</p><p id="paperHelp"></p><p>The source file, printer resolution, print density and the printing app still affect the final result.</p></details>
   </section>
@@ -144,12 +147,44 @@ var LabelGeometry=(function(){
 })();
 /* LABEL_GEOMETRY_END */
 </script>
+<script>
+/* LABEL_PRINT_START */
+var LabelPrint=(function(){
+ var table=new Uint32Array(256);
+ for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;table[n]=c>>>0;}
+ function crc32(data){var crc=0xffffffff;for(var i=0;i<data.length;i++)crc=table[(crc^data[i])&255]^(crc>>>8);return (crc^0xffffffff)>>>0;}
+ function join(parts){var out=new Uint8Array(parts.reduce(function(size,part){return size+part.length;},0)),offset=0;parts.forEach(function(part){out.set(part,offset);offset+=part.length;});return out;}
+ function chunk(name,data){var out=new Uint8Array(data.length+12),view=new DataView(out.buffer);view.setUint32(0,data.length);for(var i=0;i<4;i++)out[i+4]=name.charCodeAt(i);out.set(data,8);view.setUint32(out.length-4,crc32(out.subarray(4,out.length-4)));return out;}
+ function density(dpi){var data=new Uint8Array(9),view=new DataView(data.buffer),ppm=Math.round(dpi/.0254);view.setUint32(0,ppm);view.setUint32(4,ppm);data[8]=1;return chunk('pHYs',data);}
+ function pngDpi(bytes,dpi){
+  var parts=[bytes.subarray(0,8)],offset=8;
+  while(offset+12<=bytes.length){var size=new DataView(bytes.buffer,bytes.byteOffset+offset,4).getUint32(0),end=offset+size+12;if(end>bytes.length)throw new Error('Invalid PNG');var name=String.fromCharCode.apply(null,bytes.subarray(offset+4,offset+8));if(name!=='pHYs')parts.push(bytes.subarray(offset,end));if(name==='IHDR')parts.push(density(dpi));offset=end;}
+  return join(parts);
+ }
+ function monoRows(rgba,width,height){
+  var stride=Math.ceil(width/8)+1,rows=new Uint8Array(stride*height);
+  for(var y=0;y<height;y++)for(var x=0;x<width;x++){var p=(y*width+x)*4;if(.2126*rgba[p]+.7152*rgba[p+1]+.0722*rgba[p+2]>=128)rows[y*stride+1+(x>>>3)]|=128>>(x&7);}
+  return rows;
+ }
+ function monoPng(width,height,dpi,compressed){var header=new Uint8Array(13),view=new DataView(header.buffer);view.setUint32(0,width);view.setUint32(4,height);header[8]=1;return join([new Uint8Array([137,80,78,71,13,10,26,10]),chunk('IHDR',header),density(dpi),chunk('IDAT',compressed),chunk('IEND',new Uint8Array())]);}
+ function zip(files){
+  var local=[],central=[],offset=0,encoder=new TextEncoder(),now=new Date(),date=((Math.max(1980,Math.min(2107,now.getFullYear()))-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate(),time=(now.getHours()<<11)|(now.getMinutes()<<5)|Math.floor(now.getSeconds()/2);
+  files.forEach(function(file){
+   var name=encoder.encode(file.name),data=file.bytes,crc=crc32(data),header=new Uint8Array(30+name.length),h=new DataView(header.buffer);h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(10,time,true);h.setUint16(12,date,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);header.set(name,30);
+   var entry=new Uint8Array(46+name.length),v=new DataView(entry.buffer);v.setUint32(0,0x02014b50,true);v.setUint16(4,20,true);v.setUint16(6,20,true);v.setUint16(8,0x800,true);v.setUint16(12,time,true);v.setUint16(14,date,true);v.setUint32(16,crc,true);v.setUint32(20,data.length,true);v.setUint32(24,data.length,true);v.setUint16(28,name.length,true);v.setUint32(42,offset,true);entry.set(name,46);local.push(header,data);central.push(entry);offset+=header.length+data.length;
+  });
+  var directory=join(central),end=new Uint8Array(22),view=new DataView(end.buffer);view.setUint32(0,0x06054b50,true);view.setUint16(8,files.length,true);view.setUint16(10,files.length,true);view.setUint32(12,directory.length,true);view.setUint32(16,offset,true);return join(local.concat([directory,end]));
+ }
+ return {crc32:crc32,pngDpi:pngDpi,monoRows:monoRows,monoPng:monoPng,zip:zip};
+})();
+/* LABEL_PRINT_END */
+</script>
 <script type="module">
 import * as pdfjs from '/label-cropper/vendor/pdfjs/pdf.min.js';
 pdfjs.GlobalWorkerOptions.workerSrc='/label-cropper/vendor/pdfjs/pdf.worker.min.js';
 const el=id=>document.getElementById(id),G=LabelGeometry,NS='http://www.w3.org/2000/svg';
 const base='/label-cropper/vendor/pdfjs/';
-const state={pdf:null,original:null,view:null,page:null,crop:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null,labels:[],pageInfo:new Map(),activeId:null,adding:false,nextId:1};
+const state={pdf:null,original:null,view:null,page:null,crop:null,sourceName:'',selectionNote:'',loadId:0,buildId:0,timer:null,bytes:null,url:null,renderTask:null,loadingTask:null,drag:null,editing:false,editStart:null,labels:[],pageInfo:new Map(),activeId:null,adding:false,nextId:1,printBusy:false};
 function status(text){el('status').textContent=text;}
 function error(message){el('error').textContent=message;el('error').hidden=!message;}
 function outputSize(){return el('paper').value==='6x4'?[432,288]:[288,432];}
@@ -157,7 +192,7 @@ function extraRotation(crop=state.crop,rotation=el('rotation').value){const [w,h
 function activeLabel(){return state.labels.find(label=>label.id===state.activeId);}
 function includedLabels(){return state.labels.filter(label=>label.include);}
 function addEntry(pageNumber,crop,automatic=true){const entry={id:'label-'+state.nextId++,pageNumber,crop:{...crop},autoCrop:{...crop},automatic,include:true,rotation:'auto'};state.labels.push(entry);return entry;}
-function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready||state.adding);}
+function setActions(ready){['download','openPdf','sharePdf'].forEach(id=>el(id).disabled=!ready||state.adding);el('downloadImage').disabled=!ready||state.adding||state.printBusy;}
 function clearOutput(){state.buildId++;state.bytes=null;setActions(false);if(state.url){const old=state.url;setTimeout(()=>URL.revokeObjectURL(old),60000);state.url=null;}}
 function svg(tag,attrs){const n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));el('cropOverlay').append(n);return n;}
 function updateBatchControls(){
@@ -168,6 +203,7 @@ function updateBatchControls(){
  el('includeLabel').checked=!!current?.include;el('includeLabel').disabled=!current||state.adding;el('rotation').disabled=!current&&!state.adding;
  el('batchSummary').textContent=`${count} ${count===1?'label':'labels'} included · ${count} PDF ${count===1?'page':'pages'} · one label per page. Review each label before printing.`;
  el('download').textContent=count>1?`Download all ${count} labels`:'Download PDF';
+ updateImageSettings();
  const missing=Array.from(state.pageInfo.keys()).filter(n=>!state.labels.some(label=>label.pageNumber===n)),links=el('unmatchedPages').querySelector('.links');links.replaceChildren();el('unmatchedPages').hidden=!missing.length;
  missing.forEach(n=>{const button=document.createElement('button');button.type='button';button.className='small-button';button.textContent=`Review page ${n}`;button.addEventListener('click',()=>{el('pageNumber').value=String(n);showPage();el('sourceTitle').scrollIntoView({block:'start'});});links.append(button);});
  if(state.view){const number=Number(el('pageNumber').value),onPage=state.labels.filter(label=>label.pageNumber===number).length;el('pageNote').textContent=state.adding?'Select the new label, then tap Done to add it.':onPage?`${onPage} saved ${onPage===1?'label':'labels'} on this page. Missing one? Use Add label.`:state.pageInfo.get(number)?.failed?'This page could not be checked automatically. Use Add label to select a label on it.':'No label found automatically on this page. Use Add label if it contains a shipping label.';}
@@ -239,6 +275,37 @@ async function makeOutput(){
 }
 function scheduleOutput(){const entry=activeLabel();if(entry&&state.crop)entry.crop={...state.crop};clearOutput();clearTimeout(state.timer);drawCrop();state.timer=setTimeout(makeOutput,250);}
 function filename(){return state.sourceName.replace(/\.pdf$/i,'').replace(/[\\/:*?"<>|]/g,'-')+'-'+el('paper').value+(includedLabels().length===1?'-label.pdf':'-labels.pdf');}
+function updateImageSettings(){
+ const dpi=Number(el('printerDpi').value),[pw,ph]=outputSize(),count=includedLabels().length;
+ el('imageDimensions').textContent=`Each image: ${Math.round(pw/72*dpi)} × ${Math.round(ph/72*dpi)} pixels · ${pw/72} × ${ph/72} inches · ${dpi} dpi.`;
+ el('downloadImage').textContent=count>1?`Download ${count} printer images (ZIP)`:'Download printer PNG';
+}
+function saveBlob(bytes,type,name){const url=URL.createObjectURL(new Blob([bytes],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+async function downloadPrinterImages(){
+ if(!state.bytes||state.printBusy||state.adding)return;
+ const generation=state.buildId,dpi=Number(el('printerDpi').value),mode=el('printMode').value,pdfBytes=state.bytes.slice(),[pw,ph]=outputSize(),stem=filename().replace(/-labels?\.pdf$/,''),current=()=>generation===state.buildId&&dpi===Number(el('printerDpi').value)&&mode===el('printMode').value;
+ state.printBusy=true;el('downloadImage').disabled=true;el('imageStatus').textContent='Preparing printer images from the full PDF…';let task;
+ try{
+  task=pdfjs.getDocument({data:pdfBytes,isEvalSupported:false,standardFontDataUrl:base+'standard_fonts/',wasmUrl:base+'wasm/',cMapUrl:'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/cmaps/',cMapPacked:true});const pdf=await task.promise,files=[];
+  for(let number=1;number<=pdf.numPages;number++){
+   if(!current())return;el('imageStatus').textContent=`Preparing image ${number} of ${pdf.numPages}…`;
+   const page=await pdf.getPage(number),view=page.getViewport({scale:dpi/72}),canvas=document.createElement('canvas');canvas.width=Math.round(pw/72*dpi);canvas.height=Math.round(ph/72*dpi);const ctx=canvas.getContext('2d',{willReadFrequently:mode==='mono'});if(!ctx)throw new Error('Canvas unavailable');
+   await page.render({canvasContext:ctx,viewport:view,background:'rgb(255,255,255)'}).promise;if(!current()){canvas.width=canvas.height=0;return;}
+   let bytes;
+   if(mode==='mono'&&typeof CompressionStream==='function'){
+    const rows=LabelPrint.monoRows(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height),compressed=new Uint8Array(await new Response(new Blob([rows]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());bytes=LabelPrint.monoPng(canvas.width,canvas.height,dpi,compressed);
+   }else{
+    if(mode==='mono'){const image=ctx.getImageData(0,0,canvas.width,canvas.height),data=image.data;for(let p=0;p<data.length;p+=4){const value=.2126*data[p]+.7152*data[p+1]+.0722*data[p+2]>=128?255:0;data[p]=data[p+1]=data[p+2]=value;}ctx.putImageData(image,0,0);}
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('PNG unavailable');bytes=LabelPrint.pngDpi(new Uint8Array(await blob.arrayBuffer()),dpi);
+   }
+   files.push({name:`${stem}-label-${String(number).padStart(2,'0')}-${dpi}dpi.png`,bytes});canvas.width=canvas.height=0;page.cleanup();
+  }
+  if(!current())return;
+  if(files.length===1)saveBlob(files[0].bytes,'image/png',files[0].name);else saveBlob(LabelPrint.zip(files),'application/zip',`${stem}-printer-images-${dpi}dpi.zip`);
+  el('imageStatus').textContent=files.length===1?'PNG saved. In 4Barcode, use Pictures Printing and choose this image.':'ZIP saved. Extract it in My Files, then use Pictures Printing in 4Barcode for the PNGs.';
+ }catch(e){if(current())el('imageStatus').textContent='Could not prepare the printer images. Try a lower printer resolution or fewer included labels.';}
+ finally{await task?.destroy().catch(()=>{});state.printBusy=false;el('downloadImage').disabled=!state.bytes||state.adding;if(!current())el('imageStatus').textContent='The labels or print settings changed. Download the images again for the current settings.';}
+}
 function findLabel(){
  const entry=activeLabel();if(!entry)return;setCropEditing(false);state.crop={...entry.autoCrop};state.selectionNote=entry.automatic?'Automatic selection restored. Check that every barcode is inside this label.':'Manual selection reset. Tap Adjust crop to select this label.';scheduleOutput();status(state.selectionNote);
 }
@@ -315,6 +382,9 @@ el('nextLabel').addEventListener('click',()=>chooseLabel(state.labels[state.labe
 el('includeLabel').addEventListener('change',()=>{const entry=activeLabel();if(entry){entry.include=el('includeLabel').checked;state.selectionNote='';updateBatchControls();scheduleOutput();}});
 el('wholePage').addEventListener('click',()=>{if(state.editing&&state.view){state.crop={x:0,y:0,w:state.view.width,h:state.view.height};state.selectionNote='Whole page selected. Check the preview before saving.';scheduleOutput();}});
 el('paper').addEventListener('change',scheduleOutput);el('rotation').addEventListener('change',()=>{const entry=activeLabel();if(entry)entry.rotation=el('rotation').value;scheduleOutput();});
+el('paper').addEventListener('change',updateImageSettings);el('printerDpi').addEventListener('change',updateImageSettings);
+el('downloadImage').addEventListener('click',downloadPrinterImages);
+el('imageOptions').addEventListener('click',()=>{el('printerImages').open=true;el('printerImages').scrollIntoView({block:'start',behavior:'smooth'});});el('printerImages').addEventListener('toggle',()=>el('imageOptions').setAttribute('aria-expanded',String(el('printerImages').open)));
 el('download').addEventListener('click',()=>{if(!state.url)return;const a=document.createElement('a');a.href=state.url;a.download=filename();document.body.append(a);a.click();a.remove();status('PDF saved. In 4Barcode, choose PDF Printing and open the downloaded file.');});
 el('openPdf').addEventListener('click',()=>{if(state.url)window.open(state.url,'_blank','noopener');});
 el('sharePdf').addEventListener('click',async()=>{if(!state.bytes)return;try{await navigator.share({files:[new File([state.bytes],filename(),{type:'application/pdf'})]});}catch(e){if(e.name!=='AbortError')error('Sharing is unavailable. Use Download PDF instead.');}});
