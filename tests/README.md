@@ -179,6 +179,11 @@ birth years, editing, Undo, saving, midnight rollover, focused inputs, other tab
 written Hebrew target dates, selected-date highlights, equal-sized live seconds
 on distant and near birthdays, mobile layout and portal navigation. Set
 `CJ_BASE_URL` to a fresh local server.
+The sunset suite checks 108 independent solar reference times, sunset-to-sunset
+Hebrew birthdays and annual rollover, Hebrew month anchors, English midnight,
+DST and date-line handling, unavailable polar sunsets, saved sunset locations,
+search/GPS/errors, unchanged original birthdays, focused drafts and portal/mobile
+behavior. It needs the read-only zmanim-tool checkout beside this repository.
 
 `npm run test:labels` checks the PDF label cropper's fit/rotation geometry and its
 browser flow, using generated non-personal PDFs. It verifies original compressed
