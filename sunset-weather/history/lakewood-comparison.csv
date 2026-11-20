@@ -1448,7 +1448,7 @@ date,event,standard_local,weather_adjusted_local,difference_seconds,status,reaso
 2023-11-10,Netz,2023-11-10 06:36:08 AM EST,2023-11-10 06:36:06 AM EST,-2,ok,
 2023-11-10,Sunset,2023-11-10 04:44:50 PM EST,2023-11-10 04:44:59 PM EST,9,ok,
 2023-11-11,Netz,2023-11-11 06:37:18 AM EST,2023-11-11 06:37:02 AM EST,-16,ok,
-2023-11-11,Sunset,2023-11-11 04:43:54 PM EST,,,pending,Missing requested archive window
+2023-11-11,Sunset,2023-11-11 04:43:54 PM EST,2023-11-11 04:43:54 PM EST,0,ok,
 2023-11-12,Netz,2023-11-12 06:38:27 AM EST,,,pending,Missing requested archive window
 2023-11-12,Sunset,2023-11-12 04:43:00 PM EST,,,pending,Missing requested archive window
 2023-11-13,Netz,2023-11-13 06:39:37 AM EST,,,pending,Missing requested archive window
