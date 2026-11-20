@@ -5,23 +5,23 @@
   "start_date": "2021-11-17",
   "end_date": "2026-11-16",
   "counts": {
-    "pending": 1338,
-    "ok": 2311,
+    "pending": 1242,
+    "ok": 2407,
     "unavailable": 3
   },
-  "created_utc": "2026-11-20T12:49:51.062Z",
+  "created_utc": "2026-11-20T22:40:51.303Z",
   "automation": {
     "enabled": true,
     "schedule": "Every 4 hours",
-    "lastCheckAt": "2026-11-20T12:49:51.062Z",
-    "lastOutcome": "weather_service_unavailable",
-    "nextCheckAfter": "2026-11-20T16:13:00.000Z",
-    "retryAfter": "2026-11-20T13:09:50.670Z",
-    "keptResults": 2180,
-    "newResults": 133,
-    "newUnavailable": 1,
-    "weatherRequests": 18,
-    "quotaUsed": 902.12,
+    "lastCheckAt": "2026-11-20T22:40:51.304Z",
+    "lastOutcome": "batch_budget",
+    "nextCheckAfter": "2026-11-21T00:13:00.000Z",
+    "retryAfter": null,
+    "keptResults": 2314,
+    "newResults": 96,
+    "newUnavailable": 0,
+    "weatherRequests": 21,
+    "quotaUsed": 999.13,
     "knownDataIssues": 28
   },
   "unavailable": [
@@ -44,115 +44,115 @@
   "retryNotes": {
     "2023-12-01/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:49.243Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-01/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-02/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:49.243Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-02/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-03/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-03/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-04/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-04/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-05/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:47:55.837Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-05/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-06/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-06/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-07/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-07/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.916Z"
     },
     "2023-12-08/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-08/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-09/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-09/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-10/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-10/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-11/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-11/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-12/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-12/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-13/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:08.883Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-13/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-14/rise": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:08.883Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     },
     "2023-12-14/set": {
       "reason": "atmospheric_data_missing",
-      "retryAfter": "2026-11-20T18:48:03.468Z"
+      "retryAfter": "2026-11-21T04:38:42.917Z"
     }
   }
 }
