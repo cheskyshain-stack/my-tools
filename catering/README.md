@@ -32,6 +32,15 @@ an agreed charge, if entered, controls the balance.
 
 ## Payments, adjustments and profit
 
+Open a booking and use Add payment directly in its header. Enter the amount and
+choose Save payment. Only the amount is required: the date defaults to today,
+the method can stay Not recorded, and an empty note becomes Customer payment.
+The method is optional; date, reference and note are under More details. Full
+balance fills the remaining amount without saving until the user presses Save.
+The same simplified flow opens from the booking's Payments & profit tab. It keeps
+the current booking tab open and immediately updates the balance. A stable form
+entry ID prevents the same form from submitting a payment twice.
+
 Each booking has Payments & profit with dated customer payments, method, reference
 and note. Prior `paid` totals remain a separate opening credit, without inventing
 dates or methods. Add subsequent payments in the ledger. Customer refunds reduce
@@ -210,6 +219,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-supplier-orders-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-pricing-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-finance-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-quick-payment-test.mjs
 
 Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
 offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
@@ -236,3 +246,6 @@ charges/credits, extra expenses and income, actual costs, incomplete profit, los
 voids, permanent history, duplicate bookings, print/CSV, offline reopening and phone
 layouts. SQL tests run migration 003 and reject rewritten records or excess refunds.
 The cloud suite merges independent offline receipts and checks company isolation.
+Quick-payment checks cover the direct booking action, amount-only saves, defaults,
+optional details, full-balance filling, duplicate submission, invalid amounts,
+unchanged profit, offline reopening and phone/iframe layouts.

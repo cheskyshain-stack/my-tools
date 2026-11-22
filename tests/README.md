@@ -70,6 +70,11 @@ duplicate reset, reports/CSV/print, and offline reopening. It runs migration 003
 PostgreSQL and rejects tampered financial history and invalid refunds. The cloud
 suite merges independent offline receipts and isolates company financial records.
 
+The quick-payment suite checks amount-only payment entry directly from a booking,
+optional method/date/reference/note, same-form duplicate prevention, balance updates,
+remaining-balance filling, invalid amounts, preserved profit, offline reopening
+and four viewport widths plus the phone portal iframe.
+
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
 adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,
