@@ -63,6 +63,13 @@ and unlinked templates, pack-size changes, financial and inventory preservation,
 unknown/free prices, actual deployment SQL, offline reopening, and phone/iframe
 layouts. The cloud suite checks synchronized price updates and tenant isolation.
 
+The finance suite checks old payment totals, dated methods/references, deposits,
+refunds, overpayments, extra charges/credits, extra income and expenses, separate
+actual supply/waiter costs, incomplete estimates, losses, immutable/voided history,
+duplicate reset, reports/CSV/print, and offline reopening. It runs migration 003 in
+PostgreSQL and rejects tampered financial history and invalid refunds. The cloud
+suite merges independent offline receipts and isolates company financial records.
+
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> node catering-test.mjs` checks real
 whole-pack arithmetic, bris table references, pricing snapshots, neighborhood
 adjustments, table types, packing, feedback, JSON backup/restore, CSV and print,

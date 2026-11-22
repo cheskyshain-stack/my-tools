@@ -8,10 +8,14 @@ hosting, domain and other tools are unchanged.
 
 1. Connect Supabase and select or create a dedicated project. Keep service-role
    keys server-side and out of source and browser configuration.
-2. Apply `001_companies.sql`, then `002_tablecloth_shapes.sql`, as immutable
-   migrations. They create or update only objects prefixed `catering_`; neither
+2. Apply `001_companies.sql`, `002_tablecloth_shapes.sql`, then
+   `003_payments_profit.sql`, as immutable
+   migrations. They create or update only objects prefixed `catering_`; none
    contains an owner identity or users. Migration 002 adds shape-specific supply
    rules and validates saved shopping selections without replacing existing data.
+   Migration 003 validates payment/expense entries and actual booking costs,
+   prevents excess refunds or discounts, and retains financial history. It replaces
+   the commit procedure while preserving company authorization and stock checks.
 3. Insert the owner's explicitly supplied email into
    `catering_platform_admins(email)`, normalized with `lower(trim(...))`. The
    allowlist binds to the verified Auth user ID on first sign-in. Never appoint

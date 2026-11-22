@@ -30,6 +30,43 @@ Service fees apply once. Waiter fees use count, per-event or hourly rates, hours
 and assignment notes. Calculated charges are supplies + service + waiters;
 an agreed charge, if entered, controls the balance.
 
+## Payments, adjustments and profit
+
+Each booking has Payments & profit with dated customer payments, method, reference
+and note. Prior `paid` totals remain a separate opening credit, without inventing
+dates or methods. Add subsequent payments in the ledger. Customer refunds reduce
+net payments; extra customer charges and discounts change the bill. Other income
+and extra expenses adjust profit without changing the customer's balance.
+
+Profit uses customer charges plus other income, less supply costs, waiter costs
+and extra expenses. Customer deposits and later payments settle that same bill
+and never count as additional revenue. An actual total supply cost, if supplied,
+replaces the physical-supply estimate. Service-category template lines are charges,
+rather than assumed physical supply costs. Waiter costs are separate from the
+waiter fee charged to the customer. Enter 0 for a confirmed free cost and leave
+unknown costs blank. Missing required prices or waiter costs make profit incomplete.
+Uncompleted bookings, estimated supply costs and calculated customer charges are
+labeled as estimates. Supplier purchases and inventory movements are not deducted a second
+time in the profit calculation.
+
+The financial overview filters by party date, status, name and balance. It defaults
+to open/completed events and can include cancelled events explicitly. It exports
+booking totals and a separate transaction CSV, retaining methods and void history.
+Individual booking finances can also be printed. Overpayments and losses are shown.
+
+Financial entries have stable independent IDs so concurrent receipts merge across
+devices. Ordinary edits cannot rewrite or remove a saved financial entry. Void an
+incorrect entry with a reason and add a replacement; history stays visible. Refunds
+cannot exceed recorded net payments and discounts cannot exceed the customer bill.
+Bookings with payment or adjustment history are retained. Duplicating a booking
+starts with no payments, adjustments or actual cost overrides. Full backups include
+financial entries and costs; explicitly replacing a device backup can restore an
+earlier local state, while shared imports retain accepted history.
+
+These are recorded payments, not payment processing. All financial operations work
+offline. Apply backend migration 003 before enabling shared accounts; its validation,
+revision transaction and history protection run inside the same company commit.
+
 ## Price changes and booking history
 
 Changing a catalog price or pack size in Inventory or Supply templates reveals a
@@ -71,7 +108,7 @@ Selections and bought checks survive reopening offline. They are local in
 device-only mode. Once company sync is activated, each approved editing login's
 shopping plan also synchronizes with that login on other devices through the same
 revision-controlled company document. Changing a shopping quantity requires a new
-checkmark. Apply migrations 001 and 002 before activating shared accounts.
+checkmark. Apply migrations 001, 002 and 003 before activating shared accounts.
 
 Each booking can choose round, rectangular, or mixed tablecloths. Mixed bookings
 enter round dining tables; the remainder are rectangular. Regular, kids and head
@@ -172,6 +209,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-shopping-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-supplier-orders-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-pricing-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-finance-test.mjs
 
 Browser checks cover 375/393/412/1280px, all editing surfaces, the portal iframe,
 offline caching, supplies, fees, supplier drafts, receipts and returns. PostgreSQL
@@ -193,3 +231,8 @@ Pricing tests check all three groups, selected upcoming bookings, new bookings,
 linked/unlinked templates, incompatible saved units, pack rounding, preserved
 financial and stock records, deployment SQL, offline reopening and phone layouts.
 The cloud suite also checks selected price changes across devices and companies.
+Finance tests cover opening credits, methods, partial payments, refunds, overpayments,
+charges/credits, extra expenses and income, actual costs, incomplete profit, losses,
+voids, permanent history, duplicate bookings, print/CSV, offline reopening and phone
+layouts. SQL tests run migration 003 and reject rewritten records or excess refunds.
+The cloud suite merges independent offline receipts and checks company isolation.

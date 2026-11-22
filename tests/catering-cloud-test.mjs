@@ -13,6 +13,7 @@ async function synced(p){await p.waitForFunction(()=>cloud.company&&!cloud.busy&
 async function forceSync(p){await p.evaluate(()=>syncCompany({force:true}));await synced(p);}
 async function addCustomer(p,name){await nav(p,'customers');await button(p,'+ Add customer').click();await p.locator('#customer-form [name=name]').fill(name);await button(p,'Save customer').click();await p.locator('#editor').waitFor({state:'hidden'});}
 async function editCustomer(p,name,newName){await nav(p,'customers');await p.locator('#customer-search').fill(name);await button(p,'Edit').click();await p.locator('#customer-form [name=name]').fill(newName);await button(p,'Save customer').click();await p.locator('#editor').waitFor({state:'hidden'});}
+async function financialEntry(p,type,amount,note){await nav(p,'bookings');await p.locator('[data-action=open-event][data-id="booking-test"]').click();await p.locator('.tabs [data-tab=finance]').click();await p.locator(`[data-action=new-finance-entry][data-type="${type==='payment'?'payment':'expense'}"]`).click();const f=p.locator('#finance-entry-form');await f.locator('[name=type]').selectOption(type);await f.locator('[name=amount]').fill(String(amount));await f.locator('[name=method]').selectOption('cash');await f.locator('[name=note]').fill(note);await button(p,'Save financial entry').click();await p.locator('#editor').waitFor({state:'hidden'});}
 try{
  const owner=await client(USERS.owner,1280),alice=await client(USERS.alice),bob=await client(USERS.bob),viewer=await client(USERS.viewer),pending=await client(USERS.pending);
  await Promise.all([synced(owner.p),synced(alice.p),synced(bob.p),synced(viewer.p)]);
@@ -39,6 +40,13 @@ try{
  check(await owner.p.evaluate(()=>state.inventory[0].price===6&&state.events[0].items[0].price===6),'A chosen upcoming-booking price update synchronizes with the catalog on another device.');
  check(await owner.p.evaluate(()=>state.movements.length===1&&state.events[0].counts.regular===2),'Synchronizing a price change preserves stock movements and booking quantities.');
  await forceSync(bob.p);check(await bob.p.evaluate(()=>state.inventory[0].price===2&&state.events[0].items[0].price===2),'Price updates stay isolated from other companies.');
+
+ await alice.c.setOffline(true);await owner.c.setOffline(true);await financialEntry(alice.p,'payment',40,'Receipt from first device');await financialEntry(owner.p,'payment',60,'Receipt from second device');await alice.c.setOffline(false);await forceSync(alice.p);await owner.c.setOffline(false);await forceSync(owner.p);await forceSync(alice.p);
+ check(await alice.p.evaluate(()=>bookingMoney(state.events[0]).paid===100&&state.financeEntries.length===2),'Independent offline customer payments merge by entry identity without losing either receipt.');
+ await financialEntry(owner.p,'expense',5,'Extra delivery');await synced(owner.p);await financialEntry(alice.p,'income',2,'Supplier rebate');await synced(alice.p);await forceSync(owner.p);
+ check(await owner.p.evaluate(()=>bookingMoney(state.events[0]).profit===-3&&bookingMoney(state.events[0]).paid===100),'Shared expenses and extra income adjust profit without counting customer payments as new revenue.');
+ await forceSync(bob.p);check(await bob.p.evaluate(()=>state.financeEntries.length===0),'Payment and expense records remain isolated from other companies.');
+ check(await alice.p.evaluate(()=>state.movements.length===1),'Financial entries never create stock movements.');
 
  await alice.p.waitForFunction(()=>navigator.serviceWorker.controller&&offlineReady);
  await alice.c.setOffline(true);await addCustomer(alice.p,'Offline Family');
