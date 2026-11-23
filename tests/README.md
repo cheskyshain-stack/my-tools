@@ -16,7 +16,10 @@ highlights, backward order, chapter/sefer boundaries, pagination, legacy saved f
 and shared passage settings. The print suite reproduces the reported skip-3
 שפרא result with 100 context letters on each side, verifies one-page Letter/A4
 PDFs by default, checks optional grid output and native browser printing, and
-confirms that printing preserves the screen grid.
+confirms that printing preserves the screen grid. Collection tests independently check a
+32-primary / 13-secondary fixture, results on later pages, negative intervals,
+full-area words outside the current grid, saved pairs, cancellation, context
+invalidation, all-result PDFs and capped-search reporting for 500 received matches.
 See `torah-codes/README.md` for the edition, spelling choices and limits.
 
 ## Sunrise and sunset weather history

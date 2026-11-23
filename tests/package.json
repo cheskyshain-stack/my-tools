@@ -13,7 +13,7 @@
     "test:labels": "node label-geometry-test.mjs && node label-cropper-test.mjs && node label-batch-test.mjs && node label-print-test.mjs && node label-files-test.mjs",
     "test:catering": "node catering-test.mjs && node catering-operations-test.mjs && node catering-database-test.mjs && node catering-cloud-test.mjs && node catering-invite-test.mjs && node catering-shopping-test.mjs && node catering-supplier-orders-test.mjs && node catering-pricing-test.mjs && node catering-finance-test.mjs && node catering-quick-payment-test.mjs",
     "test:prospr": "node prospr-test.mjs",
-    "test:torah-codes": "node torah-codes-engine-test.mjs && node torah-codes-test.mjs && node torah-codes-print-test.mjs"
+    "test:torah-codes": "node torah-codes-engine-test.mjs && node torah-codes-test.mjs && node torah-codes-print-test.mjs && node torah-codes-collections-test.mjs"
   },
   "keywords": [],
   "author": "",

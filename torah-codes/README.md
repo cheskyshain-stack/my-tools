@@ -103,10 +103,33 @@ letters. Arrows and Next highlighted letter navigate long spans; visible-hit cou
 state when only part of a match is displayed. Touch and keyboard inspection work.
 Only the grid scrolls horizontally.
 
-Up to 5 extra words search the currently displayed window, each with its own skips,
-direction, color, and up to 100 matches. One selected match per word is highlighted.
-Overlaps use two colors plus an outline. Changing the range/window clears extras;
-zoom does not. Extras use the main result's final-letter setting.
+The additional-word scope is explicit. This displayed grid searches the current
+window, supporting up to 5 extra words with independent skips, direction and color.
+Changing that window clears these grid-only words; zoom does not.
+
+All search results checks one additional word against every result received from
+the current primary search, including results on other list pages. Each region
+covers the primary word's complete first-to-last-letter span plus the current
+context on each side, clipped to the initial search scope. It is not restricted to
+the first rendered 2,000-letter window. The check runs in a worker, with a combined
+50 million candidate budget, 15-second time budget, progress and immediate Cancel.
+Up to 100 secondary matches are kept per region. Hitting that cap confirms a positive
+region and does not prevent checking later regions. Unfinished regions are labeled
+not fully checked rather than missing. The final-letter comparison follows the
+primary search snapshot, and displayed source letters remain unmodified.
+
+A completed check filters to positive results by default; Show only results with
+the additional word can be unchecked to see the original list and individual result
+badges. Choosing a result attaches its secondary matches, with a separate interval
+and color. Show word in grid opens a distant secondary match. Full-area words survive
+grid-page changes. Changing context invalidates the collection check. A new primary
+search clears it. This collection is the current search, not a saved search history.
+Ordinary grid-only words and full-area words are distinguished in saved results by
+an optional `scope` field. Restoring a full-area word verifies its exact letters
+against the full result area rather than just the displayed window. A saved link
+still represents one selected result or pair, not an entire result collection.
+
+One selected match per word is highlighted; overlaps use two colors and an outline.
 
 Save exports JSON; Copy result link encodes the same state in a base64url fragment.
 Opening either verifies version, text hash, scope, every matched letter, and grid
@@ -127,6 +150,19 @@ button. It adds the current grid window and legend, fitting wide grids to paper;
 that optional full context can span pages. The app button and the browser's own
 print command use the same setting through print CSS and `beforeprint`. The checkbox
 defaults off on page load and is not stored as part of a saved pattern.
+
+Print all results builds one separate print document from every result in the
+current list, including paginated results. If the additional-word filter is on,
+its count and positive subset are used. Each entry has its own signed skip,
+direction, start/end references and all matching pesukim; paired results include
+the selected secondary match too. There is no surrounding grid in this bulk report.
+The original search's incomplete/capped status and any incomplete secondary check
+remain explicit. Negative and unchecked secondary regions are distinguished.
+Preparation yields between small chunks and can be cancelled before opening the
+single native print dialog. It does not alter the selected result, grid or input
+fields. Print this result and browser-menu printing use the selected-result layout;
+bulk mode is reset after printing or on a new result selection/search. A saved
+result containing just one match can only print that received match.
 
 Printing uses white paper and black text. The passage summary identifies the page
 and full verse count so a long passage is never presented as complete in print.
