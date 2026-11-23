@@ -13,7 +13,10 @@ RTL grids, extra-word colors/skips, cancellation, source integrity, saved links/
 printing, long grids and portal Back/Forward. Passage checks cover all matched
 pesukim, optional intervening verses, exact pointed source text, grouped/overlapping
 highlights, backward order, chapter/sefer boundaries, pagination, legacy saved files
-and shared passage settings.
+and shared passage settings. The print suite reproduces the reported skip-3
+שפרא result with 100 context letters on each side, verifies one-page Letter/A4
+PDFs by default, checks optional grid output and native browser printing, and
+confirms that printing preserves the screen grid.
 See `torah-codes/README.md` for the edition, spelling choices and limits.
 
 ## Sunrise and sunset weather history

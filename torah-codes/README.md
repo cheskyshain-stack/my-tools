@@ -116,11 +116,23 @@ Its types and bounds are validated before restoring; older files without it open
 with matching pesukim only. They make no claim that the original search was exhaustive. Fragments are not sent
 in HTTP requests. No browser storage is needed to open a saved file on another device.
 
-Print shows the current grid window and displayed page of full pesukim on white
-paper, fits wide grids to A4 width, and lists all main-letter references, selected
-extra patterns, and the text fingerprint. The passage summary identifies the page
-and total verse count so a long passage is never presented as complete in print.
-Reduce width/context for larger printed letters. Large windows can span pages.
+Print defaults to the word, skip/direction, start/end references, displayed page of
+full pesukim with marked letters, and each main letter's reference. The surrounding
+letter grid, its range caption and legend are omitted so a small-skip result does
+not fill the paper with a tall column of context letters. The screen grid and its
+context settings are preserved.
+
+Include letter grid when printing is an explicit opt-in checkbox above the print
+button. It adds the current grid window and legend, fitting wide grids to paper;
+that optional full context can span pages. The app button and the browser's own
+print command use the same setting through print CSS and `beforeprint`. The checkbox
+defaults off on page load and is not stored as part of a saved pattern.
+
+Printing uses white paper and black text. The passage summary identifies the page
+and full verse count so a long passage is never presented as complete in print.
+The reported שפרא match at skip +3, Bereishis 12:11 letters 51 through 60, fits one
+Letter or A4 page without the optional grid, even with 100 screen-context letters
+on each side. The print suite verifies the actual generated PDF page count.
 
 ## Verification
 
