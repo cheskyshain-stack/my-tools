@@ -1,0 +1,113 @@
+{
+  "source": "https://github.com/bdenckla/MAM-basics/tree/f948233b08cb4809f92bd9c3be748ef55381cd97",
+  "commit": "f948233b08cb4809f92bd9c3be748ef55381cd97",
+  "license": "CC BY-SA 4.0",
+  "extraction": "Written ketiv only. One combined-cantillation branch. Special letter once. Scroll variant branches as documented by MAM. No qere, notes, parashah letters, inverted-nun symbols, or repeated texts. Only U+05D0 through U+05EA are searchable.",
+  "dataSHA256": "e479feb9264afb9a8da67ca3d679c0e0465da70946c66d09c5794080b405b4c8",
+  "files": {
+    "MAM-simple/json-vtrad-mam/Gen.json": "bf7a742869b58ebec8b14c6991f4a63236eb0b5e3cae14300d60cb09f1ed3abf",
+    "MAM-simple/json-vtrad-bhs/Exod.json": "dfeab4048072d00585b5198ef300677f88e89118f10f3044aa9f530e009fb9cb",
+    "MAM-simple/json-vtrad-mam/Lev.json": "dc27aca1ec05c50da4f6260984b554215e54b3dff2120ffeb084e3b07f418d69",
+    "MAM-simple/json-vtrad-bhs/Num.json": "ae1f651d64c044e8e528b3f672d721c1b8f7a7c55ed1ea20ba40b8996f2899ec",
+    "MAM-simple/json-vtrad-bhs/Deut.json": "aadb7a44de896419a198edadbfb716fe7ebe9dd89195f9b8838802dbecc95415",
+    "LICENSE.md": "a5182c592a89fc3ac64f2d75c63afe990aee66ee771f79405b4cbdb7061e37f7"
+  },
+  "counts": {
+    "standard": {
+      "letters": 304805,
+      "pesukim": 5853,
+      "SHA256": "b65394d28c85ce76dca0d15af08810deebb2e85032d6575a9ae764643a193226",
+      "books": [
+        {
+          "book": "Gen",
+          "letters": 78064,
+          "pesukim": 1533
+        },
+        {
+          "book": "Exod",
+          "letters": 63529,
+          "pesukim": 1213
+        },
+        {
+          "book": "Lev",
+          "letters": 44790,
+          "pesukim": 859
+        },
+        {
+          "book": "Num",
+          "letters": 63530,
+          "pesukim": 1289
+        },
+        {
+          "book": "Deut",
+          "letters": 54892,
+          "pesukim": 959
+        }
+      ]
+    },
+    "chabad": {
+      "letters": 304805,
+      "pesukim": 5853,
+      "SHA256": "8d2676b44b8e063e090bf960c88bcc0636e05e7f9a90adab9719673e95228c99",
+      "books": [
+        {
+          "book": "Gen",
+          "letters": 78064,
+          "pesukim": 1533
+        },
+        {
+          "book": "Exod",
+          "letters": 63529,
+          "pesukim": 1213
+        },
+        {
+          "book": "Lev",
+          "letters": 44790,
+          "pesukim": 859
+        },
+        {
+          "book": "Num",
+          "letters": 63530,
+          "pesukim": 1289
+        },
+        {
+          "book": "Deut",
+          "letters": 54892,
+          "pesukim": 959
+        }
+      ]
+    },
+    "yemenite": {
+      "letters": 304801,
+      "pesukim": 5853,
+      "SHA256": "5655f345a6e32f25df94cd8807f70f5e4e4272c1deb2892bae11f54274ad3aed",
+      "books": [
+        {
+          "book": "Gen",
+          "letters": 78063,
+          "pesukim": 1533
+        },
+        {
+          "book": "Exod",
+          "letters": 63527,
+          "pesukim": 1213
+        },
+        {
+          "book": "Lev",
+          "letters": 44790,
+          "pesukim": 859
+        },
+        {
+          "book": "Num",
+          "letters": 63529,
+          "pesukim": 1289
+        },
+        {
+          "book": "Deut",
+          "letters": 54892,
+          "pesukim": 959
+        }
+      ]
+    }
+  }
+}

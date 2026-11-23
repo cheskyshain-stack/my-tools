@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
+<meta name="theme-color" content="#080b12">
+<meta name="description" content="Search traditional Torah scroll letters at equal intervals. View Hebrew grids, check pasuk references, save and share letter patterns.">
+<title>Torah Codes | CJ Portal</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png?v=1" type="image/png">
+<link rel="apple-touch-icon" href="icon.png?v=1">
+<style>
+*{box-sizing:border-box}html,body{margin:0;overscroll-behavior-y:none}body{padding:16px 12px 36px}main,.page-top{width:min(100%,920px);margin:auto}a{color:#71cfff;text-underline-offset:3px}button,input,select{font:inherit}button,select{cursor:pointer}button,input,select{min-height:44px;border:1px solid #ffffff19;border-radius:12px;background:#0a142b;color:#edf2ff;padding:10px 12px;max-width:100%}button:disabled{opacity:.42;cursor:default}button:hover:not(:disabled){filter:brightness(1.15)}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid #00c8ff;outline-offset:3px}input,select{width:100%;min-width:0}input[type=checkbox]{width:20px;min-height:20px;height:20px;accent-color:#2583f7;flex:none}input[type=range]{padding:0;accent-color:#2583f7}input[type=file]{font-size:13px}h2,h3,p{margin:0}h2{font-family:var(--cj-display,Georgia,serif);font-size:25px}h3{font-size:16px}p{line-height:1.65}.muted,.hint{color:#93a3c7}.hint{font-size:12px;line-height:1.6}.small{font-size:13px}.hebrew{font-family:"Noto Sans Hebrew","Arial Hebrew",Arial,sans-serif}.subtitle{display:block;color:#93a3c7;font-size:17px;letter-spacing:.04em;margin-top:5px;font-family:Arial,sans-serif}.page-top{margin-bottom:24px}.cj-page-header{width:100%!important;padding-left:0!important;padding-right:0!important}.home{font-size:12px;text-decoration:none;padding:10px}.intro{margin:18px 0 16px;font-size:15px;color:#b4c1dd;max-width:680px}.edition-pill{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px;color:#a2b5d7;border:1px solid #ffffff16;border-radius:20px;padding:7px 12px;background:#ffffff05}.edition-pill b{color:#00c8ff}.card{background:linear-gradient(145deg,#142440,#121b33);border:1px solid #ffffff12;border-radius:22px;padding:22px;margin:0 0 18px;min-width:0}.card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.step-label{font-size:11px;color:#00c8ff;text-transform:uppercase;letter-spacing:.16em;display:block;margin-bottom:6px;font-weight:700}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:7px;min-width:0}label,.field-title{font-size:14px;color:#c7d1e9;font-weight:600}.full{grid-column:1/-1}.query{font-size:28px;letter-spacing:.07em;padding:12px 16px;background:#08132a}.check{display:flex;align-items:flex-start;gap:10px;line-height:1.5;font-size:13px;font-weight:400}.check input{margin:0}.primary{background:linear-gradient(140deg,#2583f7,#1763cf);border-color:transparent;font-weight:700}.search-actions{margin-top:18px;display:flex;gap:10px}.search-actions .primary{flex:1}summary{cursor:pointer;color:#b4c1dd;font-size:13px;line-height:1.5;padding:4px 0}details>div,details>p{margin-top:14px}.help{margin:16px 0 0}.help p+p{margin-top:10px}.status{font-size:14px;line-height:1.6;margin-top:14px;overflow-wrap:anywhere}.status.error{color:#ffb3b3}progress{width:100%;height:7px;accent-color:#00c8ff;margin-top:12px}.range-box{background:#ffffff04;border-radius:14px;padding:14px;margin-top:14px}.range-end{display:grid;grid-template-columns:1.4fr .7fr .7fr;gap:8px;margin-top:8px}.range-end label{font-size:11px;display:flex;flex-direction:column;gap:6px}.range-title{font-size:12px;color:#93a3c7}.results-layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;align-items:start}.results-layout .card{padding:18px}.result-list{display:grid;gap:8px}.match{width:100%;text-align:left;padding:12px;background:#0a152c;border-radius:14px;font-size:12px;line-height:1.7}.match strong{font-size:22px;color:#edf2ff}.match[aria-pressed=true]{border-color:#00c8ff;background:#12314c;box-shadow:inset 3px 0 #00c8ff}.match-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#9fb6da}.result-ref{color:#a2b5d7;display:block;font-size:11px}.pager{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:12px}.pager button{font-size:12px;padding:8px 10px}.pager span{font-size:11px;color:#93a3c7}.result-heading{margin-bottom:12px}.pattern-title{font-size:34px;color:#f5b841;letter-spacing:.08em}.pattern-meta{font-size:13px;line-height:1.8;color:#b4c1dd;overflow-wrap:anywhere}.pattern-ref{margin-top:7px;color:#b4c1dd;font-size:12px;line-height:1.8}.grid-settings{margin:16px 0}.grid-settings .fields{grid-template-columns:1fr 1fr 1fr;gap:10px}.grid-settings label{font-size:11px}.grid-box{direction:rtl;overflow:auto;max-height:490px;background:#071126;border:1px solid #ffffff14;border-radius:12px;overscroll-behavior:contain;padding:10px;max-width:100%;-webkit-overflow-scrolling:touch}.letter-grid{direction:rtl;display:grid;grid-template-columns:repeat(var(--cols,20),var(--cell,28px));grid-auto-rows:var(--cell,28px);gap:1px;width:max-content;margin:0 auto;font:22px/1 Arial,sans-serif;color:#c9d4eb;user-select:text}.letter{display:flex;align-items:center;justify-content:center;border-radius:4px;position:relative;border:1px solid transparent;cursor:pointer}.letter:hover{background:#ffffff18}.letter.hit{color:#071126;background:var(--hit);font-weight:700;border-color:#ffffff80;box-shadow:inset 0 -2px #07112644}.letter.multi{outline:2px dotted #fff;outline-offset:-3px}.letter.chosen{outline:2px solid #fff;outline-offset:-2px}.grid-note{font-size:11px;line-height:1.7;color:#93a3c7;margin:10px 0}.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px}.swatch{width:10px;height:10px;background:var(--hit);border-radius:3px;display:inline-block;flex:none}.inspector{font-size:12px;color:#c7d1e9;line-height:1.7;background:#ffffff05;padding:12px;border-radius:12px;margin-top:12px}.verse-text{direction:rtl;font:19px/1.9 Arial,sans-serif;margin-top:8px;overflow-wrap:anywhere}.verse-text mark{background:#f5b841;color:#071126;border-radius:3px}.extra-area{border-top:1px solid #ffffff12;margin-top:20px;padding-top:18px}.extra-area .fields{margin-top:12px;gap:10px}.extra-area input.hebrew{font-size:23px}.extra-list{display:grid;gap:10px;margin:12px 0}.extra-item{border:1px solid #ffffff16;border-inline-start:3px solid var(--hit);border-radius:10px;padding:10px;font-size:12px}.extra-item .row{justify-content:space-between;margin-bottom:8px}.extra-item button{min-height:36px;padding:6px 10px;font-size:11px}.extra-item select{font-size:11px}.export-actions{margin-top:18px}.export-actions button{font-size:12px;flex:1}.share-link{margin-top:12px;font-size:11px}.source-details{font-size:12px;line-height:1.8;color:#a2b5d7;overflow-wrap:anywhere}.source-details p+p{margin-top:12px}.source-details table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}.source-details td,.source-details th{text-align:left;padding:7px 4px;border-bottom:1px solid #ffffff14}.source-details .hebrew{font-size:19px;direction:rtl}.source-details code{overflow-wrap:anywhere;font-size:10px}.table-wrap{overflow:auto}.load-saved{margin:16px 0}.disclaimer{font-size:11px;color:#93a3c7;line-height:1.7;margin:16px 3px}.print-only{display:none}.empty{text-align:center;padding:25px;color:#93a3c7;font-size:13px}[hidden]{display:none!important}
+@media(max-width:740px){.results-layout{grid-template-columns:1fr}.card{padding:18px}.results-layout .card{padding:16px}.page-top{margin-bottom:18px}.grid-settings .fields{gap:8px}.results-layout #resultsCard{margin-bottom:0}.results-layout{gap:14px}.result-list{grid-template-columns:1fr 1fr}.match{font-size:11px;padding:10px}.match strong{font-size:21px}.match-meta{gap:5px}.result-ref{font-size:10px}.grid-box{max-height:440px}.range-end{grid-template-columns:1.4fr .8fr .8fr}}
+@media(max-width:380px){body{padding-left:10px;padding-right:10px}.card{padding:16px}.fields{gap:12px}.home{padding:6px}.grid-settings .fields{grid-template-columns:1fr 1fr}.grid-settings .context-field{grid-column:1/-1}.result-list{grid-template-columns:1fr}}
+@media print{@page{margin:12mm}body{padding:0!important;font-family:Arial,sans-serif}.page-top,#searchCard,#resultsCard,.source-card,.load-saved,.disclaimer,#cj-share,.no-print,.extra-area,.grid-settings,.export-actions,.pager,.inspector{display:none!important}.results-layout{display:block}.card{margin:0;padding:0!important;border:0!important;box-shadow:none!important;background:#fff!important;border-radius:0}.pattern-title{color:#000!important}.pattern-meta,.pattern-ref,.grid-note,.legend{color:#000!important}.grid-box{max-height:none;overflow:visible;border:0;padding:0;margin:15px 0;background:#fff!important;border-radius:0}.letter-grid{--cell:min(18px,calc(180mm / var(--cols)))!important;font-size:calc(min(18px,180mm / var(--cols)) * .78)!important;gap:0}.letter{color:#000!important;border-radius:0}.letter.hit{color:#000!important;background:#fff!important;border:1px solid #000;box-shadow:none}.letter.multi{outline:1px dashed #000;outline-offset:-3px}.print-only{display:block;font-size:11px;line-height:1.8;margin:12px 0}.print-only table{border-collapse:collapse;width:100%}.print-only td,.print-only th{text-align:left;border-bottom:1px solid #ccc;padding:4px}.swatch{border:1px solid #000}.pattern-title{font-size:30px}.print-footer{font-size:10px;overflow-wrap:anywhere}}
+</style>
+<link rel="stylesheet" href="/assets/cj.css">
+<script src="/assets/share-widget.js" defer></script>
+<script src="/assets/cj-refresh.js" defer></script>
+</head>
+<body>
+<div class="page-top">
+<header class="cj-page-header"><a class="cj-brand" href="/home/" aria-label="CJ Portal home"><img src="icon.png?v=1" alt="Torah Codes"></a><h1>Torah Codes<span class="subtitle" lang="he" dir="rtl">דילוגי אותיות</span></h1><a class="home" href="/home/">All tools</a></header>
+<p class="intro">Find a Hebrew word by reading the Torah’s letters at equal intervals. Explore the pattern and check every letter’s pasuk.</p>
+<div class="edition-pill"><b>304,805 letters</b><span>Standard Ashkenazi &amp; Sephardi scroll spelling</span></div>
+</div>
+<main>
+<section class="card" id="searchCard" aria-labelledby="searchHeading">
+<div class="card-title"><div><span class="step-label">Explore the letters</span><h2 id="searchHeading">What would you like to find?</h2></div></div>
+<form id="searchForm">
+<fieldset id="searchFields" disabled style="border:0;padding:0;margin:0;min-width:0">
+<div class="fields">
+<label class="field full">Hebrew word or phrase<input class="query hebrew" id="query" lang="he" dir="rtl" placeholder="תורה" maxlength="200" autocomplete="off" required aria-describedby="countedQuery"></label>
+<p class="hint full" id="countedQuery">Only Hebrew letters count. Spaces, nekudos, cantillation and punctuation are ignored.</p>
+<label class="field">Search in<select id="scope"><option value="all">Entire Torah</option><option value="book">One sefer</option><option value="range">Range of pesukim</option></select></label>
+<label class="field">Direction<select id="direction"><option value="both">Forward &amp; backward</option><option value="forward">Forward</option><option value="backward">Backward</option></select></label>
+<label class="field" id="bookField" hidden>Sefer<select id="book"></select></label>
+</div>
+<div id="rangeFields" class="range-box" hidden><div class="range-title">Include both the starting and ending pasuk.</div>
+<div class="range-end"><label>From sefer<select id="fromBook"></select></label><label>Perek<input id="fromChapter" type="number" min="1" max="50" value="1" inputmode="numeric"></label><label>Pasuk<input id="fromVerse" type="number" min="1" max="176" value="1" inputmode="numeric"></label></div>
+<div class="range-end"><label>To sefer<select id="toBook"></select></label><label>Perek<input id="toChapter" type="number" min="1" max="50" value="1" inputmode="numeric"></label><label>Pasuk<input id="toVerse" type="number" min="1" max="176" value="5" inputmode="numeric"></label></div>
+</div>
+<details class="help" id="searchOptions"><summary>Skip intervals &amp; letter options</summary><div class="fields">
+<label class="field">Minimum skip<input id="minSkip" type="number" min="1" max="10000" value="1" inputmode="numeric" required></label>
+<label class="field">Maximum skip<input id="maxSkip" type="number" min="1" max="10000" value="100" inputmode="numeric" required></label>
+<label class="check full"><input id="foldFinals" type="checkbox"><span>Match final letters with regular forms<br><span class="hint" lang="he" dir="rtl">ך = כ · ם = מ · ן = נ · ף = פ · ץ = צ</span></span></label>
+<p class="hint full">A skip of 50 moves 50 Hebrew letters each time, with 49 letters between. A skip of 1 reads adjacent letters.</p>
+</div></details>
+<div class="search-actions"><button class="primary" id="searchButton" type="submit">Find patterns</button><button id="exampleButton" type="button">Try an example</button></div>
+</fieldset>
+</form>
+<button id="cancelButton" type="button" hidden style="margin-top:12px;width:100%">Cancel search</button>
+<progress id="progress" value="0" max="1" hidden aria-label="Search progress"></progress>
+<p class="status" id="status" role="status" aria-live="polite">Loading and checking the Torah text…</p>
+<details class="help"><summary>How it works &amp; search limits</summary><p class="hint">For example, in <bdi lang="he" class="hebrew">אבגדהוז</bdi>, starting at א and moving 2 letters each time gives <bdi lang="he" class="hebrew">אגהז</bdi>. In the Torah example, תורה begins at Bereishis 1:1, letter 6, with a skip of +50.</p><p class="hint">Enter 2 to 32 Hebrew letters. Skips can be 1 to 10,000 in either direction. Each search allows up to 50 million candidate checks, 15 seconds of worker search time, and 500 displayed matches. A stopped search is marked incomplete. Narrow the range to search further. Searches run on your device in a background worker.</p><p class="hint">These are letter patterns. Finding one does not establish a prediction, hidden message, or statistical significance. The text is joined across words and pesukim; an entire-Torah search can also cross between sefarim.</p></details>
+</section>
+<div class="results-layout" id="resultsArea" hidden>
+<section class="card" id="resultsCard" aria-labelledby="resultsHeading"><div class="result-heading"><span class="step-label">Matches</span><h2 id="resultsHeading">Letter patterns</h2><p class="hint" id="resultSummary"></p></div><div class="result-list" id="resultList"></div><div class="pager"><button id="prevResults" type="button">Previous</button><span id="resultsPage"></span><button id="nextResults" type="button">Next</button></div></section>
+<section class="card" id="gridCard" hidden aria-labelledby="gridHeading">
+<span class="step-label no-print">Inspect a pattern</span><h2 class="print-only">Torah Codes · דילוגי אותיות</h2><h2 class="pattern-title hebrew" id="gridHeading" dir="rtl" lang="he"></h2><p class="pattern-meta" id="patternMeta"></p><p class="pattern-ref" id="patternRef"></p>
+<details class="grid-settings"><summary>Grid width, zoom &amp; context</summary><div class="fields"><label class="field">Letters per row<input id="gridWidth" type="number" min="4" max="100" value="20" inputmode="numeric"></label><label class="field">Letter size <output id="zoomValue">22 px</output><input id="gridZoom" type="range" min="16" max="36" value="22"></label><label class="field context-field">Context each side<input id="gridContext" type="number" min="0" max="1000" value="100" inputmode="numeric"></label></div><p class="hint">Letters advance from right to left, then down. Wide grids scroll sideways inside the box. Up to 2,000 letters are shown per window. Additional words search only that window.</p></details>
+<p class="grid-note" id="gridWindow"></p>
+<div class="grid-box" id="gridBox" tabindex="0" role="group" aria-label="Hebrew letter grid. Tap a letter to check its reference."><div class="letter-grid hebrew" id="letterGrid" lang="he" dir="rtl"></div></div>
+<div class="pager no-print"><button id="prevGrid" type="button">Previous letters</button><button id="jumpHit" type="button">Next highlighted letter</button><button id="nextGrid" type="button">Next letters</button></div>
+<div class="legend" id="legend"></div><p class="grid-note no-print">Tap any letter to see its pasuk and position. Dotted outlines show overlapping patterns.</p>
+<div class="inspector" id="inspector"></div>
+<div class="extra-area"><h3>Find another word in this grid</h3><p class="hint">Each word gets its own color and skip. Add up to 5 words.</p>
+<form id="extraForm"><fieldset id="extraFields" style="border:0;padding:0;margin:0;min-width:0"><div class="fields"><label class="field full">Additional Hebrew word<input id="extraQuery" class="hebrew" lang="he" dir="rtl" maxlength="200" autocomplete="off" required placeholder="שלום"></label><label class="field">Minimum skip<input id="extraMin" type="number" min="1" max="10000" value="1" required inputmode="numeric"></label><label class="field">Maximum skip<input id="extraMax" type="number" min="1" max="10000" value="100" required inputmode="numeric"></label><label class="field full">Direction<select id="extraDirection"><option value="both">Forward &amp; backward</option><option value="forward">Forward</option><option value="backward">Backward</option></select></label></div><button type="submit" class="primary" style="margin-top:12px;width:100%">Find &amp; highlight</button></fieldset></form>
+<button id="cancelExtra" type="button" hidden style="margin-top:8px;width:100%">Cancel additional search</button><p id="extraStatus" class="status" role="status"></p><div id="extraList" class="extra-list"></div></div>
+<div class="row export-actions"><button id="saveResult" type="button">Save result</button><button id="shareResult" type="button">Copy result link</button><button id="printResult" type="button">Print</button></div>
+<p id="exportStatus" class="status no-print" role="status"></p><input id="sharedLink" class="share-link no-print" readonly hidden aria-label="Result link">
+<div id="printLetters" class="print-only"></div><p class="print-only print-footer" id="printFooter"></p>
+</section></div>
+<details class="card load-saved"><summary>Open a saved result</summary><div><label class="field">Choose your Torah Codes result file<input id="loadResult" type="file" accept=".json,application/json" disabled></label><p class="hint">Saved files and links include the exact pattern, text version, and grid settings. They do not save a search as exhaustive.</p><p id="loadStatus" class="status" role="status"></p></div></details>
+<details class="card source-card" id="sourceDetails"><summary>Torah text, edition &amp; accuracy</summary><div class="source-details">
+<p><b>Standard Ashkenazi &amp; Sephardi Torah scroll spelling, 304,805 Hebrew letters.</b> This is a written-letter (ketiv) projection of <a href="https://en.wikisource.org/wiki/User:Dovi/Miqra_according_to_the_Masorah#beginning" target="_blank" rel="noopener">Miqra according to the Masorah, Hebrew Wikisource</a>, using its explicitly documented Ashkenazi and Sephardi scroll readings. The 9 spelling choices below come from that same edition’s notes. Chabad and Yemenite scrolls have some differences; this search uses the standard selection shown here.</p>
+<p>The dataset is pinned to <a href="https://github.com/bdenckla/MAM-basics/tree/f948233b08cb4809f92bd9c3be748ef55381cd97/MAM-simple" target="_blank" rel="noopener">MAM-basics f948233b (23 Nov 2026 snapshot)</a>. Pasuk references follow <b>BHS Hebrew chapter and verse numbering</b>, including its divisions of the Aseres Hadibros. Other editions can divide those pesukim differently.</p>
+<p>Only letters א through ת count. No spaces, vowel or cantillation marks, punctuation, marginal qere readings, section markers, or inverted-nun symbols enter the search. Large and small letters count once. Final letters stay exactly as written in the grid; the optional final-letter setting only changes how comparisons are made. No spelling is inferred from a word’s modern spelling.</p>
+<p>Every letter maps to its sefer, perek, pasuk, letter position within that pasuk, and character offset in the selected source text. Tap a grid letter to inspect it. The data file and searchable letter stream are checked against SHA-256 fingerprints before searching.</p>
+<div class="table-wrap"><table><thead><tr><th>Pasuk</th><th>Selected scroll spelling</th><th>MAM base reading</th></tr></thead><tbody id="readingTable"></tbody></table></div>
+<p>Text attribution: <a href="https://en.wikisource.org/wiki/User:Dovi/Miqra_according_to_the_Masorah#beginning" target="_blank" rel="noopener">Hebrew Wikisource</a>. Prepared by Seth (Avi) Kadish with Erel Segal-Halevi and Benjamin Denckla. Text and this derived dataset: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Changes: selected the documented scroll variants, ketiv-only extraction, removal of layout symbols, and packaging with references. No other consonant spelling changes.</p>
+<p><a href="data/provenance.json" download>Checksums &amp; source manifest</a> · <a href="data/torah.json" download>Search dataset</a> · <a href="source/mam-torah-snapshot.zip" download>Unmodified source snapshot</a> · <a href="source/LICENSE.md">Source license</a></p>
+<p class="hint" id="integrity"></p></div></details>
+<p class="disclaimer">Patterns depend on the text edition, search range, and spelling options. A match alone has no established predictive or statistical meaning.</p>
+<div id="cj-share"></div>
+</main>
+<script id="elsEngine">
+/* TORAH_ELS_START */
+(function(root){
+'use strict';
+const FINAL={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+function normalize(s,fold=false){const t=String(s).replace(/[^\u05d0-\u05ea]/g,'');return fold?t.replace(/[ךםןףץ]/g,c=>FINAL[c]):t;}
+function build(data,tradition='standard'){
+ const ti=data.traditions.indexOf(tradition);if(ti<0)throw Error('Unknown scroll tradition.');
+ const verses=[],books=[],parts=[];let n=0;
+ data.books.forEach((b,bi)=>{const book={...b,start:n,chapters:[]};books.push(book);
+ b.chapters.forEach((ch,ci)=>{const chapter=[];book.chapters.push(chapter);
+ ch.forEach((v,vi)=>{const raw=typeof v==='string'?v:v[ti],text=normalize(raw);if(!text.length)throw Error('Empty pasuk.');
+ const verse={book:bi,chapter:ci+1,verse:vi+1,raw,start:n,end:n+text.length};chapter.push(verse);verses.push(verse);parts.push(text);n+=text.length;});});book.end=n;});
+ const text=parts.join(''),verseOf=new Uint16Array(n),offsets=new Uint16Array(n);let k=0;
+ verses.forEach((v,i)=>{for(let p=0;p<v.raw.length;p++){if(v.raw[p]>='א'&&v.raw[p]<='ת'){verseOf[k]=i;offsets[k++]=p;}}});
+ return {text,verses,books,verseOf,offsets,tradition};
+}
+function reference(c,i){if(!Number.isInteger(i)||i<0||i>=c.text.length)throw Error('Letter outside the Torah.');const v=c.verses[c.verseOf[i]];return {...v,name:c.books[v.book].name,he:c.books[v.book].he,position:i-v.start+1,sourceOffset:c.offsets[i],letter:c.text[i]};}
+function lower(a,n){let l=0,r=a.length;while(l<r){const m=(l+r)>>>1;if(a[m]<n)l=m+1;else r=m;}return l;}
+function plan(text,opt){
+ const q=normalize(opt.query,opt.fold),a=opt.from,b=opt.to;
+ if(q.length<2||q.length>32)throw Error('Enter 2 to 32 Hebrew letters.');
+ if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b>text.length||a>=b)throw Error('Choose a valid pasuk range.');
+ if(!Number.isInteger(opt.min)||!Number.isInteger(opt.max)||opt.min<1||opt.max>10000||opt.min>opt.max)throw Error('Skips must be whole numbers from 1 to 10,000, with minimum no greater than maximum.');
+ if(!['both','forward','backward'].includes(opt.direction))throw Error('Choose a search direction.');
+ const s=opt.fold?normalize(text,true):text,starts=[];for(let i=a;i<b;i++)if(s[i]===q[0])starts.push(i);
+ const tasks=[];let total=0;const max=Math.min(opt.max,Math.floor((b-a-1)/(q.length-1)));
+ for(let d=opt.min;d<=max;d++)for(const sign of opt.direction==='both'?[1,-1]:[opt.direction==='forward'?1:-1]){
+  const span=d*(q.length-1),lo=lower(starts,sign>0?a:a+span),hi=lower(starts,sign>0?b-span:b);
+  if(hi>lo){tasks.push({step:d*sign,lo,hi});total+=hi-lo;}
+ }
+ if(total>(opt.budget??50000000))throw Error('This search needs '+total.toLocaleString()+' candidate checks. The limit is 50 million. Narrow the pasuk range, skip range, or search a longer word.');
+ return {s,q,starts,tasks,total};
+}
+function search(text,opt,report=()=>{},now=()=>performance.now()){
+ const p=plan(text,opt),began=now(),matches=[];let checked=0,last=began,sent=0,reason='complete';
+ report({type:'progress',checked:0,total:p.total,matches:[]});
+ outer:for(const t of p.tasks){for(let j=t.lo;j<t.hi;j++){
+  const start=p.starts[j];let ok=true;for(let k=1;k<p.q.length;k++)if(p.s[start+k*t.step]!==p.q[k]){ok=false;break;}
+  checked++;if(ok){matches.push({start,step:t.step});if(matches.length>=(opt.limit??500)){reason='result-limit';break outer;}}
+  if((checked&2047)===0){const time=now();if(time-began>(opt.milliseconds??15000)){reason='time-limit';break outer;}
+   if(time-last>=75){report({type:'progress',checked,total:p.total,matches:matches.slice(sent)});sent=matches.length;last=time;}}
+ }}
+ const result={type:'done',checked,total:p.total,matches:matches.slice(sent),reason,elapsed:now()-began};report(result);return {...result,matches};
+}
+function validateMatch(c,m,from,to,fold){
+ if(!m||typeof m.query!=='string'||m.query.length>200||normalize(m.query).length<2||normalize(m.query).length>32||!Number.isInteger(m.start)||!Number.isInteger(m.step)||!m.step||Math.abs(m.step)>10000)throw Error('Invalid saved match.');
+ const q=normalize(m.query,fold);for(let k=0;k<q.length;k++){const i=m.start+k*m.step;if(i<from||i>=to||normalize(c.text[i],fold)!==q[k])throw Error('Saved letters do not match this Torah text.');}return true;
+}
+root.TorahELS={normalize,build,reference,plan,search,validateMatch};
+})(typeof self==='undefined'?globalThis:self);
+/* TORAH_ELS_END */
+</script>
+<script id="elsWorker" type="text/plain">
+self.onmessage=({data})=>{try{TorahELS.search(data.text,data.options,m=>self.postMessage(m));}catch(e){self.postMessage({type:'error',message:e.message});}};
+</script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id),E=TorahELS;
+const DATA_HASH='e479feb9264afb9a8da67ca3d679c0e0465da70946c66d09c5794080b405b4c8',LETTER_HASH='b65394d28c85ce76dca0d15af08810deebb2e85032d6575a9ae764643a193226';
+const COLORS=['#f5b841','#00c8ff','#ef97da','#8fe4b8','#ffab78','#bba3ff'];
+let inspected=0;
+let corpus,data,primary=null,results=[],searchOptions=null,resultPage=0,selected=-1,grid={width:20,zoom:22,context:100,page:0},windowRange=null,extras=[],job=null,extraJob=null,jobSerial=0;
+const nf=n=>n.toLocaleString('en-US');
+function message(id,text,error=false){$(id).textContent=text;$(id).classList.toggle('error',error);}
+function node(tag,attrs={},text=''){const n=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k==='class')n.className=v;else n.setAttribute(k,v);}if(text)n.textContent=text;return n;}
+function ref(i,position=true){const r=E.reference(corpus,i);return `${r.name} ${r.chapter}:${r.verse}${position?' · letter '+r.position:''}`;}
+function scopeRange(){const mode=$('scope').value;if(mode==='all')return[0,corpus.text.length];if(mode==='book'){const b=corpus.books[+$('book').value];return[b.start,b.end];}
+ const find=prefix=>corpus.books[+$(prefix+'Book').value]?.chapters[+$(prefix+'Chapter').value-1]?.[+$(prefix+'Verse').value-1];
+ const a=find('from'),b=find('to');if(!a||!b||a.start>b.start)throw Error('Choose existing pesukim, with the starting pasuk before the ending pasuk.');return[a.start,b.end];}
+function options(extra=false){const[from,to]=extra?[windowRange.from,windowRange.to]:scopeRange();return {query:$(extra?'extraQuery':'query').value,from,to,min:+$(extra?'extraMin':'minSkip').value,max:+$(extra?'extraMax':'maxSkip').value,direction:$(extra?'extraDirection':'direction').value,fold:extra?searchOptions.fold:$('foldFinals').checked,limit:extra?100:500};}
+function makeWorker(opt,receive,failed){
+ const url=URL.createObjectURL(new Blob([$('elsEngine').textContent,'\n',$('elsWorker').textContent],{type:'text/javascript'}));let worker;
+ try{worker=new Worker(url);}catch(e){URL.revokeObjectURL(url);throw Error('Your browser could not start a background search. Please try a current Chrome, Firefox or Safari.');}
+ const task={worker,id:++jobSerial,stop(){worker.terminate();URL.revokeObjectURL(url);}};
+ worker.onmessage=({data:m})=>receive(m,task);worker.onerror=()=>{task.stop();failed('The background search could not run. Try a smaller range or reload the page.');};worker.postMessage({text:corpus.text,options:opt});return task;
+}
+function busy(on){$('searchFields').disabled=on;$('loadResult').disabled=on;$('extraFields').disabled=on;$('cancelButton').hidden=!on;$('progress').hidden=!on;$('progress').value=0;}
+function cancelExtra(reason='Additional search cancelled. Its partial results were not added.'){
+ if(extraJob){extraJob.stop();extraJob=null;message('extraStatus',reason);}$('extraFields').disabled=!!job;$('cancelExtra').hidden=true;
+}
+function stopSearch(){if(!job)return;job.stop();job=null;busy(false);finish('cancelled');}
+function finish(reason){
+ const complete=reason==='complete';let text=complete?`${nf(results.length)} ${results.length===1?'match':'matches'} found. Search complete.`:reason==='cancelled'?`Search cancelled. ${nf(results.length)} matches received so far; results are incomplete.`:reason==='result-limit'?`Stopped at the 500-match limit. Results are incomplete. Narrow the range to find more.`:'Stopped at the 15-second limit. Results are incomplete. Narrow the range to continue.';
+ if(complete&&!results.length)text='No matches in this range with these skip and letter options.';
+ message('status',text);$('resultSummary').textContent=complete?`${nf(results.length)} matches · ${searchOptions.fold?'final forms matched':'exact letter forms'}`:`${nf(results.length)} received · incomplete search`;
+ $('resultsArea').hidden=false;renderResults();
+ if(results.length&&selected<0)selectMatch(0,false);
+}
+function startSearch(event){event?.preventDefault();if(!corpus||job)return;
+ let opt;try{opt=options();E.plan(corpus.text,opt);}catch(e){message('status',e.message,true);return;}
+ cancelExtra();primary=null;extras=[];selected=-1;results=[];resultPage=0;searchOptions=opt;$('gridCard').hidden=true;$('resultsArea').hidden=true;$('sharedLink').hidden=true;message('exportStatus','');
+ busy(true);message('status','Searching the Torah’s Hebrew letters…');
+ try{job=makeWorker(opt,(m,t)=>{if(job!==t)return;if(m.type==='error'){t.stop();job=null;busy(false);message('status',m.message,true);return;}
+  results.push(...m.matches);$('progress').value=m.total?m.checked/m.total:1;
+  if(m.type==='progress')message('status',`${nf(m.checked)} of ${nf(m.total)} candidate positions checked · ${nf(results.length)} matches received`);
+  else if(m.type==='done'){t.stop();job=null;busy(false);finish(m.reason);}
+ },err=>{job=null;busy(false);message('status',err,true);});}catch(e){busy(false);message('status',e.message,true);}
+}
+function renderResults(){const list=$('resultList');list.replaceChildren();const first=resultPage*10;
+ for(let i=first;i<Math.min(first+10,results.length);i++){const m=results[i],end=m.start+(E.normalize(searchOptions.query).length-1)*m.step;const b=node('button',{type:'button',class:'match','aria-pressed':i===selected?'true':'false'});
+ b.append(node('strong',{class:'hebrew',dir:'rtl',lang:'he'},E.normalize(searchOptions.query)),node('span',{class:'match-meta'},`Skip ${m.step>0?'+':''}${m.step} · ${m.step>0?'Forward':'Backward'}`),node('span',{class:'result-ref'},`From ${ref(m.start)}`),node('span',{class:'result-ref'},`To ${ref(end)}`));b.onclick=()=>selectMatch(i,true);list.append(b);}
+ if(!results.length)list.append(node('p',{class:'empty'},'Try a different word, range or skip interval.'));
+ $('prevResults').disabled=resultPage===0;$('nextResults').disabled=first+10>=results.length;$('resultsPage').textContent=results.length?`${first+1}–${Math.min(first+10,results.length)} of ${nf(results.length)}`:'0 matches';
+}
+function selectMatch(index,scroll){cancelExtra();selected=index;primary={...results[index],query:E.normalize(searchOptions.query)};extras=[];grid.page=0;grid.width=Math.max(4,Math.min(60,Math.abs(primary.step)));setField('gridWidth',grid.width);windowRange=null;renderResults();$('gridCard').hidden=false;renderGrid();if(scroll)$('gridCard').scrollIntoView({behavior:'smooth',block:'start'});}
+function setField(id,value){if(document.activeElement!==$(id))$(id).value=String(value);}
+function gridBounds(){const end=primary.start+(primary.query.length-1)*primary.step;return{from:Math.max(searchOptions.from,Math.min(primary.start,end)-grid.context),to:Math.min(searchOptions.to,Math.max(primary.start,end)+grid.context+1)};}
+function currentWindow(){const b=gridBounds(),size=Math.floor(2000/grid.width)*grid.width;grid.page=Math.max(0,Math.min(grid.page,Math.ceil((b.to-b.from)/size)-1));return{from:b.from+grid.page*size,to:Math.min(b.to,b.from+(grid.page+1)*size),size,bounds:b};}
+function highlighted(){const map=new Map();function add(m,colorIndex){for(let k=0;k<m.query.length;k++){const index=m.start+k*m.step;if(!map.has(index))map.set(index,[]);map.get(index).push(colorIndex);}}add(primary,0);extras.forEach(x=>add({...x.matches[x.selected],query:x.query},x.color));return map;}
+function renderGrid(){if(!primary)return;
+ const w=currentWindow();if(windowRange&&(windowRange.from!==w.from||windowRange.to!==w.to)){cancelExtra('The grid window changed. Search additional words again.');if(extras.length)message('extraStatus','The grid window changed. Search additional words again.');extras=[];}
+ windowRange=w;const marks=highlighted(),fragment=document.createDocumentFragment();let visible=0;
+ for(let i=w.from;i<w.to;i++){const span=node('span',{class:'letter','data-index':i,title:ref(i)},corpus.text[i]);const colors=marks.get(i);if(colors){span.classList.add('hit');span.style.setProperty('--hit',COLORS[colors[0]]);span.setAttribute('aria-label',`${corpus.text[i]}, ${ref(i)}, highlighted ${colors.map(n=>n+1).join(', ')}`);if(colors.length>1){span.classList.add('multi');span.style.background=`linear-gradient(135deg,${COLORS[colors[0]]} 50%,${COLORS[colors[1]]} 50%)`;}}
+ if(marks.get(i)?.includes(0))visible++;fragment.append(span);}
+ const g=$('letterGrid');g.replaceChildren(fragment);g.style.setProperty('--cols',grid.width);g.style.setProperty('--cell',(grid.zoom+10)+'px');g.style.fontSize=grid.zoom+'px';
+ $('gridHeading').textContent=primary.query;const end=primary.start+(primary.query.length-1)*primary.step;
+ $('patternMeta').textContent=`Skip ${primary.step>0?'+':''}${primary.step} · ${primary.step>0?'Forward':'Backward'} · ${searchOptions.fold?'Final letters matched to regular forms':'Exact letter forms'}`;
+ $('patternRef').textContent=`From ${ref(primary.start)} to ${ref(end)}`;
+ $('gridWindow').textContent=`Letters ${nf(w.from+1)}–${nf(w.to)} of the Torah · ${visible} of ${primary.query.length} main matching letters visible${visible<primary.query.length?' · Use the arrows to see the rest.':''}`;
+ $('prevGrid').disabled=w.from===w.bounds.from;$('nextGrid').disabled=w.to===w.bounds.to;
+ const legend=$('legend');legend.replaceChildren();[{query:primary.query,color:0},...extras].forEach(x=>{const item=node('span',{},`${x.color+1}. ${x.query}`);const sw=node('i',{class:'swatch'});sw.style.setProperty('--hit',COLORS[x.color]);item.prepend(sw);legend.append(item);});
+ renderExtras();inspect(primary.start>=w.from&&primary.start<w.to?primary.start:w.from);renderPrint();setField('gridWidth',grid.width);setField('gridContext',grid.context);setField('gridZoom',grid.zoom);$('zoomValue').value=grid.zoom+' px';
+}
+function inspect(index){inspected=index;const r=E.reference(corpus,index),box=$('inspector');box.replaceChildren(node('strong',{},`${r.letter} · ${ref(index)}`),node('div',{class:'hint'},`Torah letter ${nf(index+1)} · source character ${r.sourceOffset+1} in the selected pasuk text`));
+ const verse=node('div',{class:'verse-text',lang:'he',dir:'rtl'});verse.append(document.createTextNode(r.raw.slice(0,r.sourceOffset)),node('mark',{},r.raw[r.sourceOffset]),document.createTextNode(r.raw.slice(r.sourceOffset+1)));box.append(verse);$('letterGrid').querySelector('.chosen')?.classList.remove('chosen');$('letterGrid').querySelector(`[data-index="${index}"]`)?.classList.add('chosen');}
+function startExtra(event){event.preventDefault();if(!primary||extraJob||job)return;if(extras.length>=5){message('extraStatus','Up to 5 additional words fit in one grid. Remove one to add another.',true);return;}
+ let opt;try{opt=options(true);E.plan(corpus.text,opt);}catch(e){message('extraStatus',e.message,true);return;}const found=[];
+ $('extraFields').disabled=true;$('cancelExtra').hidden=false;message('extraStatus','Searching only the displayed letters…');
+ try{extraJob=makeWorker(opt,(m,t)=>{if(extraJob!==t)return;if(m.type==='error'){t.stop();extraJob=null;$('extraFields').disabled=false;$('cancelExtra').hidden=true;message('extraStatus',m.message,true);return;}
+  found.push(...m.matches);if(m.type==='progress')message('extraStatus',`${nf(m.checked)} of ${nf(m.total)} candidate positions checked`);
+  else{t.stop();extraJob=null;$('extraFields').disabled=false;$('cancelExtra').hidden=true;
+   if(found.length){const color=[1,2,3,4,5].find(n=>!extras.some(e=>e.color===n));extras.push({query:E.normalize(opt.query),matches:found,selected:0,color});renderGrid();}
+   message('extraStatus',`${found.length} matches in the displayed window${m.reason!=='complete'?' · incomplete, stopped at a limit':'.'}${found.length?' Choose a match below to highlight it.':''}`);
+  }},err=>{extraJob=null;$('extraFields').disabled=false;$('cancelExtra').hidden=true;message('extraStatus',err,true);});}catch(e){$('extraFields').disabled=false;$('cancelExtra').hidden=true;message('extraStatus',e.message,true);}
+}
+function renderExtras(){const box=$('extraList');box.replaceChildren();extras.forEach((x,i)=>{const wrap=node('div',{class:'extra-item'});wrap.style.setProperty('--hit',COLORS[x.color]);const row=node('div',{class:'row'});row.append(node('strong',{class:'hebrew',lang:'he'},`${x.color+1}. ${x.query}`));const remove=node('button',{type:'button','aria-label':'Remove '+x.query},'Remove');remove.onclick=()=>{extras.splice(i,1);renderGrid();};row.append(remove);wrap.append(row);
+ const pick=node('select',{'aria-label':'Choose a match for '+x.query});x.matches.forEach((m,n)=>pick.append(node('option',{value:n},`${n+1}. Skip ${m.step>0?'+':''}${m.step}, ${m.step>0?'forward':'backward'} · ${ref(m.start)}`)));pick.value=x.selected;pick.onchange=()=>{x.selected=+pick.value;renderGrid();};wrap.append(pick);const m=x.matches[x.selected];wrap.append(node('p',{class:'hint'},`To ${ref(m.start+(x.query.length-1)*m.step)}`));box.append(wrap);});}
+function renderPrint(){const box=$('printLetters');box.replaceChildren(node('p',{},'Main pattern letters (including any outside this printed grid window):'));const table=node('table');for(let k=0;k<primary.query.length;k++){const i=primary.start+k*primary.step,tr=node('tr');tr.append(node('td',{},String(k+1)),node('td',{lang:'he'},corpus.text[i]),node('td',{},ref(i)));table.append(tr);}box.append(table);extras.forEach(x=>{const m=x.matches[x.selected];box.append(node('p',{},`${x.color+1}. ${x.query} · skip ${m.step>0?'+':''}${m.step} · ${ref(m.start)} to ${ref(m.start+(x.query.length-1)*m.step)}`));});$('printFooter').textContent=`Text: Miqra according to the Masorah, Hebrew Wikisource, CC BY-SA 4.0. Documented standard Ashkenazi & Sephardi scroll readings. BHS Hebrew verse numbering. Letter SHA-256: ${LETTER_HASH}. Patterns alone establish no prediction or statistical significance.`;}
+function savedState(){if(!primary)throw Error('Choose a match first.');return{version:1,text:LETTER_HASH,tradition:'standard',scope:[searchOptions.from,searchOptions.to],fold:searchOptions.fold,primary:{...primary},grid:{...grid},extras:extras.map(x=>({query:x.query,...x.matches[x.selected],color:x.color}))};}
+function restore(s){
+ if(!s||s.version!==1||s.text!==LETTER_HASH||s.tradition!=='standard')throw Error('This result uses a different or unknown Torah text version.');
+ if(!Array.isArray(s.scope)||s.scope.length!==2||!s.scope.every(Number.isInteger)||s.scope[0]<0||s.scope[1]>corpus.text.length||s.scope[0]>=s.scope[1]||typeof s.fold!=='boolean')throw Error('Invalid saved search range.');
+ E.validateMatch(corpus,s.primary,...s.scope,s.fold);
+ const g=s.grid;if(!g||!Number.isInteger(g.width)||g.width<4||g.width>100||!Number.isInteger(g.zoom)||g.zoom<16||g.zoom>36||!Number.isInteger(g.context)||g.context<0||g.context>1000||!Number.isInteger(g.page)||g.page<0||g.page>100000)throw Error('Invalid grid settings.');
+ if(!Array.isArray(s.extras)||s.extras.length>5)throw Error('Invalid extra patterns.');
+ const spanEnd=s.primary.start+(E.normalize(s.primary.query).length-1)*s.primary.step,bFrom=Math.max(s.scope[0],Math.min(s.primary.start,spanEnd)-g.context),bTo=Math.min(s.scope[1],Math.max(s.primary.start,spanEnd)+g.context+1),size=Math.floor(2000/g.width)*g.width,from=bFrom+g.page*size,to=Math.min(bTo,from+size);
+ if(from>=to)throw Error('Invalid saved grid window.');const colors=new Set();s.extras.forEach(x=>{if(!Number.isInteger(x.color)||x.color<1||x.color>5||colors.has(x.color))throw Error('Invalid highlight colors.');colors.add(x.color);E.validateMatch(corpus,x,from,to,s.fold);});
+ cancelExtra();if(job){job.stop();job=null;busy(false);}primary={query:E.normalize(s.primary.query),start:s.primary.start,step:s.primary.step};searchOptions={query:primary.query,from:s.scope[0],to:s.scope[1],fold:s.fold};results=[{start:primary.start,step:primary.step}];selected=0;resultPage=0;grid={width:g.width,zoom:g.zoom,context:g.context,page:g.page};extras=s.extras.map(x=>({query:E.normalize(x.query),matches:[{start:x.start,step:x.step}],selected:0,color:x.color}));windowRange=null;
+ $('resultsArea').hidden=false;$('gridCard').hidden=false;$('resultSummary').textContent='Saved pattern · no exhaustive search was run';renderResults();renderGrid();message('status','Saved result verified against the pinned Torah text.');message('exportStatus','');
+}
+function encode(s){const bytes=new TextEncoder().encode(JSON.stringify(s));return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function decode(s){if(s.length>12000||!/^[A-Za-z0-9_-]+$/.test(s))throw Error('This result link is invalid or too long.');return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))));}
+async function copyResult(){try{const url=new URL('/torah-codes/',location.origin);url.hash='result='+encode(savedState());const text=url.href;let copied=false;try{await navigator.clipboard.writeText(text);copied=true;}catch{const a=document.createElement('textarea');a.value=text;a.style.position='fixed';a.style.opacity='0';document.body.append(a);a.select();copied=document.execCommand('copy');a.remove();}
+ if(copied){message('exportStatus','Result link copied. Anyone with the link can open this exact pattern.');$('sharedLink').hidden=true;}else{$('sharedLink').hidden=false;$('sharedLink').value=text;message('exportStatus','Copy the result link from the box below.');}}catch(e){message('exportStatus',e.message,true);}}
+function saveResult(){try{const b=new Blob([JSON.stringify(savedState(),null,2)+'\n'],{type:'application/json'}),u=URL.createObjectURL(b),a=node('a',{href:u,download:'torah-codes-result.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);message('exportStatus','Result saved. Use “Open a saved result” to load it later.');}catch(e){message('exportStatus',e.message,true);}}
+function loadHash(){if(!location.hash)return;try{if(!location.hash.startsWith('#result='))throw Error('Unknown result link format.');restore(decode(location.hash.slice(8)));}catch(e){message('loadStatus',e.message,true);$('loadResult').closest('details').open=true;}}
+async function digest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(n=>n.toString(16).padStart(2,'0')).join('');}
+async function init(){try{const response=await fetch('data/torah.json?v='+DATA_HASH.slice(0,12));if(!response.ok)throw Error('Torah text could not be downloaded. Check your connection and reload.');const bytes=await response.arrayBuffer();if(await digest(bytes)!==DATA_HASH)throw Error('The Torah data fingerprint did not match. Reload the page to get the correct edition.');data=JSON.parse(new TextDecoder().decode(bytes));corpus=E.build(data,'standard');if(corpus.text.length!==304805||await digest(new TextEncoder().encode(corpus.text))!==LETTER_HASH)throw Error('The searchable Torah letters failed their integrity check. Searching has been disabled.');
+ ['book','fromBook','toBook'].forEach(id=>corpus.books.forEach((b,i)=>$(id).append(node('option',{value:i},`${b.name} · ${b.he}`))));
+ data.scrollReadings.forEach(x=>{const tr=node('tr');tr.append(node('td',{},x.ref),node('td',{class:'hebrew',lang:'he'},x.standard),node('td',{class:'hebrew',lang:'he'},x.mam));$('readingTable').append(tr);});
+ $('searchFields').disabled=false;$('loadResult').disabled=false;message('status','Torah text verified. Enter a word, or try the checked example.');$('integrity').textContent='Verified searchable-letter SHA-256: '+LETTER_HASH;loadHash();
+ }catch(e){message('status',e.message||'Could not load the Torah text. Please reload.',true);}}
+$('searchForm').addEventListener('submit',startSearch);$('cancelButton').onclick=stopSearch;$('cancelExtra').onclick=()=>cancelExtra();$('extraForm').addEventListener('submit',startExtra);
+$('scope').onchange=()=>{$('bookField').hidden=$('scope').value!=='book';$('rangeFields').hidden=$('scope').value!=='range';};
+$('query').oninput=()=>{const q=E.normalize($('query').value);$('countedQuery').textContent=q?`Searching ${q.length} Hebrew letters: ${q}`:'Only Hebrew letters count. Spaces, nekudos, cantillation and punctuation are ignored.';};
+$('exampleButton').onclick=()=>{$('query').value='תורה';$('scope').value='range';$('scope').onchange();['fromBook','toBook'].forEach(id=>$(id).value='0');['fromChapter','toChapter','fromVerse'].forEach(id=>$(id).value='1');$('toVerse').value='5';$('minSkip').value='50';$('maxSkip').value='50';$('direction').value='both';$('foldFinals').checked=false;$('query').oninput();startSearch();};
+$('prevResults').onclick=()=>{resultPage--;renderResults();};$('nextResults').onclick=()=>{resultPage++;renderResults();};
+$('letterGrid').onclick=e=>{const letter=e.target.closest('[data-index]');if(letter)inspect(+letter.dataset.index);};
+$('gridBox').addEventListener('keydown',e=>{if(!windowRange)return;const delta={ArrowLeft:1,ArrowRight:-1,ArrowDown:grid.width,ArrowUp:-grid.width}[e.key];if(delta!==undefined){e.preventDefault();const i=Math.max(windowRange.from,Math.min(windowRange.to-1,inspected+delta));inspect(i);$('letterGrid').querySelector(`[data-index="${i}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});}});
+['gridWidth','gridContext','gridZoom'].forEach(id=>$(id).addEventListener(id==='gridZoom'?'input':'change',()=>{const n=+$(id).value,lo=id==='gridWidth'?4:id==='gridZoom'?16:0,hi=id==='gridWidth'?100:id==='gridZoom'?36:1000;if(!Number.isInteger(n)||n<lo||n>hi){message('exportStatus',`Choose a whole number between ${lo} and ${hi}.`,true);return;}grid[id==='gridWidth'?'width':id==='gridZoom'?'zoom':'context']=n;if(id!=='gridZoom')grid.page=0;renderGrid();}));
+$('prevGrid').onclick=()=>{grid.page--;renderGrid();};$('nextGrid').onclick=()=>{grid.page++;renderGrid();};$('jumpHit').onclick=()=>{const b=gridBounds(),hits=Array.from({length:primary.query.length},(_,i)=>primary.start+i*primary.step).sort((a,b)=>a-b),next=hits.find(i=>i>=windowRange.to)??hits[0];grid.page=Math.floor((next-b.from)/windowRange.size);renderGrid();const cell=$('letterGrid').querySelector(`[data-index="${next}"]`);cell?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});inspect(next);};
+$('saveResult').onclick=saveResult;$('shareResult').onclick=copyResult;$('printResult').onclick=()=>{message('exportStatus','Prints the displayed grid window and a table of all main pattern letters. For a wide grid, choose landscape or reduce the grid width.');window.print();};
+$('loadResult').onchange=async()=>{const f=$('loadResult').files[0];if(!f)return;try{if(f.size>20000)throw Error('Result files must be under 20 KB.');restore(JSON.parse(await f.text()));message('loadStatus','Saved result opened and verified.');}catch(e){message('loadStatus',e.message,true);}finally{$('loadResult').value='';}};
+window.addEventListener('hashchange',()=>{if(corpus)loadHash();});window.addEventListener('pagehide',()=>{job?.stop();extraJob?.stop();});
+init();
+})();
+</script>
+</body>
+</html>

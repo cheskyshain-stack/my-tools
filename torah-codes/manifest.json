@@ -1,0 +1,7 @@
+{
+  "name": "Torah Codes", "short_name": "Torah Codes",
+  "description": "Explore equal-interval Hebrew letter patterns in the Torah.",
+  "start_url": "/torah-codes/", "scope": "/torah-codes/", "display": "standalone",
+  "background_color": "#080b12", "theme_color": "#080b12",
+  "icons": [{"src":"/torah-codes/icon.png","sizes":"512x512","type":"image/png","purpose":"any"}]
+}

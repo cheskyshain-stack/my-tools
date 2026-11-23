@@ -533,6 +533,16 @@ The pushers read left to right as **setting, Reset, Start/Stop**. The user is ri
 handed and the one pressed most often belongs under the thumb; the order was asked for
 and is not arbitrary.
 
+## Torah Codes
+
+`torah-codes/` uses an inline engine and Blob-backed Web Worker. Read its README
+before changing the text, normalization, search, mapping, or saved-result format.
+The user selected standard Ashkenazi/Sephardi scroll spelling, 304,805 letters,
+using MAM's documented variant branches. Never substitute WLC, count spaces or
+marks, append qere, or silently change spellings. Both pinned SHA-256 hashes must
+match before searching. Links revalidate the text fingerprint and every match.
+Keep Cancel immediate, incomplete searches explicit, and grid windows capped.
+
 ## Data
 
 Every tool keeps its own state in `localStorage` and there is no backend. That means data

@@ -1,5 +1,15 @@
 # Tests
 
+## Torah Codes
+
+Serve the repository root on a fresh unused port, then run
+`CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:torah-codes` from `tests/`.
+Checks cover the pinned traditional scroll text, all letter-to-pasuk mappings,
+independent forward/backward examples, final letters and reference brute-force searches.
+Chromium checks four viewport sizes, RTL grids, extra-word colors/skips, cancellation,
+source integrity, saved links/files, printing, long grids and portal Back/Forward.
+See `torah-codes/README.md` for the edition, spelling choices and limits.
+
 ## Sunrise and sunset weather history
 
 Serve the repository root on a fresh port, then run
