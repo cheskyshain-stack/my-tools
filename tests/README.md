@@ -6,7 +6,8 @@ Serve the repository root on a fresh unused port, then run
 `CJ_BASE_URL=http://127.0.0.1:<fresh-port> npm run test:torah-codes` from `tests/`.
 Checks cover the pinned traditional scroll text, all letter-to-pasuk mappings,
 independent forward/backward examples, final letters and reference brute-force searches.
-Chromium checks four viewport sizes, prominent skip counts, explicit perek/pasuk
+Chromium checks four viewport sizes, visible first-search skip limits, entered ranges,
+prominent skip counts, explicit perek/pasuk
 labels, per-letter pasuk navigation in both directions, getting-started instructions,
 RTL grids, extra-word colors/skips, cancellation, source integrity, saved links/files,
 printing, long grids and portal Back/Forward. Passage checks cover all matched

@@ -71,7 +71,8 @@ Progress includes partial batches. Every early stop is explicitly incomplete.
 Cancel terminates the worker and ignores stale messages. Starting over clears results.
 
 The search form includes a short getting-started prompt and a Basic instructions
-panel. Each result card states "Every N letters" and its direction, sefer, perek
+panel. Minimum and maximum skip inputs are always visible on the primary form,
+starting at 1 and 100; only final-letter options are collapsed. Each result card states "Every N letters" and its direction, sefer, perek
 and pasuk. The selected result gives a large interval count, explains the number
 of letters between hits, and explicitly labels the first and last matched pesukim.
 The letter list shows every matched letter and its reference in word order,

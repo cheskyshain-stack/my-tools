@@ -42,6 +42,9 @@
 <div class="fields">
 <label class="field full">Hebrew word or phrase<input class="query hebrew" id="query" lang="he" dir="rtl" placeholder="תורה" maxlength="200" autocomplete="off" required aria-describedby="countedQuery"></label>
 <p class="hint full" id="countedQuery">Only Hebrew letters count. Spaces, nekudos, cantillation and punctuation are ignored.</p>
+<label class="field">Minimum skip<input id="minSkip" type="number" min="1" max="10000" value="1" inputmode="numeric" required></label>
+<label class="field">Maximum skip<input id="maxSkip" type="number" min="1" max="10000" value="100" inputmode="numeric" required></label>
+<p class="hint full" id="skipRangeHelp">Search every skip in this range. To search only one skip, enter the same number in both boxes. A skip of 1 reads adjacent letters.</p>
 <label class="field">Search in<select id="scope"><option value="all">Entire Torah</option><option value="book">One sefer</option><option value="range">Range of pesukim</option></select></label>
 <label class="field">Direction<select id="direction"><option value="both">Forward &amp; backward</option><option value="forward">Forward</option><option value="backward">Backward</option></select></label>
 <label class="field" id="bookField" hidden>Sefer<select id="book"></select></label>
@@ -50,11 +53,9 @@
 <div class="range-end"><label>From sefer<select id="fromBook"></select></label><label>Perek<input id="fromChapter" type="number" min="1" max="50" value="1" inputmode="numeric"></label><label>Pasuk<input id="fromVerse" type="number" min="1" max="176" value="1" inputmode="numeric"></label></div>
 <div class="range-end"><label>To sefer<select id="toBook"></select></label><label>Perek<input id="toChapter" type="number" min="1" max="50" value="1" inputmode="numeric"></label><label>Pasuk<input id="toVerse" type="number" min="1" max="176" value="5" inputmode="numeric"></label></div>
 </div>
-<details class="help" id="searchOptions"><summary>Skip intervals &amp; letter options</summary><div class="fields">
-<label class="field">Minimum skip<input id="minSkip" type="number" min="1" max="10000" value="1" inputmode="numeric" required></label>
-<label class="field">Maximum skip<input id="maxSkip" type="number" min="1" max="10000" value="100" inputmode="numeric" required></label>
+<details class="help" id="searchOptions"><summary>Final-letter options</summary><div class="fields">
 <label class="check full"><input id="foldFinals" type="checkbox"><span>Match final letters with regular forms<br><span class="hint" lang="he" dir="rtl">ך = כ · ם = מ · ן = נ · ף = פ · ץ = צ</span></span></label>
-<p class="hint full">A skip of 50 moves 50 Hebrew letters each time, with 49 letters between. A skip of 1 reads adjacent letters.</p>
+
 </div></details>
 <div class="search-actions"><button class="primary" id="searchButton" type="submit">Find patterns</button><button id="exampleButton" type="button">Try an example</button></div>
 </fieldset>
@@ -62,7 +63,7 @@
 <button id="cancelButton" type="button" hidden style="margin-top:12px;width:100%">Cancel search</button>
 <progress id="progress" value="0" max="1" hidden aria-label="Search progress"></progress>
 <p class="status" id="status" role="status" aria-live="polite">Loading and checking the Torah text…</p>
-<details class="help" id="basicInstructions"><summary>Basic instructions</summary><ol class="basic-steps"><li>Enter a Hebrew word. Spaces and nekudos do not count.</li><li>Tap <b>Find patterns</b>. The default searches skips 1 to 100, forward and backward. You can leave those settings alone to start.</li><li>The result shows <b>Every 50 letters</b>, for example. This means move 50 letters each time, with 49 letters between the matching letters.</li><li>Read <b>First matched letter</b> and <b>Last matched letter</b> for the sefer, perek and pasuk. The list below shows the pasuk for <b>every</b> matching letter.</li><li>Read all matching pesukim below the grid. Turn on <b>Show pesukim in between</b> to read the whole passage. Tap a letter in the list to jump to its pasuk. Use <b>Choose another match</b> to compare results.</li></ol><p class="basic-note"><b>Forward</b> follows the Torah’s letter order. <b>Backward</b> reads the letters in reverse order. A skip of 1 means adjacent letters, with none between. The example תורה uses a skip of 50 from Bereishis 1:1 to 1:5.</p></details>
+<details class="help" id="basicInstructions"><summary>Basic instructions</summary><ol class="basic-steps"><li>Enter a Hebrew word. Spaces and nekudos do not count.</li><li>Tap <b>Find patterns</b>. Choose <b>Minimum skip</b> and <b>Maximum skip</b> on the main form, or leave the defaults at 1 and 100. Enter 50 in both boxes to search only skip 50. Direction defaults to forward and backward.</li><li>The result shows <b>Every 50 letters</b>, for example. This means move 50 letters each time, with 49 letters between the matching letters.</li><li>Read <b>First matched letter</b> and <b>Last matched letter</b> for the sefer, perek and pasuk. The list below shows the pasuk for <b>every</b> matching letter.</li><li>Read all matching pesukim below the grid. Turn on <b>Show pesukim in between</b> to read the whole passage. Tap a letter in the list to jump to its pasuk. Use <b>Choose another match</b> to compare results.</li></ol><p class="basic-note"><b>Forward</b> follows the Torah’s letter order. <b>Backward</b> reads the letters in reverse order. A skip of 1 means adjacent letters, with none between. The example תורה uses a skip of 50 from Bereishis 1:1 to 1:5.</p></details>
 <details class="help"><summary>How it works &amp; search limits</summary><p class="hint">For example, in <bdi lang="he" class="hebrew">אבגדהוז</bdi>, starting at א and moving 2 letters each time gives <bdi lang="he" class="hebrew">אגהז</bdi>. In the Torah example, תורה begins at Bereishis 1:1, letter 6, with a skip of +50.</p><p class="hint">Enter 2 to 32 Hebrew letters. Skips can be 1 to 10,000 in either direction. Each search allows up to 50 million candidate checks, 15 seconds of worker search time, and 500 displayed matches. A stopped search is marked incomplete. Narrow the range to search further. Searches run on your device in a background worker.</p><p class="hint">These are letter patterns. Finding one does not establish a prediction, hidden message, or statistical significance. The text is joined across words and pesukim; an entire-Torah search can also cross between sefarim.</p></details>
 </section>
 <div class="results-layout" id="resultsArea" hidden>
