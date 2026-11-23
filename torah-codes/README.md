@@ -81,6 +81,21 @@ changes, following the same window rule below. Finished searches open the select
 result; Change word and Choose another match provide navigation back to the form
 and match list. A cancelled search does not move the page automatically.
 
+The passage view below the grid shows every pasuk containing a selected matching
+letter once, with all hits highlighted, including selected additional words. It
+uses the full match rather than just the current grid window. Show pesukim in
+between includes every pasuk from the earliest to latest matched verse, always
+in Torah order, even for a backward word. Text and nekudos are preserved exactly;
+highlight spans include combining marks without normalizing the source.
+
+Only 25 pesukim render per page; all remaining pesukim are available with Previous
+and Next. The summary states the full count and displayed range. Clicking a letter
+opens the right passage page as well as the grid window. A non-matching grid pasuk
+can still be inspected in a separate, clearly labeled card, without adding it to
+the matching count or coloring it as a match. Changing the passage page or context
+checkbox does not change the grid or rerun the search. Source-page controls retain
+focus while updating the displayed text.
+
 Grid source order is right to left, then down. Width is 4 to 100; zoom 16 to 36 px;
 context 0 to 1,000 letters on each side. Each rendered window contains at most 2,000
 letters. Arrows and Next highlighted letter navigate long spans; visible-hit counts
@@ -95,11 +110,15 @@ zoom does not. Extras use the main result's final-letter setting.
 Save exports JSON; Copy result link encodes the same state in a base64url fragment.
 Opening either verifies version, text hash, scope, every matched letter, and grid
 limits before replacing the display. Links open directly without rerunning a search.
-They make no claim that the original search was exhaustive. Fragments are not sent
+The optional `passages` object saves the between-pesukim setting and passage page.
+Its types and bounds are validated before restoring; older files without it open
+with matching pesukim only. They make no claim that the original search was exhaustive. Fragments are not sent
 in HTTP requests. No browser storage is needed to open a saved file on another device.
 
-Print shows the current window on white paper, fits wide grids to A4 width, and
-lists all main-letter references, selected extra patterns, and the text fingerprint.
+Print shows the current grid window and displayed page of full pesukim on white
+paper, fits wide grids to A4 width, and lists all main-letter references, selected
+extra patterns, and the text fingerprint. The passage summary identifies the page
+and total verse count so a long passage is never presented as complete in print.
 Reduce width/context for larger printed letters. Large windows can span pages.
 
 ## Verification

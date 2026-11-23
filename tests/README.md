@@ -9,7 +9,10 @@ independent forward/backward examples, final letters and reference brute-force s
 Chromium checks four viewport sizes, prominent skip counts, explicit perek/pasuk
 labels, per-letter pasuk navigation in both directions, getting-started instructions,
 RTL grids, extra-word colors/skips, cancellation, source integrity, saved links/files,
-printing, long grids and portal Back/Forward.
+printing, long grids and portal Back/Forward. Passage checks cover all matched
+pesukim, optional intervening verses, exact pointed source text, grouped/overlapping
+highlights, backward order, chapter/sefer boundaries, pagination, legacy saved files
+and shared passage settings.
 See `torah-codes/README.md` for the edition, spelling choices and limits.
 
 ## Sunrise and sunset weather history
