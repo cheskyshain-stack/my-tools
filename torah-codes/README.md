@@ -70,6 +70,17 @@ First-letter postings and end-bound checks reduce work. A preflight rejects over
 Progress includes partial batches. Every early stop is explicitly incomplete.
 Cancel terminates the worker and ignores stale messages. Starting over clears results.
 
+The search form includes a short getting-started prompt and a Basic instructions
+panel. Each result card states "Every N letters" and its direction, sefer, perek
+and pasuk. The selected result gives a large interval count, explains the number
+of letters between hits, and explicitly labels the first and last matched pesukim.
+The letter list shows every matched letter and its reference in word order,
+including backward matches. Tapping a row opens the full selected pasuk and jumps
+the grid window if necessary. This can clear extra words when the displayed range
+changes, following the same window rule below. Finished searches open the selected
+result; Change word and Choose another match provide navigation back to the form
+and match list. A cancelled search does not move the page automatically.
+
 Grid source order is right to left, then down. Width is 4 to 100; zoom 16 to 36 px;
 context 0 to 1,000 letters on each side. Each rendered window contains at most 2,000
 letters. Arrows and Next highlighted letter navigate long spans; visible-hit counts
