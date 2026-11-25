@@ -1,3 +1,11 @@
 [functions.catering-invite]
 # The function explicitly verifies the Auth user and platform administrator role.
 verify_jwt = false
+
+[functions.catering-sms]
+# Public provider webhook. The handler verifies the Twilio request signature first.
+verify_jwt = false
+
+[functions.catering-sms-send]
+# The handler verifies managed Auth and company write access before dispatching.
+verify_jwt = false

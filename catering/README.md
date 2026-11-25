@@ -174,6 +174,41 @@ inactive products remain visible in repeated orders but cannot be newly selected
 Repeating and selecting supplies work offline and use the existing backup/sync
 records without a new database migration.
 
+## Text booking requests
+
+Text bookings includes an offline conversation preview. It uses the same engine
+as the signed SMS webhook and the public booking choices: Kiddush, Vacht Nacht,
+Shalom Zachor, Bris and Other, with Classic, Royal and King packages or help choosing.
+Customers answer short questions about date, guests, name, venue, dining tables,
+round/rectangular/mixed cloths and preferences. They review before SEND submits a
+request. BACK restores the last draft answer; MENU restarts; HELP explains; STOP
+stops replies and START resumes. General questions and later texts are supported.
+No calls are placed. The preview sends nothing and creates no actual booking.
+
+Real SMS requires the managed company backend plus a dedicated Twilio texting
+number and server-side credentials. No number has been provisioned and the empty
+cloud settings still mean device-only operation. See backend/README.md for setup.
+The online inbox is company-scoped. Open Text history to inspect the customer
+conversation. Review & create booking transfers details into the existing booking
+editor. Vacht Nacht, Shalom Zachor and Other require an explicit supply template;
+the original service name remains on the booking. Estimated guests do not invent
+an adult/child split. Review table counts, timing, supplies and agreed charge.
+Save and sync the booking, then return to Text bookings and choose Approve & text.
+Only that explicit action sends the reviewed booking confirmation. Declining a
+request with a linked booking requires cancelling the booking first. Reply by text
+sends a custom staff response; no arbitrary recipient number can be substituted.
+
+The inbox retains request status, incoming messages and staff outbox records.
+Provider acceptance is labeled separately from delivery. An explicit provider
+rejection can be retried with its original operation; an uncertain timeout or
+interrupted send requires provider-log review before any new send. The same
+operation cannot send an accepted message twice. Linked bookings are retained;
+mark them cancelled instead of deleting them. Incoming SMS and staff messages live
+in the online database, outside the local planner JSON backup. Export shown requests
+exports the requests currently loaded, with Load older requests for additional pages.
+Receiving, refreshing, approving and sending real texts require internet access.
+The ordinary planner and conversation preview remain available offline.
+
 ## Company accounts and offline use
 
 Empty public settings deliberately leave the app in local-only mode, explicitly
@@ -215,6 +250,7 @@ From tests/, install npm dependencies and serve the repo root on a fresh port:
     node catering-database-test.mjs
     node catering-cloud-test.mjs
     node catering-invite-test.mjs
+    CJ_BASE_URL=http://127.0.0.1:8879 node catering-sms-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-shopping-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-supplier-orders-test.mjs
     CJ_BASE_URL=http://127.0.0.1:8879 node catering-pricing-test.mjs

@@ -252,3 +252,12 @@ Do not delete them without understanding what they caught:
   was read as sea level
 - a typed `1000` becoming `27.41000`, because the page wrote into a field while somebody
   was typing in it
+
+The text-booking suite (`catering-sms-test.mjs`, included in `test:catering`) checks
+the exact shared engine and current public choices, explicit submission, review,
+strict dates, unknown counts, cloth splits, editing, questions and STOP/START.
+It runs the deployed SQL and gateway handlers against PGlite for signed webhooks,
+retries, company isolation, authorization, linked-booking review, outbox claims,
+provider failures and uncertain sends. Chromium checks the preview, offline
+reopening, request history, reviewed booking creation, confirmation, mobile widths
+and portal iframe. All provider traffic is simulated; it sends no real SMS.

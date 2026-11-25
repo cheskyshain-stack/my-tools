@@ -19,13 +19,14 @@ export function fixtureState(name='Company A'){
 export function move(id,type,quantity,extra={}){return {id,inventoryId:'stock-cups',type,quantity,unit:'cups',date:'2026-11-12T13:00:00.000Z',notes:'Fixture movement',bookingId:null,orderId:null,lineId:null,...extra};}
 export async function createDatabase({documents=true}={}){
  const db=new PGlite();
- await db.exec(`create role anon;create role authenticated;create schema auth;
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to authenticated;`);
  await db.exec(await fs.readFile(new URL('../catering/backend/001_companies.sql',import.meta.url),'utf8'));
  await db.exec(await fs.readFile(new URL('../catering/backend/002_tablecloth_shapes.sql',import.meta.url),'utf8'));
  await db.exec(await fs.readFile(new URL('../catering/backend/003_payments_profit.sql',import.meta.url),'utf8'));
+ await db.exec(await fs.readFile(new URL('../catering/backend/004_sms_bookings.sql',import.meta.url),'utf8'));
  for(const [name,u] of Object.entries(USERS))await db.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,$3)',[u.id,u.email,name==='unverified'?null:'2026-11-12T12:00:00Z']);
  await db.query('insert into public.catering_platform_admins(email) values($1)',[USERS.owner.email]);
  await db.query("insert into public.catering_companies(id,name) values($1,'Company A'),($2,'Company B')",[COMPANIES.a,COMPANIES.b]);
@@ -36,5 +37,6 @@ export async function createDatabase({documents=true}={}){
   const task=queue.then(async()=>{await db.exec('begin;set local role authenticated;');try{await db.query("select set_config('request.jwt.claim.sub',$1,true)",[user?.id||'']);const result=await db.query(sql,params);await db.exec('commit');return result;}catch(error){await db.exec('rollback');throw error;}});
   queue=task.catch(()=>{});return task;
  };
- return {db,as,close:()=>queue.then(()=>db.close())};
+ const system=(sql,params=[])=>{const task=queue.then(()=>db.query(sql,params));queue=task.catch(()=>{});return task;};
+ return {db,as,system,close:()=>queue.then(()=>db.close())};
 }

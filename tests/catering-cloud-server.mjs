@@ -3,11 +3,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createDatabase,USERS} from './catering-db.mjs';
+import {smsSend} from '../catering/backend/functions/catering-sms-send/index.ts';
 
 // Only the managed email/password provider is simulated. Tenant authorization,
 // revision transactions and inventory checks run in the actual PostgreSQL schema.
 export async function startCloudServer({port=0}={}){
- const store=await createDatabase();const root=path.resolve(fileURLToPath(new URL('..',import.meta.url)));
+ const store=await createDatabase();const root=path.resolve(fileURLToPath(new URL('..',import.meta.url)));const sentTexts=[];
  const definitions={
   catering_session:[],catering_request_access:[['p_company_name','text']],
   catering_admin_create_company:[['p_name','text'],['p_owner_email','text']],
@@ -36,6 +37,20 @@ export async function startCloudServer({port=0}={}){
     output(res,200,{id:user.id,email:user.email});return;
    }
    if(url.pathname==='/api/auth/v1/logout'){output(res,204,null);return;}
+   if(url.pathname==='/api/functions/v1/catering-sms-send'){
+    const user=getUser(req),input=await body(req);
+    const settings={url:'https://database.test',publicKey:'test-public',serviceKey:'test-service',accountSid:'AC'+'1'.repeat(32),authToken:'test-only-secret',webhookUrl:'https://database.test/functions/v1/catering-sms',origin:'http://127.0.0.1:'+port};
+    const provider=async(endpoint,options={})=>{
+     const name=String(endpoint).split('/').at(-1);
+     if(name==='user')return new Response('{}',{status:user?200:401});
+     if(name==='Messages.json'){sentTexts.push(new URLSearchParams(options.body));return new Response(JSON.stringify({sid:'SM'+sentTexts.length.toString(16).padStart(32,'0')}));}
+     const data=options.body?JSON.parse(options.body):{},args=Object.values(data),types={catering_sms_action:['uuid','text','text','uuid'],catering_sms_claim:['uuid'],catering_sms_finish:['uuid','text','text','text']}[name];
+     if(!types)throw Error('Unexpected SMS procedure');
+     try{const sql=`select public.${name}(${types.map((t,i)=>'$'+(i+1)+'::'+t).join(',')}) result`;const result=name==='catering_sms_action'?await store.as(user,sql,args):await store.system(sql,args);return new Response(JSON.stringify(result.rows[0].result));}catch(error){return new Response(JSON.stringify({message:error.message}),{status:400});}
+    };
+    const result=await smsSend(new Request(settings.origin+url.pathname,{method:'POST',headers:{Authorization:req.headers.authorization||'',Origin:settings.origin,'Content-Type':'application/json'},body:JSON.stringify(input)}),settings,provider);
+    output(res,result.status,await result.json());return;
+   }
    if(url.pathname==='/api/auth/v1/recover'||url.pathname==='/api/auth/v1/signup'){output(res,200,{user:{id:USERS.pending.id}});return;}
    if(url.pathname.startsWith('/api/rest/v1/')){
     const user=getUser(req);if(!user){output(res,401,{message:'Sign in first'});return;}
@@ -54,6 +69,14 @@ export async function startCloudServer({port=0}={}){
     }
     if(route==='catering_access_requests'){output(res,200,(await store.as(user,"select * from public.catering_access_requests where status='pending' order by created_at")).rows);return;}
     if(route==='catering_members'){output(res,200,(await store.as(user,'select company_id,email,role,status from public.catering_members order by email')).rows);return;}
+    if(['catering_sms_channels','catering_sms_requests','catering_sms_messages','catering_sms_outbox'].includes(route)){
+     const columns={company_id:'uuid',request_id:'uuid',conversation_id:'uuid'},args=[],where=[];
+     for(const [key,type] of Object.entries(columns)){const value=url.searchParams.get(key);if(value){if(!value.startsWith('eq.'))throw Error('Invalid filter');args.push(value.slice(3));where.push(`${key}=$${args.length}::${type}`);}}
+     const order=route==='catering_sms_channels'?'id':url.searchParams.get('order')?.startsWith('created_at.asc')?'created_at asc':'created_at desc';
+     const limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||100))),offset=Math.max(0,Number(url.searchParams.get('offset')||0));
+     if(!Number.isInteger(limit)||!Number.isInteger(offset))throw Error('Invalid pagination');
+     output(res,200,(await store.as(user,`select * from public.${route}${where.length?' where '+where.join(' and '):''} order by ${order} limit ${limit} offset ${offset}`,args)).rows);return;
+    }
     output(res,404,{message:'Unknown table'});return;
    }
    if(url.pathname==='/catering/cloud-config.js'){
@@ -67,5 +90,5 @@ export async function startCloudServer({port=0}={}){
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});
  port=server.address().port;
- return {url:'http://127.0.0.1:'+port,store,close:async()=>{await new Promise(r=>server.close(r));await store.close();}};
+ return {url:'http://127.0.0.1:'+port,store,sentTexts,close:async()=>{await new Promise(r=>server.close(r));await store.close();}};
 }
