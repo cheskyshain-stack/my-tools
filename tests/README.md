@@ -20,6 +20,12 @@ confirms that printing preserves the screen grid. Collection tests independently
 32-primary / 13-secondary fixture, results on later pages, negative intervals,
 full-area words outside the current grid, saved pairs, cancellation, context
 invalidation, all-result PDFs and capped-search reporting for 500 received matches.
+Nearby-word checks independently scan and spatially join each word, verifying the
+300-area ישראל / מאיר fixture, 13 chapter-level pairs, three and six input words,
+independent directions/skips, marked text, optional sequence mode, work/time limits,
+areas after 500 raw primary hits, saved group validation and printing. Persistent
+Previous / Next controls are measured at different scroll positions on four screen
+sizes and inside the portal; checks cross list pages and respect filtered results.
 See `torah-codes/README.md` for the edition, spelling choices and limits.
 
 ## Sunrise and sunset weather history

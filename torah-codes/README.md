@@ -60,10 +60,39 @@ against a different text stream.
 
 ## Search, display and saved results
 
-Defaults: 2 to 32 query letters, skips 1 to 100, both directions, exact final forms.
+Defaults: 2 to 32 Hebrew letters per word, skips 1 to 100, both directions, exact final forms.
 Allowed skip magnitude is 1 to 10,000. Skip +50 advances 50 letters, leaving 49 in
 between. Negative skips move backward. Engine scope is `[from,to)`, with inclusive
 pasuk endpoints in the UI. An entire-Torah search may cross sefer boundaries.
+
+Spaces in the main query now separate independent words by default. For example,
+`ישראל מאיר` searches for two patterns near one another, each with its own skip and
+permitted direction. A visible selector retains the old continuous-sequence behavior.
+The pure `queries` helper strips marks and punctuation per token and accepts 1 to 6
+unique words of 2 to 32 Hebrew letters each. Whitespace alone separates words;
+spaces never enter the searchable Torah or alter a letter index. Duplicate words,
+including duplicates after optional final-letter folding, are rejected explicitly.
+
+`searchTogether` scans the first word throughout the selected scope. For each of its
+occurrences, it seeks every other word wholly within that first pattern's inclusive
+letter span plus `nearby` letters on each side, clipped to the scope. Nearby defaults
+to 100 and permits 0 to 1,000. Each word independently uses the entered skip range and
+direction. Every returned group contains all input words. One representative match
+per other word is retained in each area; all combinations are not enumerated.
+
+The 500-result limit counts successful groups, not raw first-word occurrences. A rare
+secondary name can therefore be found after more than 500 primary occurrences. The
+worker tracks a combined 50 million actual candidate checks for all words and a single
+15-second deadline, with progress, immediate Cancel and explicit partial outcomes.
+The first-word preflight still rejects a plan over the work budget before it starts.
+Result cards and the selected-area summary show every word's own skip, direction and
+pasuk references. Independent color highlights preserve source glyphs exactly.
+
+A fixed Previous result / Results / Next result bar remains available while scrolling.
+It steps across list pages and follows the current additional-word filter. Its center
+opens the list page containing the selected result. End buttons disable at the edges;
+it hides before selection and for no matches, and disables while work is running.
+Page padding keeps bottom content above the bar. Print CSS omits the controls.
 
 First-letter postings and end-bound checks reduce work. A preflight rejects over
 50 million candidate checks. A worker stops at 15 seconds of scanning or 500 matches.
@@ -124,8 +153,16 @@ badges. Choosing a result attaches its secondary matches, with a separate interv
 and color. Show word in grid opens a distant secondary match. Full-area words survive
 grid-page changes. Changing context invalidates the collection check. A new primary
 search clears it. This collection is the current search, not a saved search history.
-Ordinary grid-only words and full-area words are distinguished in saved results by
-an optional `scope` field. Restoring a full-area word verifies its exact letters
+Ordinary grid-only words, full-area words and nearby-group words are distinguished
+in saved results by an optional `scope` field. Nearby groups add optional `together`
+metadata containing input words and the search distance, while keeping version 1
+compatible with older files. Every group member must match its declared word, color,
+source letters and the original first-word search region before any UI state changes.
+The grid bounds encompass every group member even with zero visual context. Changing
+grid context or pages preserves the original group. Group words cannot be removed
+from an existing result; the main query changes the searched names.
+
+Restoring a full-area word verifies its exact letters
 against the full result area rather than just the displayed window. A saved link
 still represents one selected result or pair, not an entire result collection.
 
