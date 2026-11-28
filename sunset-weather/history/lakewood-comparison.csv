@@ -2915,8 +2915,8 @@ date,event,standard_local,weather_adjusted_local,difference_seconds,status,reaso
 2025-11-12,Sunset,2025-11-12 04:42:32 PM EST,2025-11-12 04:42:34 PM EST,2,ok,
 2025-11-13,Netz,2025-11-13 06:40:12 AM EST,2025-11-13 06:40:10 AM EST,-2,ok,
 2025-11-13,Sunset,2025-11-13 04:41:41 PM EST,2025-11-13 04:41:40 PM EST,-1,ok,
-2025-11-14,Netz,2025-11-14 06:41:21 AM EST,,,pending,Missing requested archive window
-2025-11-14,Sunset,2025-11-14 04:40:51 PM EST,,,pending,Missing requested archive window
+2025-11-14,Netz,2025-11-14 06:41:21 AM EST,2025-11-14 06:41:13 AM EST,-8,ok,
+2025-11-14,Sunset,2025-11-14 04:40:51 PM EST,2025-11-14 04:40:50 PM EST,-1,ok,
 2025-11-15,Netz,2025-11-15 06:42:31 AM EST,2025-11-15 06:42:20 AM EST,-11,ok,
 2025-11-15,Sunset,2025-11-15 04:40:03 PM EST,2025-11-15 04:39:57 PM EST,-6,ok,
 2025-11-16,Netz,2025-11-16 06:43:39 AM EST,2025-11-16 06:43:45 AM EST,6,ok,
@@ -3647,7 +3647,7 @@ date,event,standard_local,weather_adjusted_local,difference_seconds,status,reaso
 2026-11-13,Sunset,2026-11-13 04:41:53 PM EST,2026-11-13 04:41:55 PM EST,2,ok,
 2026-11-14,Netz,2026-11-14 06:41:05 AM EST,2026-11-14 06:41:08 AM EST,3,ok,
 2026-11-14,Sunset,2026-11-14 04:41:03 PM EST,2026-11-14 04:41:07 PM EST,4,ok,
-2026-11-15,Netz,2026-11-15 06:42:14 AM EST,,,pending,Missing requested archive window
-2026-11-15,Sunset,2026-11-15 04:40:14 PM EST,,,pending,Missing requested archive window
-2026-11-16,Netz,2026-11-16 06:43:23 AM EST,,,pending,Missing requested archive window
-2026-11-16,Sunset,2026-11-16 04:39:28 PM EST,,,pending,Missing requested archive window
+2026-11-15,Netz,2026-11-15 06:42:14 AM EST,2026-11-15 06:42:12 AM EST,-2,ok,
+2026-11-15,Sunset,2026-11-15 04:40:14 PM EST,2026-11-15 04:40:16 PM EST,2,ok,
+2026-11-16,Netz,2026-11-16 06:43:23 AM EST,2026-11-16 06:43:12 AM EST,-11,ok,
+2026-11-16,Sunset,2026-11-16 04:39:28 PM EST,2026-11-16 04:39:37 PM EST,9,ok,
